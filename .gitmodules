@@ -20,3 +20,6 @@
 [submodule "third_party/fontawesome"]
 	path = third_party/fontawesome
 	url = https://github.com/FortAwesome/Font-Awesome.git
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git
