@@ -1,6 +1,4 @@
 build/ 
-vcpkg_installed/
-vcpkg/buildtrees/
-vcpkg/packages/
-vcpkg/downloads/
-vcpkg/out/ 
+
+/vcpkg
+/vcpkg_installed

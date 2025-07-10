@@ -22,10 +22,6 @@
 	path = third_party/asmjit
 	url = https://github.com/asmjit/asmjit.git
 	branch = master
-[submodule "third_party/fontawesome"]
-	path = third_party/fontawesome
-	url = https://github.com/FortAwesome/Font-Awesome.git
-	branch = master
 [submodule "third_party/json"]
 	path = third_party/json
 	url = https://github.com/nlohmann/json.git
