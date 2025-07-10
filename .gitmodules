@@ -10,7 +10,13 @@
 	url = https://github.com/skypjack/entt.git
 [submodule "third_party/imgui-node-editor"]
 	path = third_party/imgui-node-editor
-	url = https://github.com/thedmd/imgui-node-editor
+	url = https://github.com/BLotApp/imgui-node-editor
 [submodule "third_party/blend2d"]
 	path = third_party/blend2d
 	url = https://github.com/blend2d/blend2d.git
+[submodule "third_party/asmjit"]
+	path = third_party/asmjit
+	url = https://github.com/asmjit/asmjit.git
+[submodule "third_party/fontawesome"]
+	path = third_party/fontawesome
+	url = https://github.com/FortAwesome/Font-Awesome.git
