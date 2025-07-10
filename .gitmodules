@@ -5,21 +5,24 @@
 [submodule "third_party/glm"]
 	path = third_party/glm
 	url = https://github.com/g-truc/glm.git
+	branch = master
 [submodule "third_party/entt"]
 	path = third_party/entt
 	url = https://github.com/skypjack/entt.git
+	branch = master
 [submodule "third_party/imgui-node-editor"]
 	path = third_party/imgui-node-editor
 	url = https://github.com/BLotApp/imgui-node-editor
+	branch = master
 [submodule "third_party/blend2d"]
 	path = third_party/blend2d
 	url = https://github.com/blend2d/blend2d.git
+	branch = master
 [submodule "third_party/asmjit"]
 	path = third_party/asmjit
 	url = https://github.com/asmjit/asmjit.git
+	branch = master
 [submodule "third_party/fontawesome"]
 	path = third_party/fontawesome
 	url = https://github.com/FortAwesome/Font-Awesome.git
-[submodule "third_party/json"]
-	path = third_party/json
-	url = https://github.com/nlohmann/json.git
+	branch = master
