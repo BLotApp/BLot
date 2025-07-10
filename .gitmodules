@@ -26,3 +26,6 @@
 	path = third_party/json
 	url = https://github.com/nlohmann/json.git
 	branch = master
+[submodule "third_party/IconFontCppHeaders"]
+	path = third_party/IconFontCppHeaders
+	url = https://github.com/juliettef/IconFontCppHeaders.git
