@@ -1,6 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
 
+:: Default to Release build
+set BUILD_TYPE=Release
+
+:: Check for --debug flag
+if "%1"=="--debug" (
+    set BUILD_TYPE=Debug
+)
+
 echo ========================================
 echo Building Blot - Creative Coding Application
 echo ========================================
@@ -125,7 +133,7 @@ echo Installing dependencies with vcpkg manifest...
 echo Dependencies installed (manifest mode).
 
 echo Configuring with CMake...
-cmake .. -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 echo Ran CMake configure.
 if errorlevel 1 (
     echo CMake configuration failed.
@@ -134,7 +142,7 @@ if errorlevel 1 (
     "%VCPKG_ROOT%\vcpkg.exe" install
     echo.
     echo Retrying CMake configuration...
-    cmake .. -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release
+    cmake .. -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
     if errorlevel 1 (
         echo CMake configuration still failed. Please check the error messages above.
         pause
@@ -143,7 +151,7 @@ if errorlevel 1 (
 )
 
 echo Building Blot...
-cmake --build . --config Release --parallel
+cmake --build . --config %BUILD_TYPE% --parallel
 echo Ran build command.
 if errorlevel 1 (
     echo Build failed.
@@ -151,16 +159,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if exist "Release\blot.exe" (
+if exist "%BUILD_TYPE%\blot.exe" (
     echo.
     echo ========================================
     echo Build successful!
     echo ========================================
     echo.
-    echo Executable: build\Release\blot.exe
+    echo Executable: build\%BUILD_TYPE%\blot.exe
     echo.
     echo To run Blot:
-    echo   cd build\Release
+    echo   cd build\%BUILD_TYPE%
     echo   blot.exe
     echo.
 ) else (

@@ -145,11 +145,14 @@ void BlotApp::initImGui() {
     io.FontDefault = io.Fonts->Fonts.back();
 
     // Load FontAwesome Solid font and merge
-    static const ImWchar icons_ranges[] = { 0xf000, 0xf8ff, 0 };
+    float baseFontSize = 16.0f * uiScale;
+    float iconFontSize = baseFontSize * 2.0f / 3.0f;
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
     ImFontConfig icons_config;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
-    io.Fonts->AddFontFromFileTTF("third_party/IconFontCppHeaders/fonts/fa-solid-900.ttf", 16.0f * uiScale, &icons_config, icons_ranges);
+    icons_config.GlyphMinAdvanceX = iconFontSize;
+    io.Fonts->AddFontFromFileTTF("assets/fonts/fa-solid-900.ttf", iconFontSize, &icons_config, icons_ranges);
 
     // Initialize ImGui with GLFW and OpenGL
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);
