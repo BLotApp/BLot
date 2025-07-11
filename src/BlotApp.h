@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "Renderer.h"
 #include "ImGuiRenderer.h"
+#include "CanvasManager.h"
 
 // Forward declarations
 class Canvas;
@@ -45,7 +46,8 @@ private:
     std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
     
     // Creative coding components
-    std::unique_ptr<Canvas> m_canvas;
+    CanvasManager m_canvasManager;
+    EntityID m_activeCanvasId = 0;
     std::shared_ptr<Graphics> m_graphics;
     std::unique_ptr<CodeEditor> m_codeEditor;
     std::unique_ptr<ScriptEngine> m_scriptEngine;

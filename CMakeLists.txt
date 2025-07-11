@@ -77,18 +77,20 @@ set(SOURCES
     src/BlotApp.cpp
     src/Canvas.cpp
     src/Graphics.cpp
-    src/TextRenderer.cpp
-    src/ImGuiRenderer.cpp
-    src/CodeEditor.cpp
-    src/ScriptEngine.cpp
-    src/AddonBase.cpp
-    src/AddonManager.cpp
-    src/ECSManager.cpp
-    src/Renderer.cpp
     src/Blend2DRenderer.cpp
-    src/NodeEditor.cpp
+    src/Renderer.cpp
+    src/CodeEditor.cpp
+    src/AddonBase.cpp
     src/VertexBuffer.cpp
     src/Shader.cpp
+    src/TextRenderer.cpp
+    src/ImGuiRenderer.cpp
+    src/AddonManager.cpp
+    src/ECSManager.cpp
+    src/NodeEditor.cpp
+    src/ScriptEngine.cpp
+    src/CanvasManager.cpp
+    src/CanvasComponent.h
 )
 
 # ImGui sources (submodule)

@@ -178,7 +178,8 @@ void BlotApp::initGraphics() {
     m_currentRenderer = std::make_unique<Blend2DRenderer>();
     m_currentRenderer->initialize(m_windowWidth, m_windowHeight);
     m_graphics->setRenderer(m_currentRenderer.get());
-    m_canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, m_graphics);
+    // Create a default canvas via the manager
+    m_activeCanvasId = m_canvasManager.addCanvas(m_windowWidth, m_windowHeight);
     
     // Run the default sketch on launch
     m_scriptEngine->runCode(m_codeEditor->getCode());
@@ -273,6 +274,18 @@ void BlotApp::renderUI() {
 
     // Main menu bar and windows
     if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("BLot")) {
+            ImGui::Text("BLot");
+            ImGui::Separator();
+            if (ImGui::MenuItem("Preferences...")) {
+                // TODO: Show preferences window
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Quit.")) {
+                m_running = false;
+            }
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Renderer")) {
             if (ImGui::MenuItem("Blend2D", nullptr, m_currentRendererType == RendererType::Blend2D)) {
                 switchRenderer(RendererType::Blend2D);
@@ -281,6 +294,34 @@ void BlotApp::renderUI() {
             if (ImGui::MenuItem("OpenGL/ES", nullptr, m_currentRendererType == RendererType::OpenGL)) {
                 switchRenderer(RendererType::OpenGL);
                 m_graphics->setRenderer(m_currentRenderer.get());
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Canvases")) {
+            if (ImGui::MenuItem("New Canvas")) {
+                int w = 1280, h = 720;
+                EntityID newId = m_canvasManager.addCanvas(w, h);
+                m_activeCanvasId = newId;
+            }
+            ImGui::Separator();
+            for (const auto& [id, comp] : m_canvasManager.getAll()) {
+                char label[64];
+                snprintf(label, sizeof(label), "Canvas %d%s", id, (id == m_activeCanvasId ? " (active)" : ""));
+                if (ImGui::Selectable(label, id == m_activeCanvasId)) {
+                    m_activeCanvasId = id;
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton((std::string("x##close_") + std::to_string(id)).c_str())) {
+                    m_canvasManager.removeCanvas(id);
+                    if (m_activeCanvasId == id) {
+                        // Pick another canvas as active
+                        if (!m_canvasManager.getAll().empty())
+                            m_activeCanvasId = m_canvasManager.getAll().begin()->first;
+                        else
+                            m_activeCanvasId = 0;
+                    }
+                    break;
+                }
             }
             ImGui::EndMenu();
         }
@@ -296,8 +337,8 @@ void BlotApp::renderUI() {
             }
             if (ImGui::MenuItem("Save As...")) {
                 auto result = pfd::save_file("Save Canvas As", ".", {"PNG Files (*.png)", "*.png", "All Files", "*"}).result();
-                if (!result.empty() && m_canvas) {
-                    m_canvas->saveFrame(result);
+                if (!result.empty() && m_canvasManager.getCanvas(m_activeCanvasId)) {
+                    m_canvasManager.getCanvas(m_activeCanvasId)->canvas->saveFrame(result);
                 }
             }
             ImGui::Separator();
@@ -367,14 +408,96 @@ void BlotApp::renderUI() {
     // Canvas Window
     if (m_showCanvas) {
         ImGui::Begin("Canvas", &m_showCanvas);
-        if (m_canvas) {
-            ImTextureID tex_id = (ImTextureID)(intptr_t)m_canvas->getColorTexture();
-            ImVec2 size((float)m_canvas->getWidth(), (float)m_canvas->getHeight());
-            ImGui::Image(tex_id, size, ImVec2(0,1), ImVec2(1,0)); // Flip vertically if needed
+        auto* comp = m_canvasManager.getCanvas(m_activeCanvasId);
+        if (comp && comp->canvas) {
+            ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
+            ImVec2 canvas_size = ImVec2((float)comp->canvas->getWidth(), (float)comp->canvas->getHeight());
+
+            // UI controls
+            if (ImGui::Button("Reset View")) {
+                comp->zoom = 1.0f;
+                comp->offset = glm::vec2(0.0f, 0.0f);
+            }
+            ImGui::SameLine();
+            ImGui::Checkbox("Show Rulers", &comp->showRulers);
+            ImGui::SameLine();
+            ImGui::Checkbox("Show Guides", &comp->showGuides);
+
+            // Add guide UI
+            if (comp->showGuides) {
+                static float guidePos = 100.0f;
+                static bool vertical = true;
+                static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+                ImGui::InputFloat("Guide Position", &guidePos);
+                ImGui::Checkbox("Vertical", &vertical);
+                ImGui::ColorEdit4("Guide Color", color);
+                if (ImGui::Button("Add Guide")) {
+                    comp->guides.push_back({guidePos, vertical, glm::vec4(color[0], color[1], color[2], color[3])});
+                }
+                if (!comp->guides.empty()) {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Clear Guides")) {
+                        comp->guides.clear();
+                    }
+                }
+            }
+
+            // Handle zoom with mouse wheel
+            if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y))) {
+                float wheel = ImGui::GetIO().MouseWheel;
+                if (wheel != 0.0f) {
+                    float zoom_factor = 1.1f;
+                    if (wheel > 0) comp->zoom *= zoom_factor;
+                    if (wheel < 0) comp->zoom /= zoom_factor;
+                    comp->zoom = std::clamp(comp->zoom, 0.1f, 10.0f);
+                }
+                // Pan with middle mouse drag
+                if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
+                    ImVec2 delta = ImGui::GetIO().MouseDelta;
+                    comp->offset.x += delta.x;
+                    comp->offset.y += delta.y;
+                }
+            }
+
+            // Draw the canvas texture with zoom and pan
+            ImVec2 uv0 = ImVec2(0, 1);
+            ImVec2 uv1 = ImVec2(1, 0);
+            ImVec2 center = ImVec2(canvas_pos.x + canvas_size.x * 0.5f, canvas_pos.y + canvas_size.y * 0.5f);
+            ImVec2 draw_size = ImVec2(canvas_size.x * comp->zoom, canvas_size.y * comp->zoom);
+            ImVec2 draw_pos = ImVec2(center.x - draw_size.x * 0.5f + comp->offset.x, center.y - draw_size.y * 0.5f + comp->offset.y);
+
+            ImTextureID tex_id = (ImTextureID)(intptr_t)comp->canvas->getColorTexture();
+            ImGui::SetCursorScreenPos(draw_pos);
+            ImGui::Image(tex_id, draw_size, uv0, uv1);
+
+            // Draw rulers
+            if (comp->showRulers) {
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                float ruler_thickness = 1.0f;
+                ImU32 ruler_color = IM_COL32(200, 200, 200, 255);
+                // Top ruler
+                draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x + draw_size.x, draw_pos.y), ruler_color, ruler_thickness);
+                // Left ruler
+                draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x, draw_pos.y + draw_size.y), ruler_color, ruler_thickness);
+            }
+            // Draw guides
+            if (comp->showGuides) {
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                for (const auto& guide : comp->guides) {
+                    ImU32 guide_color = ImGui::ColorConvertFloat4ToU32(ImVec4(guide.color.r, guide.color.g, guide.color.b, guide.color.a));
+                    if (guide.vertical) {
+                        float x = draw_pos.x + guide.position * comp->zoom;
+                        draw_list->AddLine(ImVec2(x, draw_pos.y), ImVec2(x, draw_pos.y + draw_size.y), guide_color, 2.0f);
+                    } else {
+                        float y = draw_pos.y + guide.position * comp->zoom;
+                        draw_list->AddLine(ImVec2(draw_pos.x, y), ImVec2(draw_pos.x + draw_size.x, y), guide_color, 2.0f);
+                    }
+                }
+            }
         }
         ImGui::End();
     }
-
+    
     if (m_showToolbar) {
         ImGui::Begin("Toolbar", &m_showToolbar, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
         if (ImGui::Button(ICON_FA_MOUSE_POINTER)) m_currentTool = ToolType::Select;
@@ -548,64 +671,10 @@ void BlotApp::renderUI() {
 }
 
 void BlotApp::renderCanvas() {
-    // Canvas rendering is handled by the Canvas class
-    // This is where the creative coding output is displayed
-    m_shapes.clear();
-    std::unordered_map<int, std::unordered_map<std::string, float>> nodeOutputs;
-    // Evaluate math nodes first
-    for (auto& node : m_nodes) {
-        if (node.type == NodeType::Add) {
-            float a = node.params[0].value;
-            float b = node.params[1].value;
-            nodeOutputs[node.id]["out"] = a + b;
-        } else if (node.type == NodeType::Multiply) {
-            float a = node.params[0].value;
-            float b = node.params[1].value;
-            nodeOutputs[node.id]["out"] = a * b;
-        } else if (node.type == NodeType::Sin) {
-            float in = node.params[0].value;
-            nodeOutputs[node.id]["out"] = sinf(in);
-        } else if (node.type == NodeType::Cos) {
-            float in = node.params[0].value;
-            nodeOutputs[node.id]["out"] = cosf(in);
-        }
-    }
-    // Evaluate shape nodes, using connections
-    for (auto& node : m_nodes) {
-        if (node.type == NodeType::Circle) {
-            float x = node.params[0].value;
-            float y = node.params[1].value;
-            float r = node.params[2].value;
-            // Apply connections
-            for (const auto& conn : node.inputs) {
-                if (conn.toParam == "x") x = nodeOutputs[conn.fromNodeId][conn.fromParam];
-                if (conn.toParam == "y") y = nodeOutputs[conn.fromNodeId][conn.fromParam];
-                if (conn.toParam == "radius") r = nodeOutputs[conn.fromNodeId][conn.fromParam];
-            }
-            m_shapes.push_back({Shape::Type::Circle, ImVec2(x, y), r});
-        } else if (node.type == NodeType::Grid) {
-            float x = node.params[0].value;
-            float y = node.params[1].value;
-            float r = node.params[2].value;
-            int rows = (int)node.params[3].value;
-            int cols = (int)node.params[4].value;
-            float spacing = node.params[5].value;
-            for (int i = 0; i < rows; ++i) {
-                for (int j = 0; j < cols; ++j) {
-                    m_shapes.push_back({Shape::Type::Circle, ImVec2(x + j * spacing, y + i * spacing), r});
-                }
-            }
-        } else if (node.type == NodeType::Copy) {
-            float x = node.params[0].value;
-            float y = node.params[1].value;
-            float r = node.params[2].value;
-            int count = (int)node.params[3].value;
-            float dx = node.params[4].value;
-            float dy = node.params[5].value;
-            for (int i = 0; i < count; ++i) {
-                m_shapes.push_back({Shape::Type::Circle, ImVec2(x + i * dx, y + i * dy), r});
-            }
-        }
+    // Render only the active canvas if it exists
+    auto* comp = m_canvasManager.getCanvas(m_activeCanvasId);
+    if (comp && comp->canvas) {
+        comp->canvas->render();
     }
 }
 
@@ -770,7 +839,7 @@ void BlotApp::handleInput() {
 
 void BlotApp::update() {
     // Update application logic
-    m_canvas->update(m_deltaTime);
+    m_canvasManager.updateAll(m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
     
     // Update addons
