@@ -309,6 +309,13 @@ void BlotApp::renderUI() {
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
     ImGui::End();
 
+    // Ensure the code editor is always visible and dockable
+    if (m_showCodeEditor) {
+        ImGui::Begin("Code Editor", &m_showCodeEditor);
+        m_codeEditor->render();
+        ImGui::End();
+    }
+
     // Main menu bar and windows
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("BLot")) {
@@ -493,13 +500,6 @@ void BlotApp::renderUI() {
         ImGui::EndMainMenuBar();
     }
     
-    // Code Editor Window
-    if (m_showCodeEditor) {
-        ImGui::Begin("Code Editor", &m_showCodeEditor);
-        m_codeEditor->render();
-        ImGui::End();
-    }
-    
     // File Browser Window
     if (showFileBrowser) {
         ImGui::Begin("File Browser", &showFileBrowser);
@@ -608,10 +608,23 @@ void BlotApp::renderUI() {
     
     if (m_showToolbar) {
         ImGui::Begin("Toolbar", &m_showToolbar, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
-        if (ImGui::Button(ICON_FA_MOUSE_POINTER)) m_currentTool = ToolType::Select;
-        if (ImGui::Button(ICON_FA_SQUARE)) m_currentTool = ToolType::Rectangle;
-        if (ImGui::Button(ICON_FA_CIRCLE)) m_currentTool = ToolType::Ellipse;
-        if (ImGui::Button(ICON_FA_PEN)) m_currentTool = ToolType::Line;
+        ImVec4 selectedColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+        ImVec4 normalColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
+        auto ToolButton = [&](const char* icon, ToolType type) {
+            if (m_currentTool == type)
+                ImGui::PushStyleColor(ImGuiCol_Button, selectedColor);
+            else
+                ImGui::PushStyleColor(ImGuiCol_Button, normalColor);
+            bool pressed = ImGui::Button(icon);
+            ImGui::PopStyleColor();
+            if (pressed) m_currentTool = type;
+            ImGui::SameLine();
+        };
+        ToolButton(ICON_FA_MOUSE_POINTER, ToolType::Select);
+        ToolButton(ICON_FA_SQUARE, ToolType::Rectangle);
+        ToolButton(ICON_FA_CIRCLE, ToolType::Ellipse);
+        ToolButton(ICON_FA_PEN, ToolType::Line);
+        ImGui::NewLine();
         ImGui::End();
     }
     

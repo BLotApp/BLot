@@ -87,6 +87,7 @@ set(SOURCES
     src/rendering/Blend2DRenderer.cpp
     src/rendering/Renderer.cpp
     src/codeeditor/CodeEditor.cpp
+    src/codeeditor/CodeEditor.h
     src/addons/AddonBase.cpp
     src/addons/AddonManager.cpp
     src/resources/VertexBuffer.cpp
@@ -106,6 +107,26 @@ set(SOURCES
     third_party/implot3d/implot3d_demo.cpp
     third_party/implot3d/implot3d_meshes.cpp
     third_party/ImGuiColorTextEdit/TextEditor.cpp
+    third_party/ImGuiColorTextEdit/TextEditor.h
+    # ImGui sources
+    third_party/imgui/imgui.cpp
+    third_party/imgui/imgui.h
+    third_party/imgui/imgui_draw.cpp
+    third_party/imgui/imgui_internal.h
+    third_party/imgui/imgui_tables.cpp
+    third_party/imgui/imgui_widgets.cpp
+    third_party/imgui/imgui_demo.cpp
+    third_party/imgui/imconfig.h
+    third_party/imgui/imstb_rectpack.h
+    third_party/imgui/imstb_textedit.h
+    third_party/imgui/imstb_truetype.h
+    # ImGui backends
+    third_party/imgui/backends/imgui_impl_glfw.cpp
+    third_party/imgui/backends/imgui_impl_glfw.h
+    third_party/imgui/backends/imgui_impl_opengl3.cpp
+    third_party/imgui/backends/imgui_impl_opengl3.h
+    third_party/imgui/backends/imgui_impl_opengl3_loader.h
+    # (Add more backend files here if you want them visible)
 )
 
 # ImGui sources (submodule)
@@ -208,7 +229,26 @@ target_link_libraries(blend2d_test PRIVATE blend2d::blend2d)
 source_group("App" FILES src/app/main.cpp src/app/BlotApp.cpp)
 source_group("Canvas" FILES src/canvas/Canvas.cpp)
 source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Blend2DRenderer.cpp src/rendering/Renderer.cpp)
-source_group("CodeEditor" FILES src/codeeditor/CodeEditor.cpp)
+source_group("CodeEditor" FILES src/codeeditor/CodeEditor.cpp src/codeeditor/CodeEditor.h)
+source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)
+source_group("ThirdParty\\ImGui" FILES
+    third_party/imgui/imgui.cpp
+    third_party/imgui/imgui.h
+    third_party/imgui/imgui_draw.cpp
+    third_party/imgui/imgui_internal.h
+    third_party/imgui/imgui_tables.cpp
+    third_party/imgui/imgui_widgets.cpp
+    third_party/imgui/imgui_demo.cpp
+    third_party/imgui/imconfig.h
+    third_party/imgui/imstb_rectpack.h
+    third_party/imgui/imstb_textedit.h
+    third_party/imgui/imstb_truetype.h
+    third_party/imgui/backends/imgui_impl_glfw.cpp
+    third_party/imgui/backends/imgui_impl_glfw.h
+    third_party/imgui/backends/imgui_impl_opengl3.cpp
+    third_party/imgui/backends/imgui_impl_opengl3.h
+    third_party/imgui/backends/imgui_impl_opengl3_loader.h
+)
 source_group("Addons" FILES src/addons/AddonBase.cpp src/addons/AddonManager.cpp)
 source_group("Resources" FILES src/resources/VertexBuffer.cpp src/resources/Shader.cpp)
 source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp)
