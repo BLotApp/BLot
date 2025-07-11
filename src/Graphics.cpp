@@ -45,14 +45,17 @@ Graphics::~Graphics() {
 
 void Graphics::setFillColor(float r, float g, float b, float a) {
     m_fillColor = glm::vec4(r, g, b, a);
+    if (m_renderer) m_renderer->setFillColor(m_fillColor);
 }
 
 void Graphics::setStrokeColor(float r, float g, float b, float a) {
     m_strokeColor = glm::vec4(r, g, b, a);
+    if (m_renderer) m_renderer->setStrokeColor(m_strokeColor);
 }
 
 void Graphics::setStrokeWidth(float width) {
     m_strokeWidth = width;
+    if (m_renderer) m_renderer->setStrokeWidth(m_strokeWidth);
 }
 
 void Graphics::setFillOpacity(float opacity) {
@@ -60,121 +63,39 @@ void Graphics::setFillOpacity(float opacity) {
 }
 
 void Graphics::drawRect(float x, float y, float width, float height) {
-    // Basic rectangle drawing implementation
-    float vertices[] = {
-        x, y, 0.0f,
-        x + width, y, 0.0f,
-        x + width, y + height, 0.0f,
-        x, y + height, 0.0f
-    };
-    
-    glUseProgram(m_impl->shaderProgram);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "fillColor"), 
-                 m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "strokeColor"), 
-                 m_strokeColor.r, m_strokeColor.g, m_strokeColor.b, m_strokeColor.a);
-    glUniform1f(glGetUniformLocation(m_impl->shaderProgram, "strokeWidth"), m_strokeWidth);
-    
-    glBindVertexArray(m_impl->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_impl->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glBindVertexArray(0);
+    if (m_renderer) {
+        m_renderer->drawRect(x, y, width, height);
+    }
 }
 
 void Graphics::drawEllipse(float x, float y, float width, float height) {
-    // Basic ellipse drawing implementation
-    const int segments = 32;
-    std::vector<float> vertices;
-    
-    for (int i = 0; i <= segments; i++) {
-        float angle = static_cast<float>(2.0 * M_PI * i / segments);
-        float px = x + width * 0.5f * cos(angle);
-        float py = y + height * 0.5f * sin(angle);
-        vertices.push_back(px);
-        vertices.push_back(py);
-        vertices.push_back(0.0f);
+    if (m_renderer) {
+        m_renderer->drawEllipse(x, y, width, height);
     }
-    
-    glUseProgram(m_impl->shaderProgram);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "fillColor"), 
-                 m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "strokeColor"), 
-                 m_strokeColor.r, m_strokeColor.g, m_strokeColor.b, m_strokeColor.a);
-    glUniform1f(glGetUniformLocation(m_impl->shaderProgram, "strokeWidth"), m_strokeWidth);
-    
-    glBindVertexArray(m_impl->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_impl->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
-    glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(segments + 1));
-    glBindVertexArray(0);
 }
 
 void Graphics::drawCircle(float x, float y, float radius) {
-    drawEllipse(x - radius, y - radius, radius * 2, radius * 2);
+    if (m_renderer) {
+        m_renderer->drawCircle(x, y, radius);
+    }
 }
 
 void Graphics::drawLine(float x1, float y1, float x2, float y2) {
-    float vertices[] = {
-        x1, y1, 0.0f,
-        x2, y2, 0.0f
-    };
-    
-    glUseProgram(m_impl->shaderProgram);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "strokeColor"), 
-                 m_strokeColor.r, m_strokeColor.g, m_strokeColor.b, m_strokeColor.a);
-    glUniform1f(glGetUniformLocation(m_impl->shaderProgram, "strokeWidth"), m_strokeWidth);
-    
-    glBindVertexArray(m_impl->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_impl->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glDrawArrays(GL_LINES, 0, 2);
-    glBindVertexArray(0);
+    if (m_renderer) {
+        m_renderer->drawLine(x1, y1, x2, y2);
+    }
 }
 
 void Graphics::drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) {
-    float vertices[] = {
-        x1, y1, 0.0f,
-        x2, y2, 0.0f,
-        x3, y3, 0.0f
-    };
-    
-    glUseProgram(m_impl->shaderProgram);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "fillColor"), 
-                 m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "strokeColor"), 
-                 m_strokeColor.r, m_strokeColor.g, m_strokeColor.b, m_strokeColor.a);
-    glUniform1f(glGetUniformLocation(m_impl->shaderProgram, "strokeWidth"), m_strokeWidth);
-    
-    glBindVertexArray(m_impl->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_impl->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
+    if (m_renderer) {
+        m_renderer->drawTriangle(x1, y1, x2, y2, x3, y3);
+    }
 }
 
 void Graphics::drawPolygon(const std::vector<glm::vec2>& points) {
-    if (points.size() < 3) return;
-    
-    std::vector<float> vertices;
-    for (const auto& point : points) {
-        vertices.push_back(point.x);
-        vertices.push_back(point.y);
-        vertices.push_back(0.0f);
+    if (m_renderer) {
+        m_renderer->drawPolygon(points);
     }
-    
-    glUseProgram(m_impl->shaderProgram);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "fillColor"), 
-                 m_fillColor.r, m_fillColor.g, m_fillColor.b, m_fillColor.a);
-    glUniform4f(glGetUniformLocation(m_impl->shaderProgram, "strokeColor"), 
-                 m_strokeColor.r, m_strokeColor.g, m_strokeColor.b, m_strokeColor.a);
-    glUniform1f(glGetUniformLocation(m_impl->shaderProgram, "strokeWidth"), m_strokeWidth);
-    
-    glBindVertexArray(m_impl->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_impl->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
-    glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(points.size()));
-    glBindVertexArray(0);
 }
 
 void Graphics::beginPath() {
@@ -405,5 +326,16 @@ void Graphics::setStrokeDash(const std::vector<float>& dashes, float offset) {
             std::vector<double> d(dashes.begin(), dashes.end());
             b2d->setStrokeDashPattern(d, static_cast<double>(offset));
         }
+    }
+} 
+
+void Graphics::setCanvasSize(int width, int height) {
+    m_canvasWidth = width;
+    m_canvasHeight = height;
+} 
+
+void Graphics::rect(float x, float y, float width, float height) {
+    if (m_renderer) {
+        m_renderer->drawRect(x, y, width, height);
     }
 } 

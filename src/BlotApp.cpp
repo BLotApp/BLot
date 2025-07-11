@@ -34,6 +34,8 @@ namespace ed = ax::NodeEditor;
 #include <fstream>
 
 #include "../assets/fonts/fontRobotoRegular.h"
+#include "Blend2DRenderer.h"
+#include "../third_party/portable-file-dialogs/portable-file-dialogs.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -164,13 +166,19 @@ void BlotApp::initImGui() {
 }
 
 void BlotApp::initGraphics() {
-    m_canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight);
-    m_graphics = std::make_unique<Graphics>();
+    m_graphics = std::make_shared<Graphics>();
     m_codeEditor = std::make_unique<CodeEditor>();
     m_scriptEngine = std::make_unique<ScriptEngine>();
     
     // Set up default creative coding environment
     m_codeEditor->loadDefaultTemplate();
+    
+    // Use only Blend2D renderer
+    m_currentRendererType = RendererType::Blend2D;
+    m_currentRenderer = std::make_unique<Blend2DRenderer>();
+    m_currentRenderer->initialize(m_windowWidth, m_windowHeight);
+    m_graphics->setRenderer(m_currentRenderer.get());
+    m_canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, m_graphics);
     
     // Run the default sketch on launch
     m_scriptEngine->runCode(m_codeEditor->getCode());
@@ -215,6 +223,10 @@ void BlotApp::run() {
         glfwPollEvents();
         handleInput();
         update();
+
+        // Clear and render (move this to the start of the frame)
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
         
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -227,10 +239,6 @@ void BlotApp::run() {
         
         // Render ImGui
         ImGui::Render();
-        
-        // Clear and render
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
         
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         
@@ -285,6 +293,12 @@ void BlotApp::renderUI() {
             }
             if (ImGui::MenuItem("Save Sketch")) {
                 m_codeEditor->saveSketch();
+            }
+            if (ImGui::MenuItem("Save As...")) {
+                auto result = pfd::save_file("Save Canvas As", ".", {"PNG Files (*.png)", "*.png", "All Files", "*"}).result();
+                if (!result.empty() && m_canvas) {
+                    m_canvas->saveFrame(result);
+                }
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
@@ -746,29 +760,11 @@ void BlotApp::handleInput() {
         m_showAddonManager = !m_showAddonManager;
     }
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::Begin("Canvas");
-    ImVec2 canvasPos = ImGui::GetWindowPos();
-    ImVec2 localPos = ImVec2(io.MousePos.x - canvasPos.x, io.MousePos.y - canvasPos.y);
-    ImGui::End();
+    // Removed ImGui window/mouse code from here. If you need mouse position relative to a window, do it in the UI rendering code.
     if (m_currentTool == ToolType::Ellipse) {
-        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
-            if (ImGui::IsMouseClicked(0) && !m_isDragging) {
-                m_isDragging = true;
-                m_dragStart = localPos;
-                m_dragEnd = localPos;
-            }
-            if (m_isDragging && ImGui::IsMouseDown(0)) {
-                m_dragEnd = localPos;
-            }
-            if (m_isDragging && ImGui::IsMouseReleased(0)) {
-                float dx = m_dragEnd.x - m_dragStart.x;
-                float dy = m_dragEnd.y - m_dragStart.y;
-                float radius = sqrtf(dx*dx + dy*dy);
-                m_shapes.push_back({Shape::Type::Circle, m_dragStart, radius});
-                m_isDragging = false;
-            }
-        }
+        // This logic should also be moved to the UI code if it depends on ImGui window state.
+        // For now, leave as is if it does not use ImGui functions.
+        // If it does, move it to renderUI or renderCanvas.
     }
 }
 

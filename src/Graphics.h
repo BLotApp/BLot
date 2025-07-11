@@ -11,6 +11,7 @@ public:
     Graphics();
     ~Graphics();
     void setRenderer(IRenderer* renderer);
+    IRenderer* getRenderer() const { return m_renderer; }
     
     // Color and style
     void setFillColor(float r, float g, float b, float a = 1.0f);
@@ -25,6 +26,7 @@ public:
     void drawLine(float x1, float y1, float x2, float y2);
     void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3);
     void drawPolygon(const std::vector<glm::vec2>& points);
+    void rect(float x, float y, float width, float height);
     
     // Path drawing
     void beginPath();
@@ -65,6 +67,7 @@ public:
     void clear(float r, float g, float b, float a = 1.0f);
     void save();
     void restore();
+    void setCanvasSize(int width, int height);
     
     // Getters
     glm::vec4 getFillColor() const { return m_fillColor; }
@@ -113,4 +116,6 @@ private:
     glm::vec4 m_gradientEndColor;
 
     IRenderer* m_renderer = nullptr;
+    int m_canvasWidth = 0;
+    int m_canvasHeight = 0;
 }; 

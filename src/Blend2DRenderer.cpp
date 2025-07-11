@@ -13,12 +13,13 @@ Blend2DRenderer::Blend2DRenderer() : m_initialized(false), m_width(0), m_height(
 Blend2DRenderer::~Blend2DRenderer() {}
 
 bool Blend2DRenderer::initialize(int width, int height) {
-    m_width = width;
-    m_height = height;
-    m_image.create(m_width, m_height, BL_FORMAT_PRGB32);
+    if (m_context) m_context.end();
+    m_image.create(width, height, BL_FORMAT_PRGB32);
     m_context.begin(m_image);
+    m_context.setCompOp(BL_COMP_OP_SRC_COPY);
+    m_context.fillAll(BLRgba32(0xFFFFFFFF));
+    m_context.setCompOp(BL_COMP_OP_SRC_OVER);
     m_initialized = true;
-    std::cout << "[Blend2DRenderer] Initialized with " << width << "x" << height << std::endl;
     return true;
 }
 
@@ -29,10 +30,7 @@ void Blend2DRenderer::shutdown() {
 }
 
 void Blend2DRenderer::resize(int width, int height) {
-    m_width = width;
-    m_height = height;
-    m_image.create(m_width, m_height, BL_FORMAT_PRGB32);
-    std::cout << "[Blend2DRenderer] Resize to " << width << "x" << height << std::endl;
+    initialize(width, height);
 }
 
 void Blend2DRenderer::beginFrame() {
@@ -48,7 +46,28 @@ void Blend2DRenderer::clear(const glm::vec4& color) {
     m_context.fillAll(c);
 }
 
-void Blend2DRenderer::drawLine(float x1, float y1, float x2, float y2, float strokeWidth, const glm::vec4& color) {}
+void Blend2DRenderer::drawLine(float x1, float y1, float x2, float y2) {
+    if (!m_hasStroke || m_strokeWidth <= 0.0f) return;
+    BLRgba32 strokeC(
+        uint8_t(m_strokeColor.r * 255),
+        uint8_t(m_strokeColor.g * 255),
+        uint8_t(m_strokeColor.b * 255),
+        uint8_t(m_strokeColor.a * 255)
+    );
+    m_context.setStrokeStyle(strokeC);
+    m_context.setStrokeWidth(m_strokeWidth);
+    m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
+    m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
+    m_context.setStrokeJoin(m_strokeJoin);
+    if (!m_dashPattern.empty()) {
+        BLArray<double> dashArray;
+        dashArray.clear();
+        for (double d : m_dashPattern) dashArray.append(d);
+        m_context.setStrokeDashArray(dashArray);
+        m_context.setStrokeDashOffset(m_dashOffset);
+    }
+    m_context.strokeLine(BLPoint(x1, y1), BLPoint(x2, y2));
+}
 
 void Blend2DRenderer::fill(const glm::vec4& color) {
     m_currentFillColor = color;
@@ -91,42 +110,62 @@ void Blend2DRenderer::setStrokeDashPattern(const std::vector<double>& dashes, do
     m_context.setStrokeDashOffset(offset);
 }
 
-void Blend2DRenderer::drawRect(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) {
-    BLRect rect(x, y, width, height);
-    if (m_hasFill) {
-        BLRgba32 fillC((uint8_t)(m_currentFillColor.r * 255), (uint8_t)(m_currentFillColor.g * 255), (uint8_t)(m_currentFillColor.b * 255), (uint8_t)(m_currentFillColor.a * 255));
-        m_context.setCompOp(BL_COMP_OP_SRC_OVER);
-        m_context.fillRect(rect, fillC);
-    }
-    if (m_hasStroke && m_currentStrokeWidth > 0.0f) {
-        BLRgba32 strokeC((uint8_t)(m_currentStrokeColor.r * 255), (uint8_t)(m_currentStrokeColor.g * 255), (uint8_t)(m_currentStrokeColor.b * 255), (uint8_t)(m_currentStrokeColor.a * 255));
-        m_context.setStrokeStyle(strokeC);
-        m_context.setStrokeWidth(m_currentStrokeWidth);
-        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
-        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
-        m_context.setStrokeJoin(m_strokeJoin);
-        if (!m_dashPattern.empty()) {
-            BLArray<double> dashArray;
-            dashArray.clear();
-            for (double d : m_dashPattern) dashArray.append(d);
-            m_context.setStrokeDashArray(dashArray);
-            m_context.setStrokeDashOffset(m_dashOffset);
-        }
-        m_context.strokeRect(rect);
+void Blend2DRenderer::setFillColor(const glm::vec4& color) {
+    m_fillColor = color;
+}
+
+void Blend2DRenderer::setStrokeColor(const glm::vec4& color) {
+    m_strokeColor = color;
+}
+
+void Blend2DRenderer::setStrokeWidth(float width) {
+    m_strokeWidth = width;
+}
+
+void Blend2DRenderer::drawRect(float x, float y, float width, float height) {
+    BLRgba32 fill(
+        uint8_t(m_fillColor.r * 255),
+        uint8_t(m_fillColor.g * 255),
+        uint8_t(m_fillColor.b * 255),
+        uint8_t(m_fillColor.a * 255)
+    );
+    BLRgba32 stroke(
+        uint8_t(m_strokeColor.r * 255),
+        uint8_t(m_strokeColor.g * 255),
+        uint8_t(m_strokeColor.b * 255),
+        uint8_t(m_strokeColor.a * 255)
+    );
+    m_context.setFillStyle(fill);
+    m_context.setStrokeStyle(stroke);
+    m_context.setStrokeWidth(m_strokeWidth);
+    m_context.fillRect(BLRect(x, y, width, height));
+    if (m_strokeWidth > 0.0f) {
+        m_context.strokeRect(BLRect(x, y, width, height));
     }
 }
 
-void Blend2DRenderer::drawCircle(float x, float y, float radius, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) {
+void Blend2DRenderer::drawCircle(float x, float y, float radius) {
     BLEllipse ellipse(x, y, radius, radius);
     if (m_hasFill) {
-        BLRgba32 fillC((uint8_t)(m_currentFillColor.r * 255), (uint8_t)(m_currentFillColor.g * 255), (uint8_t)(m_currentFillColor.b * 255), (uint8_t)(m_currentFillColor.a * 255));
+        BLRgba32 fillC(
+            uint8_t(m_fillColor.r * 255),
+            uint8_t(m_fillColor.g * 255),
+            uint8_t(m_fillColor.b * 255),
+            uint8_t(m_fillColor.a * 255)
+        );
         m_context.setCompOp(BL_COMP_OP_SRC_OVER);
-        m_context.fillEllipse(ellipse, fillC);
+        m_context.setFillStyle(fillC);
+        m_context.fillEllipse(ellipse);
     }
-    if (m_hasStroke && m_currentStrokeWidth > 0.0f) {
-        BLRgba32 strokeC((uint8_t)(m_currentStrokeColor.r * 255), (uint8_t)(m_currentStrokeColor.g * 255), (uint8_t)(m_currentStrokeColor.b * 255), (uint8_t)(m_currentStrokeColor.a * 255));
+    if (m_hasStroke && m_strokeWidth > 0.0f) {
+        BLRgba32 strokeC(
+            uint8_t(m_strokeColor.r * 255),
+            uint8_t(m_strokeColor.g * 255),
+            uint8_t(m_strokeColor.b * 255),
+            uint8_t(m_strokeColor.a * 255)
+        );
         m_context.setStrokeStyle(strokeC);
-        m_context.setStrokeWidth(m_currentStrokeWidth);
+        m_context.setStrokeWidth(m_strokeWidth);
         m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
         m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
         m_context.setStrokeJoin(m_strokeJoin);
@@ -141,17 +180,28 @@ void Blend2DRenderer::drawCircle(float x, float y, float radius, const glm::vec4
     }
 }
 
-void Blend2DRenderer::drawEllipse(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) {
+void Blend2DRenderer::drawEllipse(float x, float y, float width, float height) {
     BLEllipse ellipse(x, y, width * 0.5, height * 0.5);
     if (m_hasFill) {
-        BLRgba32 fillC((uint8_t)(m_currentFillColor.r * 255), (uint8_t)(m_currentFillColor.g * 255), (uint8_t)(m_currentFillColor.b * 255), (uint8_t)(m_currentFillColor.a * 255));
+        BLRgba32 fillC(
+            uint8_t(m_fillColor.r * 255),
+            uint8_t(m_fillColor.g * 255),
+            uint8_t(m_fillColor.b * 255),
+            uint8_t(m_fillColor.a * 255)
+        );
         m_context.setCompOp(BL_COMP_OP_SRC_OVER);
-        m_context.fillEllipse(ellipse, fillC);
+        m_context.setFillStyle(fillC);
+        m_context.fillEllipse(ellipse);
     }
-    if (m_hasStroke && m_currentStrokeWidth > 0.0f) {
-        BLRgba32 strokeC((uint8_t)(m_currentStrokeColor.r * 255), (uint8_t)(m_currentStrokeColor.g * 255), (uint8_t)(m_currentStrokeColor.b * 255), (uint8_t)(m_currentStrokeColor.a * 255));
+    if (m_hasStroke && m_strokeWidth > 0.0f) {
+        BLRgba32 strokeC(
+            uint8_t(m_strokeColor.r * 255),
+            uint8_t(m_strokeColor.g * 255),
+            uint8_t(m_strokeColor.b * 255),
+            uint8_t(m_strokeColor.a * 255)
+        );
         m_context.setStrokeStyle(strokeC);
-        m_context.setStrokeWidth(m_currentStrokeWidth);
+        m_context.setStrokeWidth(m_strokeWidth);
         m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
         m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
         m_context.setStrokeJoin(m_strokeJoin);
@@ -165,8 +215,88 @@ void Blend2DRenderer::drawEllipse(float x, float y, float width, float height, c
         m_context.strokeEllipse(ellipse);
     }
 }
-void Blend2DRenderer::drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) {}
-void Blend2DRenderer::drawPolygon(const std::vector<glm::vec2>& points, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) {}
+
+void Blend2DRenderer::drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) {
+    BLPath path;
+    path.moveTo(x1, y1);
+    path.lineTo(x2, y2);
+    path.lineTo(x3, y3);
+    path.close();
+    if (m_hasFill) {
+        BLRgba32 fillC(
+            uint8_t(m_fillColor.r * 255),
+            uint8_t(m_fillColor.g * 255),
+            uint8_t(m_fillColor.b * 255),
+            uint8_t(m_fillColor.a * 255)
+        );
+        m_context.setCompOp(BL_COMP_OP_SRC_OVER);
+        m_context.setFillStyle(fillC);
+        m_context.fillPath(path);
+    }
+    if (m_hasStroke && m_strokeWidth > 0.0f) {
+        BLRgba32 strokeC(
+            uint8_t(m_strokeColor.r * 255),
+            uint8_t(m_strokeColor.g * 255),
+            uint8_t(m_strokeColor.b * 255),
+            uint8_t(m_strokeColor.a * 255)
+        );
+        m_context.setStrokeStyle(strokeC);
+        m_context.setStrokeWidth(m_strokeWidth);
+        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
+        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
+        m_context.setStrokeJoin(m_strokeJoin);
+        if (!m_dashPattern.empty()) {
+            BLArray<double> dashArray;
+            dashArray.clear();
+            for (double d : m_dashPattern) dashArray.append(d);
+            m_context.setStrokeDashArray(dashArray);
+            m_context.setStrokeDashOffset(m_dashOffset);
+        }
+        m_context.strokePath(path);
+    }
+}
+
+void Blend2DRenderer::drawPolygon(const std::vector<glm::vec2>& points) {
+    if (points.size() < 3) return;
+    BLPath path;
+    path.moveTo(points[0].x, points[0].y);
+    for (size_t i = 1; i < points.size(); ++i) {
+        path.lineTo(points[i].x, points[i].y);
+    }
+    path.close();
+    if (m_hasFill) {
+        BLRgba32 fillC(
+            uint8_t(m_fillColor.r * 255),
+            uint8_t(m_fillColor.g * 255),
+            uint8_t(m_fillColor.b * 255),
+            uint8_t(m_fillColor.a * 255)
+        );
+        m_context.setCompOp(BL_COMP_OP_SRC_OVER);
+        m_context.setFillStyle(fillC);
+        m_context.fillPath(path);
+    }
+    if (m_hasStroke && m_strokeWidth > 0.0f) {
+        BLRgba32 strokeC(
+            uint8_t(m_strokeColor.r * 255),
+            uint8_t(m_strokeColor.g * 255),
+            uint8_t(m_strokeColor.b * 255),
+            uint8_t(m_strokeColor.a * 255)
+        );
+        m_context.setStrokeStyle(strokeC);
+        m_context.setStrokeWidth(m_strokeWidth);
+        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_START, m_strokeCap);
+        m_context.setStrokeCap(BL_STROKE_CAP_POSITION_END, m_strokeCap);
+        m_context.setStrokeJoin(m_strokeJoin);
+        if (!m_dashPattern.empty()) {
+            BLArray<double> dashArray;
+            dashArray.clear();
+            for (double d : m_dashPattern) dashArray.append(d);
+            m_context.setStrokeDashArray(dashArray);
+            m_context.setStrokeDashOffset(m_dashOffset);
+        }
+        m_context.strokePath(path);
+    }
+}
 
 void Blend2DRenderer::beginPath() {}
 void Blend2DRenderer::moveTo(float x, float y) {}
@@ -186,4 +316,9 @@ void Blend2DRenderer::scale(float sx, float sy) {}
 void Blend2DRenderer::resetMatrix() {}
 
 bool Blend2DRenderer::saveToFile(const std::string& filename) { return false; }
-bool Blend2DRenderer::saveToMemory(std::vector<uint8_t>& data) { return false; } 
+bool Blend2DRenderer::saveToMemory(std::vector<uint8_t>& data) { return false; }
+
+void Blend2DRenderer::flush() {
+    m_context.end();
+    m_context.begin(m_image);
+} 

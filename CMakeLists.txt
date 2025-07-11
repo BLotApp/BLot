@@ -68,6 +68,9 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui/backends)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor)
 
+# Add PortableFileDialogs include path
+include_directories(third_party/portable-file-dialogs)
+
 # Source files
 set(SOURCES
     src/main.cpp
@@ -82,7 +85,6 @@ set(SOURCES
     src/AddonManager.cpp
     src/ECSManager.cpp
     src/Renderer.cpp
-    src/OpenGLRenderer.cpp
     src/Blend2DRenderer.cpp
     src/NodeEditor.cpp
     src/VertexBuffer.cpp
@@ -179,3 +181,6 @@ target_include_directories(ImGuizmo PUBLIC ${IMGUIZMO_DIR})
 
 # Link ImGuizmo to your main app target (replace blot with your target name if different)
 target_link_libraries(blot PRIVATE ImGuizmo) 
+
+add_executable(blend2d_test blend2d_test.cpp)
+target_link_libraries(blend2d_test PRIVATE blend2d::blend2d) 

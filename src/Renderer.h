@@ -28,12 +28,12 @@ public:
     virtual void clear(const glm::vec4& color) = 0;
     
     // Drawing primitives
-    virtual void drawLine(float x1, float y1, float x2, float y2, float strokeWidth, const glm::vec4& color) = 0;
-    virtual void drawRect(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) = 0;
-    virtual void drawCircle(float x, float y, float radius, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) = 0;
-    virtual void drawEllipse(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) = 0;
-    virtual void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) = 0;
-    virtual void drawPolygon(const std::vector<glm::vec2>& points, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) = 0;
+    virtual void drawLine(float x1, float y1, float x2, float y2) = 0;
+    virtual void drawRect(float x, float y, float width, float height) = 0;
+    virtual void drawCircle(float x, float y, float radius) = 0;
+    virtual void drawEllipse(float x, float y, float width, float height) = 0;
+    virtual void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) = 0;
+    virtual void drawPolygon(const std::vector<glm::vec2>& points) = 0;
     
     // Path drawing
     virtual void beginPath() = 0;
@@ -56,6 +56,11 @@ public:
     virtual void rotate(float angle) = 0;
     virtual void scale(float sx, float sy) = 0;
     virtual void resetMatrix() = 0;
+    
+    // State setters
+    virtual void setFillColor(const glm::vec4& color) = 0;
+    virtual void setStrokeColor(const glm::vec4& color) = 0;
+    virtual void setStrokeWidth(float width) = 0;
     
     // Export
     virtual bool saveToFile(const std::string& filename) = 0;

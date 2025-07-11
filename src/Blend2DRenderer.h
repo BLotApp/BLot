@@ -21,12 +21,12 @@ public:
     void endFrame() override;
     void clear(const glm::vec4& color) override;
     
-    void drawLine(float x1, float y1, float x2, float y2, float strokeWidth, const glm::vec4& color) override;
-    void drawRect(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) override;
-    void drawCircle(float x, float y, float radius, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) override;
-    void drawEllipse(float x, float y, float width, float height, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) override;
-    void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) override;
-    void drawPolygon(const std::vector<glm::vec2>& points, const glm::vec4& fillColor, const glm::vec4& strokeColor, float strokeWidth) override;
+    void drawLine(float x1, float y1, float x2, float y2) override;
+    void drawRect(float x, float y, float width, float height) override;
+    void drawCircle(float x, float y, float radius) override;
+    void drawEllipse(float x, float y, float width, float height) override;
+    void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
+    void drawPolygon(const std::vector<glm::vec2>& points) override;
     
     void beginPath() override;
     void moveTo(float x, float y) override;
@@ -59,6 +59,13 @@ public:
     void setStrokeCap(BLStrokeCap cap);
     void setStrokeJoin(BLStrokeJoin join);
     void setStrokeDashPattern(const std::vector<double>& dashes, double offset = 0.0);
+    void setFillColor(const glm::vec4& color) override;
+    void setStrokeColor(const glm::vec4& color) override;
+    void setStrokeWidth(float width) override;
+    void flush();
+
+    // Add this public getter for the BLImage
+    const BLImage& getImage() const { return m_image; }
 
 private:
     void setupContext();
@@ -92,4 +99,7 @@ private:
     BLStrokeJoin m_strokeJoin = BL_STROKE_JOIN_ROUND;
     std::vector<double> m_dashPattern;
     double m_dashOffset = 0.0;
+    glm::vec4 m_fillColor = glm::vec4(1,1,1,1);
+    glm::vec4 m_strokeColor = glm::vec4(0,0,0,1);
+    float m_strokeWidth = 1.0f;
 }; 

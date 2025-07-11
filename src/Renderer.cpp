@@ -1,13 +1,12 @@
 #include <memory>
 #include <map>
 #include "Renderer.h"
-#include "OpenGLRenderer.h"
 #include "Blend2DRenderer.h"
 
 std::unique_ptr<IRenderer> createRenderer(RendererType type) {
     switch (type) {
-        case RendererType::OpenGL:
-            return std::make_unique<OpenGLRenderer>();
+        //case RendererType::OpenGL:
+        //    return std::make_unique<OpenGLRenderer>();
         case RendererType::Blend2D:
             return std::make_unique<Blend2DRenderer>();
         default:

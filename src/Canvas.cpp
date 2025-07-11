@@ -2,6 +2,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Canvas.h"
 #include "Graphics.h"
+#include "Blend2DRenderer.h"
+#include <filesystem>
 
 struct Canvas::Impl {
 	GLuint framebuffer = 0;
@@ -12,27 +14,28 @@ struct Canvas::Impl {
 	GLuint VBO = 0;
 };
 
-Canvas::Canvas(int width, int height)
-	: m_width(width)
-	, m_height(height)
-	, m_impl(std::make_unique<Impl>())
-	, m_graphics(std::make_shared<Graphics>())
-	, m_hasFill(true)
-	, m_hasStroke(true)
-	, m_fillColor(1.0f, 1.0f, 1.0f, 1.0f)
-	, m_strokeColor(0.0f, 0.0f, 0.0f, 1.0f)
-	, m_strokeWeight(1.0f)
-	, m_textSize(12.0f)
-	, m_textAlign(0)
-	, m_time(0.0f)
-	, m_frameRate(60.0f)
-	, m_frameCount(0)
+Canvas::Canvas(int width, int height, std::shared_ptr<Graphics> graphics)
+    : m_width(width)
+    , m_height(height)
+    , m_impl(std::make_unique<Impl>())
+    , m_graphics(graphics)
+    , m_hasFill(true)
+    , m_hasStroke(true)
+    , m_fillColor(1.0f, 1.0f, 1.0f, 1.0f)
+    , m_strokeColor(0.0f, 0.0f, 0.0f, 1.0f)
+    , m_strokeWeight(1.0f)
+    , m_textSize(12.0f)
+    , m_textAlign(0)
+    , m_time(0.0f)
+    , m_frameRate(60.0f)
+    , m_frameCount(0)
 {
-	m_currentMatrix = glm::mat4(1.0f);
-	initFramebuffer();
-	initShaders();
-	// Set default background to white
-	clear(1.0f, 1.0f, 1.0f, 1.0f);
+    m_currentMatrix = glm::mat4(1.0f);
+    m_graphics->setCanvasSize(m_width, m_height);
+    initFramebuffer();
+    initShaders();
+    // Set default background to white
+    clear(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 Canvas::~Canvas() {
@@ -59,6 +62,7 @@ Canvas::~Canvas() {
 void Canvas::resize(int width, int height) {
 	m_width = width;
 	m_height = height;
+	m_graphics->setCanvasSize(m_width, m_height);
 	initFramebuffer();
 	// Set default background to white after resize
 	clear(1.0f, 1.0f, 1.0f, 1.0f);
@@ -194,16 +198,50 @@ void Canvas::update(float deltaTime) {
 }
 
 void Canvas::render() {
-    // Always draw a red circle at (10, 10) for testing
+    // Draw a simple filled rectangle using Blend2D
     if (m_graphics) {
-        m_graphics->setFillColor(1.0f, 0.0f, 0.0f, 1.0f);
-        m_graphics->drawEllipse(10, 10, 50, 50);
+        m_graphics->setFillColor(1.0f, 0.0f, 0.0f, 1.0f); // bright red
+        m_graphics->rect(10, 10, 500, 500);
+    }
+    // Upload Blend2D image to OpenGL texture
+    Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());
+    if (renderer) {
+        const BLImage& img = renderer->getImage();
+        BLImageData imgData;
+        if (img.getData(&imgData) == BL_SUCCESS) {
+            glBindTexture(GL_TEXTURE_2D, m_impl->colorTexture);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.width(), img.height(), GL_BGRA, GL_UNSIGNED_BYTE, imgData.pixelData);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        // Debug: Save the image after drawing
+        renderer->flush();
+        img.writeToFile("debug_after_render.png");
     }
 }
 
 void Canvas::saveFrame(const std::string& filename) {
-	// Implementation for saving the current frame
-	(void)filename;
+    if (m_graphics) {
+        Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());
+        if (renderer) {
+            renderer->flush();
+            const BLImage& img = renderer->getImage();
+            printf("[Canvas] Image info: %p size: %d x %d, format: %u, empty: %d\n", (void*)&img, img.width(), img.height(), img.format(), img.empty());
+            std::string outFile = filename;
+            if (std::filesystem::path(outFile).extension().empty()) {
+                outFile += ".png";
+            }
+            BLResult res = img.writeToFile(outFile.c_str());
+            if (res == BL_SUCCESS) {
+                printf("[Canvas] Saved Blend2D image to: %s\n", outFile.c_str());
+            } else {
+                printf("[Canvas] ERROR: Failed to save Blend2D image to: %s (error code: %d)\n", outFile.c_str(), res);
+            }
+        } else {
+            printf("[Canvas] ERROR: Renderer is not Blend2DRenderer.\n");
+        }
+    } else {
+        printf("[Canvas] ERROR: m_graphics is null.\n");
+    }
 }
 
 void Canvas::exportSVG(const std::string& filename) {

@@ -10,6 +10,7 @@ class Graphics;
 class Canvas {
 public:
     Canvas(int width, int height);
+    Canvas(int width, int height, std::shared_ptr<Graphics> graphics);
     ~Canvas();
     
     void resize(int width, int height);
@@ -57,7 +58,7 @@ public:
     // Getters
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
-    std::shared_ptr<Graphics> getGraphics() const { return m_graphics; }
+    std::shared_ptr<Graphics> getGraphics() { return m_graphics; }
     unsigned int getColorTexture() const;
     
 private:

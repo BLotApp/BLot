@@ -46,7 +46,7 @@ private:
     
     // Creative coding components
     std::unique_ptr<Canvas> m_canvas;
-    std::unique_ptr<Graphics> m_graphics;
+    std::shared_ptr<Graphics> m_graphics;
     std::unique_ptr<CodeEditor> m_codeEditor;
     std::unique_ptr<ScriptEngine> m_scriptEngine;
     
