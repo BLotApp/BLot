@@ -67,9 +67,16 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui/backends)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui_markdown)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit)
 
 # Add PortableFileDialogs include path
 include_directories(third_party/portable-file-dialogs)
+
+# Add ImPlot and ImPlot3D include directories
+include_directories(${CMAKE_SOURCE_DIR}/third_party/implot)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/implot3d)
 
 # Source files
 set(SOURCES
@@ -89,6 +96,16 @@ set(SOURCES
     src/ecs/ECSManager.cpp
     src/node/NodeEditor.cpp
     src/scripting/ScriptEngine.cpp
+    # ImPlot sources
+    third_party/implot/implot.cpp
+    third_party/implot/implot_items.cpp
+    third_party/implot/implot_demo.cpp
+    # ImPlot3D sources
+    third_party/implot3d/implot3d.cpp
+    third_party/implot3d/implot3d_items.cpp
+    third_party/implot3d/implot3d_demo.cpp
+    third_party/implot3d/implot3d_meshes.cpp
+    third_party/ImGuiColorTextEdit/TextEditor.cpp
 )
 
 # ImGui sources (submodule)
@@ -154,6 +171,8 @@ target_include_directories(blot PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party/imgui/backends
     ${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor
     ${CMAKE_SOURCE_DIR}/third_party/json/single_include
+    ${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser
+    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
 )
 
 # Compiler flags

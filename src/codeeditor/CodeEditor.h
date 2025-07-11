@@ -5,6 +5,7 @@
 #include <memory>
 #include "imgui.h"
 #include <functional>
+#include "TextEditor.h"
 
 class CodeEditor {
 public:
@@ -39,7 +40,7 @@ private:
     void applySyntaxHighlighting();
     
     // Editor state
-    std::string m_code;
+    std::unique_ptr<TextEditor> m_editor;
     std::string m_language;
     std::string m_theme;
     float m_fontSize;
@@ -76,4 +77,7 @@ private:
     std::string m_processingTemplate;
     std::string m_drawbotTemplate;
     std::string m_openframeworksTemplate;
+    
+    // Code buffer
+    std::string m_code;
 }; 

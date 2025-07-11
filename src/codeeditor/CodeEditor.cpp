@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "TextEditor.h"
 
 CodeEditor::CodeEditor()
     : m_language("cpp")
@@ -16,8 +17,11 @@ CodeEditor::CodeEditor()
     , m_cursorPos(0)
     , m_selectionStart(0)
     , m_selectionEnd(0)
+    , m_editor(std::make_unique<TextEditor>())
 {
     loadDefaultTemplate();
+    m_editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
+    m_editor->SetText(m_defaultTemplate);
 }
 
 CodeEditor::~CodeEditor() {
@@ -69,31 +73,13 @@ void CodeEditor::renderToolbar() {
 
 void CodeEditor::renderEditor() {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-    
-    // Set up text input flags
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
-    if (m_wordWrap) {
-        flags |= ImGuiInputTextFlags_EnterReturnsTrue;
-    }
-    
-    // Create a buffer for the text
-    static char buffer[65536];
-    strncpy(buffer, m_code.c_str(), sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
-    
-    // Render the text input
-    if (ImGui::InputTextMultiline("##code", buffer, sizeof(buffer), 
-                                  ImVec2(-1, -1), flags)) {
-        std::string newCode(buffer);
-        if (newCode != m_code) {
-            m_code = newCode;
-            m_isModified = true;
-            if (m_onCodeChanged) {
-                m_onCodeChanged(m_code);
-            }
+    m_editor->Render("CodeEditor", ImVec2(-1, -1), m_lineNumbers);
+    if (m_editor->IsTextChanged()) {
+        m_isModified = true;
+        if (m_onCodeChanged) {
+            m_onCodeChanged(m_editor->GetText());
         }
     }
-    
     ImGui::PopStyleVar();
 }
 
@@ -108,32 +94,43 @@ void CodeEditor::renderStatusBar() {
 }
 
 void CodeEditor::setCode(const std::string& code) {
-    m_code = code;
-    m_isModified = false;
+    if (m_editor) {
+        m_editor->SetText(code);
+        m_isModified = false;
+    }
 }
 
 std::string CodeEditor::getCode() const {
-    return m_code;
+    if (m_editor) {
+        return m_editor->GetText();
+    }
+    return std::string();
 }
 
 void CodeEditor::newSketch() {
-    m_code = m_defaultTemplate;
-    m_currentFile = "";
-    m_isModified = false;
+    if (m_editor) {
+        m_editor->SetText(m_defaultTemplate);
+        m_currentFile = "";
+        m_isModified = false;
+    }
 }
 
 void CodeEditor::openSketch() {
     // In a real implementation, this would open a file dialog
     // For now, we'll just load a sample sketch
-    m_code = m_processingTemplate;
-    m_currentFile = "sketch.cpp";
-    m_isModified = false;
+    if (m_editor) {
+        m_editor->SetText(m_processingTemplate);
+        m_currentFile = "sketch.cpp";
+        m_isModified = false;
+    }
 }
 
 void CodeEditor::loadOpenFrameworksTemplate() {
-    m_code = m_openframeworksTemplate;
-    m_currentFile = "openframeworks_sketch.cpp";
-    m_isModified = false;
+    if (m_editor) {
+        m_editor->SetText(m_openframeworksTemplate);
+        m_currentFile = "openframeworks_sketch.cpp";
+        m_isModified = false;
+    }
 }
 
 void CodeEditor::saveSketch() {

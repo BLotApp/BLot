@@ -32,6 +32,7 @@ namespace ed = ax::NodeEditor;
 #include <unordered_map>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <string>
 
 #include "../assets/fonts/fontRobotoRegular.h"
 #include "rendering/Blend2DRenderer.h"
@@ -45,10 +46,27 @@ namespace ed = ax::NodeEditor;
 #include "components/TextureComponent.h"
 #include "systems/CanvasUpdateSystem.h"
 
+#include "implot.h"
+#include "implot3d.h"
+
+#include "imgui_markdown.h"
+#include "imfilebrowser.h"
+
 enum class ToolType { Select, Rectangle, Ellipse, Line };
 ToolType m_currentTool = ToolType::Select;
 ImVec2 m_toolStartPos = ImVec2(0,0);
 bool m_toolActive = false;
+
+// Add a member variable to control ImPlot demo window visibility
+static bool showImPlotDemo = false;
+static bool showImGuiMarkdownDemo = false;
+static bool showMarkdownEditor = false;
+static bool showMarkdownViewer = false;
+static std::string markdownEditorBuffer;
+static std::string loadedMarkdownPath;
+static std::string loadedMarkdown;
+
+bool showFileBrowser = false;
 
 BlotApp::BlotApp() 
     : m_window(nullptr)
@@ -303,6 +321,20 @@ void BlotApp::renderUI() {
             if (ImGui::MenuItem("Quit.")) {
                 m_running = false;
             }
+            // Add Samples submenu
+            if (ImGui::BeginMenu("Samples")) {
+                if (ImGui::MenuItem("ImPlot")) {
+                    showImPlotDemo = true;
+                }
+                if (ImGui::MenuItem("ImGui Markdown Demo")) {
+                    showImGuiMarkdownDemo = true;
+                }
+                if (ImGui::MenuItem("Markdown Editor/Viewer")) {
+                    showMarkdownEditor = true;
+                    showMarkdownViewer = true;
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Renderer")) {
@@ -382,6 +414,27 @@ void BlotApp::renderUI() {
                     }
                 }
             }
+            if (ImGui::MenuItem("Open Markdown...")) {
+                auto result = pfd::open_file("Open Markdown File", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
+                if (!result.empty()) {
+                    std::ifstream in(result[0]);
+                    if (in) {
+                        markdownEditorBuffer.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                        loadedMarkdownPath = result[0];
+                        showImGuiMarkdownDemo = true;
+                    }
+                }
+            }
+            if (ImGui::MenuItem("Save Markdown As...")) {
+                auto result = pfd::save_file("Save Markdown As", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
+                if (!result.empty() && !markdownEditorBuffer.empty()) {
+                    std::ofstream out(result);
+                    if (out) {
+                        out << markdownEditorBuffer;
+                        loadedMarkdownPath = result;
+                    }
+                }
+            }
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
                 m_running = false;
@@ -399,6 +452,7 @@ void BlotApp::renderUI() {
             ImGui::MenuItem("Addon Manager", nullptr, &m_showAddonManager);
             ImGui::MenuItem("Node Editor", nullptr, &m_showNodeEditor);
             ImGui::MenuItem("ImGui Demo", nullptr, &m_showDemoWindow);
+            ImGui::MenuItem("File Browser", nullptr, &showFileBrowser);
             ImGui::EndMenu();
         }
         
@@ -443,6 +497,15 @@ void BlotApp::renderUI() {
     if (m_showCodeEditor) {
         ImGui::Begin("Code Editor", &m_showCodeEditor);
         m_codeEditor->render();
+        ImGui::End();
+    }
+    
+    // File Browser Window
+    if (showFileBrowser) {
+        ImGui::Begin("File Browser", &showFileBrowser);
+        // Use ImGui::FileBrowser for the file dialog
+        static ImGui::FileBrowser fileDialog;
+        fileDialog.Display();
         ImGui::End();
     }
     
@@ -710,8 +773,56 @@ void BlotApp::renderUI() {
         ImGui::ShowDemoWindow(&m_showDemoWindow);
     }
 
+    if (showImGuiMarkdownDemo) {
+        ImGui::Begin("ImGui Markdown Demo", &showImGuiMarkdownDemo);
+        ImGui::MarkdownConfig mdConfig; // Use default config or customize as needed
+        if (!loadedMarkdown.empty()) {
+            ImGui::Markdown(loadedMarkdown.c_str(), loadedMarkdown.size(), mdConfig);
+        } else {
+            static const char* markdown =
+                "# ImGui Markdown Demo\n"
+                "This is a **markdown** _demo_ for [ImGui Markdown](https://github.com/enkisoftware/imgui_markdown).\n\n"
+                "- Bullet 1\n"
+                "- Bullet 2\n\n"
+                "`inline code`\n\n"
+                "[ImPlot](https://github.com/epezent/implot)\n";
+            ImGui::Markdown(markdown, strlen(markdown), mdConfig);
+        }
+        ImGui::End();
+    }
+
     if (m_showThemeEditor) {
         renderThemeEditor();
+    }
+
+    if (showImPlotDemo) {
+        ImPlot::ShowDemoWindow(&showImPlotDemo);
+    }
+
+    // Markdown Editor/Viewer windows (docked)
+    if (showMarkdownEditor || showMarkdownViewer) {
+        ImGui::SetNextWindowDockID(ImGui::GetID("MarkdownDockSpace"), ImGuiCond_Once);
+        ImGui::DockSpace(ImGui::GetID("MarkdownDockSpace"), ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
+    }
+    if (showMarkdownEditor) {
+        ImGui::SetNextWindowDockID(ImGui::GetID("MarkdownDockSpace"), ImGuiCond_Once);
+        ImGui::Begin("Markdown Editor", &showMarkdownEditor);
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackResize;
+        static std::vector<char> buffer;
+        if (buffer.empty() || buffer.size() < markdownEditorBuffer.size() + 1024) buffer.resize(markdownEditorBuffer.size() + 1024);
+        std::copy(markdownEditorBuffer.begin(), markdownEditorBuffer.end(), buffer.begin());
+        buffer[markdownEditorBuffer.size()] = '\0';
+        if (ImGui::InputTextMultiline("##MarkdownEdit", buffer.data(), buffer.size(), ImVec2(-1, -1), flags)) {
+            markdownEditorBuffer = buffer.data();
+        }
+        ImGui::End();
+    }
+    if (showMarkdownViewer) {
+        ImGui::SetNextWindowDockID(ImGui::GetID("MarkdownDockSpace"), ImGuiCond_Once);
+        ImGui::Begin("Markdown Viewer", &showMarkdownViewer);
+        ImGui::MarkdownConfig mdConfig; // Use default config or customize as needed
+        ImGui::Markdown(markdownEditorBuffer.c_str(), markdownEditorBuffer.size(), mdConfig);
+        ImGui::End();
     }
 }
 
