@@ -1,5 +1,7 @@
 # BLot
 
+![preview](screenshots/blot_0001.png)
+
 BLot (Pronounced Beelot) is a small creative coding app inspired by DrawBot and OpenFrameworks.
 
 ### Dependencies
