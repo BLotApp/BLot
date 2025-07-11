@@ -41,6 +41,9 @@ namespace ed = ax::NodeEditor;
 #include <windows.h>
 #endif
 
+#include "ECSManager.h"
+#include "components/TextureComponent.h"
+
 enum class ToolType { Select, Rectangle, Ellipse, Line };
 ToolType m_currentTool = ToolType::Select;
 ImVec2 m_toolStartPos = ImVec2(0,0);
@@ -178,8 +181,23 @@ void BlotApp::initGraphics() {
     m_currentRenderer = std::make_unique<Blend2DRenderer>();
     m_currentRenderer->initialize(m_windowWidth, m_windowHeight);
     m_graphics->setRenderer(m_currentRenderer.get());
-    // Create a default canvas via the manager
-    m_activeCanvasId = m_canvasManager.addCanvas(m_windowWidth, m_windowHeight);
+    // Create a default canvas as an ECS entity and resources
+    m_activeCanvasId = m_ecs.createEntity();
+    TextureComponent texComp;
+    texComp.width = m_windowWidth;
+    texComp.height = m_windowHeight;
+    texComp.renderTarget = true;
+    // texComp.textureId will be set by resource manager
+    m_ecs.addComponent<TextureComponent>(m_activeCanvasId, texComp);
+    // Create resources for this canvas entity
+    auto renderer = std::make_unique<Blend2DRenderer>();
+    renderer->initialize(m_windowWidth, m_windowHeight);
+    auto graphics = std::make_shared<Graphics>();
+    graphics->setRenderer(renderer.get());
+    auto canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, graphics);
+    m_rendererResources[m_activeCanvasId] = std::move(renderer);
+    m_graphicsResources[m_activeCanvasId] = graphics;
+    m_canvasResources[m_activeCanvasId] = std::move(canvas);
     
     // Run the default sketch on launch
     m_scriptEngine->runCode(m_codeEditor->getCode());
@@ -300,25 +318,44 @@ void BlotApp::renderUI() {
         if (ImGui::BeginMenu("Canvases")) {
             if (ImGui::MenuItem("New Canvas")) {
                 int w = 1280, h = 720;
-                EntityID newId = m_canvasManager.addCanvas(w, h);
+                auto newId = m_ecs.createEntity();
+                TextureComponent texComp;
+                texComp.width = w;
+                texComp.height = h;
+                texComp.renderTarget = true;
+                m_ecs.addComponent<TextureComponent>(newId, texComp);
+                // Create resources for this canvas entity
+                auto renderer = std::make_unique<Blend2DRenderer>();
+                renderer->initialize(w, h);
+                auto graphics = std::make_shared<Graphics>();
+                graphics->setRenderer(renderer.get());
+                auto canvas = std::make_unique<Canvas>(w, h, graphics);
+                m_rendererResources[newId] = std::move(renderer);
+                m_graphicsResources[newId] = graphics;
+                m_canvasResources[newId] = std::move(canvas);
                 m_activeCanvasId = newId;
             }
             ImGui::Separator();
-            for (const auto& [id, comp] : m_canvasManager.getAll()) {
+            auto view = m_ecs.view<TextureComponent>();
+            for (auto entity : view) {
+                auto& texComp = view.get<TextureComponent>(entity);
                 char label[64];
-                snprintf(label, sizeof(label), "Canvas %d%s", id, (id == m_activeCanvasId ? " (active)" : ""));
-                if (ImGui::Selectable(label, id == m_activeCanvasId)) {
-                    m_activeCanvasId = id;
+                snprintf(label, sizeof(label), "Canvas %d%s", (int)entity, (entity == m_activeCanvasId ? " (active)" : ""));
+                if (ImGui::Selectable(label, entity == m_activeCanvasId)) {
+                    m_activeCanvasId = entity;
                 }
                 ImGui::SameLine();
-                if (ImGui::SmallButton((std::string("x##close_") + std::to_string(id)).c_str())) {
-                    m_canvasManager.removeCanvas(id);
-                    if (m_activeCanvasId == id) {
-                        // Pick another canvas as active
-                        if (!m_canvasManager.getAll().empty())
-                            m_activeCanvasId = m_canvasManager.getAll().begin()->first;
+                if (ImGui::SmallButton((std::string("x##close_") + std::to_string((int)entity)).c_str())) {
+                    m_ecs.destroyEntity(entity);
+                    m_rendererResources.erase(entity);
+                    m_graphicsResources.erase(entity);
+                    m_canvasResources.erase(entity);
+                    if (m_activeCanvasId == entity) {
+                        auto all = m_ecs.view<TextureComponent>();
+                        if (!all.empty())
+                            m_activeCanvasId = *all.begin();
                         else
-                            m_activeCanvasId = 0;
+                            m_activeCanvasId = entt::null;
                     }
                     break;
                 }
@@ -337,8 +374,11 @@ void BlotApp::renderUI() {
             }
             if (ImGui::MenuItem("Save As...")) {
                 auto result = pfd::save_file("Save Canvas As", ".", {"PNG Files (*.png)", "*.png", "All Files", "*"}).result();
-                if (!result.empty() && m_canvasManager.getCanvas(m_activeCanvasId)) {
-                    m_canvasManager.getCanvas(m_activeCanvasId)->canvas->saveFrame(result);
+                if (!result.empty() && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
+                    auto it = m_canvasResources.find(m_activeCanvasId);
+                    if (it != m_canvasResources.end()) {
+                        it->second->saveFrame(result);
+                    }
                 }
             }
             ImGui::Separator();
@@ -408,89 +448,93 @@ void BlotApp::renderUI() {
     // Canvas Window
     if (m_showCanvas) {
         ImGui::Begin("Canvas", &m_showCanvas);
-        auto* comp = m_canvasManager.getCanvas(m_activeCanvasId);
-        if (comp && comp->canvas) {
-            ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-            ImVec2 canvas_size = ImVec2((float)comp->canvas->getWidth(), (float)comp->canvas->getHeight());
+        if (m_activeCanvasId != entt::null && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
+            auto& texComp = m_ecs.getComponent<TextureComponent>(m_activeCanvasId);
+            auto it = m_canvasResources.find(m_activeCanvasId);
+            if (it != m_canvasResources.end()) {
+                Canvas* canvas = it->second.get();
+                ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
+                ImVec2 canvas_size = ImVec2((float)texComp.width, (float)texComp.height);
 
-            // UI controls
-            if (ImGui::Button("Reset View")) {
-                comp->zoom = 1.0f;
-                comp->offset = glm::vec2(0.0f, 0.0f);
-            }
-            ImGui::SameLine();
-            ImGui::Checkbox("Show Rulers", &comp->showRulers);
-            ImGui::SameLine();
-            ImGui::Checkbox("Show Guides", &comp->showGuides);
-
-            // Add guide UI
-            if (comp->showGuides) {
-                static float guidePos = 100.0f;
-                static bool vertical = true;
-                static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-                ImGui::InputFloat("Guide Position", &guidePos);
-                ImGui::Checkbox("Vertical", &vertical);
-                ImGui::ColorEdit4("Guide Color", color);
-                if (ImGui::Button("Add Guide")) {
-                    comp->guides.push_back({guidePos, vertical, glm::vec4(color[0], color[1], color[2], color[3])});
+                // UI controls
+                if (ImGui::Button("Reset View")) {
+                    texComp.zoom = 1.0f;
+                    texComp.offset = glm::vec2(0.0f, 0.0f);
                 }
-                if (!comp->guides.empty()) {
-                    ImGui::SameLine();
-                    if (ImGui::Button("Clear Guides")) {
-                        comp->guides.clear();
+                ImGui::SameLine();
+                ImGui::Checkbox("Show Rulers", &texComp.showRulers);
+                ImGui::SameLine();
+                ImGui::Checkbox("Show Guides", &texComp.showGuides);
+
+                // Add guide UI
+                if (texComp.showGuides) {
+                    static float guidePos = 100.0f;
+                    static bool vertical = true;
+                    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+                    ImGui::InputFloat("Guide Position", &guidePos);
+                    ImGui::Checkbox("Vertical", &vertical);
+                    ImGui::ColorEdit4("Guide Color", color);
+                    if (ImGui::Button("Add Guide")) {
+                        texComp.guides.push_back({guidePos, vertical, glm::vec4(color[0], color[1], color[2], color[3])});
+                    }
+                    if (!texComp.guides.empty()) {
+                        ImGui::SameLine();
+                        if (ImGui::Button("Clear Guides")) {
+                            texComp.guides.clear();
+                        }
                     }
                 }
-            }
 
-            // Handle zoom with mouse wheel
-            if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y))) {
-                float wheel = ImGui::GetIO().MouseWheel;
-                if (wheel != 0.0f) {
-                    float zoom_factor = 1.1f;
-                    if (wheel > 0) comp->zoom *= zoom_factor;
-                    if (wheel < 0) comp->zoom /= zoom_factor;
-                    comp->zoom = std::clamp(comp->zoom, 0.1f, 10.0f);
+                // Handle zoom with mouse wheel
+                if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y))) {
+                    float wheel = ImGui::GetIO().MouseWheel;
+                    if (wheel != 0.0f) {
+                        float zoom_factor = 1.1f;
+                        if (wheel > 0) texComp.zoom *= zoom_factor;
+                        if (wheel < 0) texComp.zoom /= zoom_factor;
+                        texComp.zoom = std::clamp(texComp.zoom, 0.1f, 10.0f);
+                    }
+                    // Pan with middle mouse drag
+                    if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
+                        ImVec2 delta = ImGui::GetIO().MouseDelta;
+                        texComp.offset.x += delta.x;
+                        texComp.offset.y += delta.y;
+                    }
                 }
-                // Pan with middle mouse drag
-                if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
-                    ImVec2 delta = ImGui::GetIO().MouseDelta;
-                    comp->offset.x += delta.x;
-                    comp->offset.y += delta.y;
+
+                // Draw the canvas texture with zoom and pan
+                ImVec2 uv0 = ImVec2(0, 1);
+                ImVec2 uv1 = ImVec2(1, 0);
+                ImVec2 center = ImVec2(canvas_pos.x + canvas_size.x * 0.5f, canvas_pos.y + canvas_size.y * 0.5f);
+                ImVec2 draw_size = ImVec2(canvas_size.x * texComp.zoom, canvas_size.y * texComp.zoom);
+                ImVec2 draw_pos = ImVec2(center.x - draw_size.x * 0.5f + texComp.offset.x, center.y - draw_size.y * 0.5f + texComp.offset.y);
+
+                ImTextureID tex_id = (ImTextureID)(intptr_t)canvas->getColorTexture();
+                ImGui::SetCursorScreenPos(draw_pos);
+                ImGui::Image(tex_id, draw_size, uv0, uv1);
+
+                // Draw rulers
+                if (texComp.showRulers) {
+                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                    float ruler_thickness = 1.0f;
+                    ImU32 ruler_color = IM_COL32(200, 200, 200, 255);
+                    // Top ruler
+                    draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x + draw_size.x, draw_pos.y), ruler_color, ruler_thickness);
+                    // Left ruler
+                    draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x, draw_pos.y + draw_size.y), ruler_color, ruler_thickness);
                 }
-            }
-
-            // Draw the canvas texture with zoom and pan
-            ImVec2 uv0 = ImVec2(0, 1);
-            ImVec2 uv1 = ImVec2(1, 0);
-            ImVec2 center = ImVec2(canvas_pos.x + canvas_size.x * 0.5f, canvas_pos.y + canvas_size.y * 0.5f);
-            ImVec2 draw_size = ImVec2(canvas_size.x * comp->zoom, canvas_size.y * comp->zoom);
-            ImVec2 draw_pos = ImVec2(center.x - draw_size.x * 0.5f + comp->offset.x, center.y - draw_size.y * 0.5f + comp->offset.y);
-
-            ImTextureID tex_id = (ImTextureID)(intptr_t)comp->canvas->getColorTexture();
-            ImGui::SetCursorScreenPos(draw_pos);
-            ImGui::Image(tex_id, draw_size, uv0, uv1);
-
-            // Draw rulers
-            if (comp->showRulers) {
-                ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                float ruler_thickness = 1.0f;
-                ImU32 ruler_color = IM_COL32(200, 200, 200, 255);
-                // Top ruler
-                draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x + draw_size.x, draw_pos.y), ruler_color, ruler_thickness);
-                // Left ruler
-                draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x, draw_pos.y + draw_size.y), ruler_color, ruler_thickness);
-            }
-            // Draw guides
-            if (comp->showGuides) {
-                ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                for (const auto& guide : comp->guides) {
-                    ImU32 guide_color = ImGui::ColorConvertFloat4ToU32(ImVec4(guide.color.r, guide.color.g, guide.color.b, guide.color.a));
-                    if (guide.vertical) {
-                        float x = draw_pos.x + guide.position * comp->zoom;
-                        draw_list->AddLine(ImVec2(x, draw_pos.y), ImVec2(x, draw_pos.y + draw_size.y), guide_color, 2.0f);
-                    } else {
-                        float y = draw_pos.y + guide.position * comp->zoom;
-                        draw_list->AddLine(ImVec2(draw_pos.x, y), ImVec2(draw_pos.x + draw_size.x, y), guide_color, 2.0f);
+                // Draw guides
+                if (texComp.showGuides) {
+                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                    for (const auto& guide : texComp.guides) {
+                        ImU32 guide_color = ImGui::ColorConvertFloat4ToU32(ImVec4(guide.color.r, guide.color.g, guide.color.b, guide.color.a));
+                        if (guide.vertical) {
+                            float x = draw_pos.x + guide.position * texComp.zoom;
+                            draw_list->AddLine(ImVec2(x, draw_pos.y), ImVec2(x, draw_pos.y + draw_size.y), guide_color, 2.0f);
+                        } else {
+                            float y = draw_pos.y + guide.position * texComp.zoom;
+                            draw_list->AddLine(ImVec2(draw_pos.x, y), ImVec2(draw_pos.x + draw_size.x, y), guide_color, 2.0f);
+                        }
                     }
                 }
             }
@@ -672,9 +716,11 @@ void BlotApp::renderUI() {
 
 void BlotApp::renderCanvas() {
     // Render only the active canvas if it exists
-    auto* comp = m_canvasManager.getCanvas(m_activeCanvasId);
-    if (comp && comp->canvas) {
-        comp->canvas->render();
+    if (m_activeCanvasId != entt::null && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
+        auto it = m_canvasResources.find(m_activeCanvasId);
+        if (it != m_canvasResources.end()) {
+            it->second->render();
+        }
     }
 }
 
@@ -839,10 +885,8 @@ void BlotApp::handleInput() {
 
 void BlotApp::update() {
     // Update application logic
-    m_canvasManager.updateAll(m_deltaTime);
+    CanvasUpdateSystem(m_ecs, m_canvasResources, m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
-    
-    // Update addons
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);
     }
@@ -942,4 +986,25 @@ void BlotApp::saveCurrentTheme(const std::string& path) {
     }
     std::ofstream out(path);
     out << j.dump(2);
+} 
+
+// ECS-style system: update all canvases
+void CanvasUpdateSystem(ECSManager& ecs, std::unordered_map<entt::entity, std::unique_ptr<Canvas>>& canvasResources, float deltaTime) {
+    auto view = ecs.view<TextureComponent>();
+    for (auto entity : view) {
+        auto it = canvasResources.find(entity);
+        if (it != canvasResources.end()) {
+            it->second->update(deltaTime);
+        }
+    }
+}
+
+// ECS-style system: render all canvases (optionally, only active)
+void CanvasRenderSystem(ECSManager& ecs, std::unordered_map<entt::entity, std::unique_ptr<Canvas>>& canvasResources, entt::entity activeCanvasId) {
+    if (activeCanvasId != entt::null && ecs.hasComponent<TextureComponent>(activeCanvasId)) {
+        auto it = canvasResources.find(activeCanvasId);
+        if (it != canvasResources.end()) {
+            it->second->render();
+        }
+    }
 } 

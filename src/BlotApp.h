@@ -7,7 +7,9 @@
 #include "imgui.h"
 #include "Renderer.h"
 #include "ImGuiRenderer.h"
-#include "CanvasManager.h"
+#include "ECSManager.h"
+#include <unordered_map>
+#include "Blend2DRenderer.h"
 
 // Forward declarations
 class Canvas;
@@ -45,9 +47,9 @@ private:
     std::unique_ptr<TextRenderer> m_textRenderer;
     std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
     
-    // Creative coding components
-    CanvasManager m_canvasManager;
-    EntityID m_activeCanvasId = 0;
+    // ECS core for all entities/components (including canvases)
+    ECSManager m_ecs;
+    entt::entity m_activeCanvasId = entt::null; // Now refers to ECS entity
     std::shared_ptr<Graphics> m_graphics;
     std::unique_ptr<CodeEditor> m_codeEditor;
     std::unique_ptr<ScriptEngine> m_scriptEngine;
@@ -138,4 +140,9 @@ private:
     std::string m_lastThemePath;
     void loadTheme(const std::string& path);
     bool m_showThemeEditor = false;
+
+    // Resource maps for ECS canvas entities
+    std::unordered_map<entt::entity, std::unique_ptr<Canvas>> m_canvasResources;
+    std::unordered_map<entt::entity, std::shared_ptr<Graphics>> m_graphicsResources;
+    std::unordered_map<entt::entity, std::unique_ptr<Blend2DRenderer>> m_rendererResources;
 }; 
