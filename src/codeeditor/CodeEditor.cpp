@@ -73,7 +73,7 @@ void CodeEditor::renderToolbar() {
 
 void CodeEditor::renderEditor() {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-    m_editor->Render("CodeEditor", ImVec2(-1, -1), m_lineNumbers);
+    m_editor->Render("CodeEditor", ImVec2(-1, -1), false, m_lineNumbers);
     if (m_editor->IsTextChanged()) {
         m_isModified = true;
         if (m_onCodeChanged) {
