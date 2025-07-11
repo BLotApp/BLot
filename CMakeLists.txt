@@ -82,6 +82,7 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party/implot3d)
 set(SOURCES
     src/app/main.cpp
     src/app/BlotApp.cpp
+    src/app/AppSettings.cpp
     src/canvas/Canvas.cpp
     src/rendering/Graphics.cpp
     src/rendering/Blend2DRenderer.cpp

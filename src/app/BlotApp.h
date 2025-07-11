@@ -12,6 +12,7 @@
 #include "rendering/Blend2DRenderer.h"
 #include "rendering/ResourceManager.h"
 #include "systems/ShapeRenderingSystem.h"
+#include "AppSettings.h"
 
 // Forward declarations
 class Graphics;
@@ -132,7 +133,10 @@ private:
     float m_deltaTime;
     float m_lastFrameTime;
 
-    // UI state
+    // Application settings
+    AppSettings m_settings;
+    
+    // UI state (now managed by AppSettings)
     bool m_showDemoWindow;
     bool m_showCodeEditor;
     bool m_showCanvas;

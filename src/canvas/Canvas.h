@@ -7,6 +7,7 @@
 #include <variant>
 
 class Graphics;
+class ECSManager; // Forward declaration
 
 // Shape management is now handled by ECS. No Shape struct or shape list here.
 
@@ -65,6 +66,11 @@ public:
     unsigned int getColorTexture() const;
     
     // Shape management moved to ECS system
+    void renderECSShapes(); // New method to render ECS shapes
+    
+    // ECS integration
+    void setECSManager(ECSManager* ecs) { m_ecs = ecs; }
+    ECSManager* m_ecs = nullptr;
 
 private:
     void initFramebuffer();

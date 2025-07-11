@@ -53,6 +53,8 @@ public:
     RendererType getType() const override { return RendererType::Blend2D; }
     std::string getName() const override { return "Blend2D"; }
     bool isInitialized() const override { return m_initialized; }
+    int getWidth() const override { return m_width; }
+    int getHeight() const override { return m_height; }
 
     void noFill();
     void noStroke();

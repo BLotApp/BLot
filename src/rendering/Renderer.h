@@ -70,6 +70,8 @@ public:
     virtual RendererType getType() const = 0;
     virtual std::string getName() const = 0;
     virtual bool isInitialized() const = 0;
+    virtual int getWidth() const = 0;
+    virtual int getHeight() const = 0;
 };
 
 // Factory function

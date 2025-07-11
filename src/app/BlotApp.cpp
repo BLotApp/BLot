@@ -103,6 +103,11 @@ void LoadSwatches(const std::string& path) {
 // Add a member variable to control ImPlot demo window visibility
 static bool showImPlotDemo = false;
 static bool showImGuiMarkdownDemo = false;
+
+// Mouse coordinate display
+static bool showMouseCoordinates = true;
+static int mouseCoordinateSystem = 0; // 0=Screen, 1=App, 2=Window
+static const char* coordinateSystemNames[] = { "Screen", "App", "Window" };
 static bool showMarkdownEditor = false;
 static bool showMarkdownViewer = false;
 static std::string markdownEditorBuffer;
@@ -179,6 +184,9 @@ BlotApp::BlotApp()
     , m_showThemeEditor(false)
     , m_lastThemePath("theme.json")
 {
+    // Load application settings
+    m_settings.loadSettings();
+    
     initWindow();
     initImGui();
     initGraphics();
@@ -186,6 +194,9 @@ BlotApp::BlotApp()
 }
 
 BlotApp::~BlotApp() {
+    // Save application settings
+    m_settings.saveSettings();
+    
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -316,6 +327,7 @@ void BlotApp::initGraphics() {
     auto graphics = std::make_shared<Graphics>();
     graphics->setRenderer(renderer.get());
     auto canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, graphics);
+    canvas->setECSManager(&m_ecs); // Connect Canvas to ECS
     m_graphicsResources[m_activeCanvasId] = graphics;
     m_canvasResources[m_activeCanvasId] = std::move(canvas);
     
@@ -476,6 +488,7 @@ void BlotApp::renderUI() {
                     auto graphics = std::make_shared<Graphics>();
                     graphics->setRenderer(renderer.get());
                     auto canvas = std::make_unique<Canvas>(w, h, graphics);
+                    canvas->setECSManager(&m_ecs); // Connect Canvas to ECS
                     m_graphicsResources[newId] = graphics;
                     m_canvasResources[newId] = std::move(canvas);
                     m_activeCanvasId = newId;
@@ -566,6 +579,7 @@ void BlotApp::renderUI() {
             ImGui::MenuItem("Node Editor", nullptr, &m_showNodeEditor);
             ImGui::MenuItem("ImGui Demo", nullptr, &m_showDemoWindow);
             ImGui::MenuItem("File Browser", nullptr, &showFileBrowser);
+            ImGui::MenuItem("Info Panel", nullptr, &showMouseCoordinates);
             ImGui::EndMenu();
         }
         
@@ -624,18 +638,29 @@ void BlotApp::renderUI() {
         ImVec2 canvasSize = ImGui::GetContentRegionAvail();
         ImVec2 canvasEnd = ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
         
-        // Draw a background for the canvas
-        ImGui::GetWindowDrawList()->AddRectFilled(canvasPos, canvasEnd, IM_COL32(255, 255, 255, 255));
-        ImGui::GetWindowDrawList()->AddRect(canvasPos, canvasEnd, IM_COL32(0, 0, 0, 255));
+        // Draw the Blend2D canvas texture
+        auto it = m_canvasResources.find(m_activeCanvasId);
+        if (it != m_canvasResources.end()) {
+            unsigned int texId = it->second->getColorTexture();
+            printf("[ImGui] Displaying texture: ID=%u, size=%.1fx%.1f\n", texId, canvasSize.x, canvasSize.y);
+            ImGui::Image((void*)(intptr_t)texId, canvasSize);
+        } else {
+            printf("[ImGui] ERROR: No canvas resource found for active canvas\n");
+        }
         
         // Handle mouse input for drawing
         if (ImGui::IsWindowHovered()) {
             ImVec2 mousePos = ImGui::GetMousePos();
+            printf("[Mouse] Window hovered, mousePos=(%.1f,%.1f), canvasBounds=(%.1f,%.1f)-(%.1f,%.1f)\n", 
+                   mousePos.x, mousePos.y, canvasPos.x, canvasPos.y, canvasEnd.x, canvasEnd.y);
             if (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x && 
                 mousePos.y >= canvasPos.y && mousePos.y <= canvasEnd.y) {
+                printf("[Mouse] Inside canvas bounds!\n");
                 
                 // Convert to canvas coordinates
                 ImVec2 canvasMousePos = ImVec2(mousePos.x - canvasPos.x, mousePos.y - canvasPos.y);
+                printf("[Mouse] mousePos=(%.1f,%.1f), canvasPos=(%.1f,%.1f), canvasMousePos=(%.1f,%.1f)\n", 
+                       mousePos.x, mousePos.y, canvasPos.x, canvasPos.y, canvasMousePos.x, canvasMousePos.y);
                 
                 // Pen tool logic
                 if (m_currentTool == BlotApp::ToolType::Pen) {
@@ -702,13 +727,38 @@ void BlotApp::renderUI() {
                         m_toolStartPos = canvasMousePos;
                         m_toolActive = true;
                     }
-                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_toolActive) {
-                        ImVec2 start = m_toolStartPos;
-                        ImVec2 end = canvasMousePos;
-                        float x1 = std::min(start.x, end.x);
-                        float y1 = std::min(start.y, end.y);
-                        float x2 = std::max(start.x, end.x);
-                        float y2 = std::max(start.y, end.y);
+                                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_toolActive) {
+                    printf("[Mouse] Left mouse released, creating shape...\n");
+                    ImVec2 start = m_toolStartPos;
+                    ImVec2 end = canvasMousePos;
+                    float x1 = std::min(start.x, end.x);
+                    float y1 = std::min(start.y, end.y);
+                    float x2 = std::max(start.x, end.x);
+                    float y2 = std::max(start.y, end.y);
+                        
+                        // Scale coordinates from ImGui window to Blend2D canvas
+                        // Get actual canvas dimensions from the canvas resource
+                        auto canvasIt = m_canvasResources.find(m_activeCanvasId);
+                        float canvasWidth = 1280.0f;  // Default fallback
+                        float canvasHeight = 720.0f;   // Default fallback
+                        if (canvasIt != m_canvasResources.end()) {
+                            // Get the actual canvas dimensions from the Graphics object
+                            auto graphics = canvasIt->second->getGraphics();
+                            if (graphics) {
+                                auto renderer = graphics->getRenderer();
+                                if (renderer) {
+                                    canvasWidth = static_cast<float>(renderer->getWidth());
+                                    canvasHeight = static_cast<float>(renderer->getHeight());
+                                }
+                            }
+                        }
+                        
+                        float scaleX = canvasWidth / canvasSize.x;
+                        float scaleY = canvasHeight / canvasSize.y;
+                        
+                        printf("[Canvas] Coordinate scaling: ImGui(%.1f,%.1f) -> Blend2D(%.1f,%.1f), scale=(%.2f,%.2f), canvas=%.0fx%.0f\n", 
+                               x1, y1, x1 * scaleX, y1 * scaleY, scaleX, scaleY, canvasWidth, canvasHeight);
+                        
                         // Create ECS entity with shape components
                         entt::entity shapeEntity = m_ecs.createEntity();
                         
@@ -718,9 +768,12 @@ void BlotApp::renderUI() {
                         transform.y = 0.0f;
                         m_ecs.addComponent<Transform>(shapeEntity, transform);
                         
-                        // Add Shape component
+                        // Add Shape component with scaled coordinates
                         Shape shape;
-                        shape.x1 = x1; shape.y1 = y1; shape.x2 = x2; shape.y2 = y2;
+                        shape.x1 = x1 * scaleX; 
+                        shape.y1 = y1 * scaleY; 
+                        shape.x2 = x2 * scaleX; 
+                        shape.y2 = y2 * scaleY;
                         // Use the new component namespace
                         if (m_selectedShape == 0) shape.type = blot::components::Shape::Type::Rectangle;
                         else if (m_selectedShape == 1) shape.type = blot::components::Shape::Type::Ellipse;
@@ -772,6 +825,94 @@ void BlotApp::renderUI() {
                 }
             }
         }
+        
+        ImGui::End();
+    }
+    
+    // Info Panel
+    if (showMouseCoordinates) {
+        ImGui::Begin("Info Panel", &showMouseCoordinates, ImGuiWindowFlags_AlwaysAutoResize);
+        
+        ImVec2 mousePos = ImGui::GetMousePos();
+        ImVec2 screenPos = ImGui::GetIO().DisplaySize;
+        
+        // Get canvas coordinates if canvas window is open
+        ImVec2 canvasPos = ImVec2(0, 0);
+        ImVec2 canvasSize = ImVec2(0, 0);
+        if (m_showCanvas) {
+            // We need to get the actual canvas position and size
+            // For now, we'll use the window position
+            canvasPos = ImGui::GetWindowPos();
+            canvasSize = ImGui::GetContentRegionAvail();
+        }
+        
+        // Dropdown for coordinate system
+        ImGui::Text("Coordinate System:");
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##CoordSystem", coordinateSystemNames[mouseCoordinateSystem])) {
+            for (int i = 0; i < IM_ARRAYSIZE(coordinateSystemNames); i++) {
+                const bool isSelected = (mouseCoordinateSystem == i);
+                if (ImGui::Selectable(coordinateSystemNames[i], isSelected)) {
+                    mouseCoordinateSystem = i;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        
+        ImGui::Separator();
+        
+        // Display coordinates based on selected system
+        switch (mouseCoordinateSystem) {
+            case 0: // Screen
+                ImGui::Text("Screen Coordinates:");
+                ImGui::Text("  Mouse: (%.1f, %.1f)", mousePos.x, mousePos.y);
+                ImGui::Text("  Screen: (%.0f, %.0f)", screenPos.x, screenPos.y);
+                break;
+                
+            case 1: // App (relative to application window)
+                ImGui::Text("App Coordinates:");
+                ImGui::Text("  Mouse: (%.1f, %.1f)", mousePos.x, mousePos.y);
+                ImGui::Text("  Window: (%.0f, %.0f)", m_windowWidth, m_windowHeight);
+                break;
+                
+            case 2: // Window (relative to canvas window)
+                ImGui::Text("Canvas Window Coordinates:");
+                if (m_showCanvas) {
+                    ImVec2 canvasMousePos = ImVec2(mousePos.x - canvasPos.x, mousePos.y - canvasPos.y);
+                    ImGui::Text("  Mouse: (%.1f, %.1f)", canvasMousePos.x, canvasMousePos.y);
+                    ImGui::Text("  Canvas: (%.0f, %.0f)", canvasSize.x, canvasSize.y);
+                    
+                    // Show scaled coordinates for Blend2D
+                    auto canvasIt = m_canvasResources.find(m_activeCanvasId);
+                    if (canvasIt != m_canvasResources.end()) {
+                        auto graphics = canvasIt->second->getGraphics();
+                        if (graphics) {
+                            auto renderer = graphics->getRenderer();
+                            if (renderer) {
+                                float canvasWidth = static_cast<float>(renderer->getWidth());
+                                float canvasHeight = static_cast<float>(renderer->getHeight());
+                                float scaleX = canvasWidth / canvasSize.x;
+                                float scaleY = canvasHeight / canvasSize.y;
+                                
+                                ImVec2 blend2DCoords = ImVec2(canvasMousePos.x * scaleX, canvasMousePos.y * scaleY);
+                                ImGui::Text("  Blend2D: (%.1f, %.1f)", blend2DCoords.x, blend2DCoords.y);
+                                ImGui::Text("  Scale: (%.2f, %.2f)", scaleX, scaleY);
+                            }
+                        }
+                    }
+                } else {
+                    ImGui::Text("Canvas window not open");
+                }
+                break;
+        }
+        
+        ImGui::Separator();
+        ImGui::Text("Debug Info:");
+        ImGui::Text("  Delta Time: %.3f ms", m_deltaTime * 1000.0f);
+        ImGui::Text("  Frame Rate: %.1f FPS", 1.0f / m_deltaTime);
         
         ImGui::End();
     }
@@ -1111,11 +1252,6 @@ void BlotApp::renderCanvas() {
         auto it = m_canvasResources.find(m_activeCanvasId);
         if (it != m_canvasResources.end()) {
             it->second->render();
-        }
-        
-        // Render ECS shapes using the shape rendering system
-        if (m_shapeRenderer) {
-            m_shapeRenderer->renderShapes(m_ecs);
         }
     }
 }

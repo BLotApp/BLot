@@ -3,6 +3,9 @@
 #include "Canvas.h"
 #include "rendering/Graphics.h"
 #include "rendering/Blend2DRenderer.h"
+#include "ecs/ECSManager.h"
+#include "components/ShapeComponent.h"
+#include "components/StyleComponent.h"
 #include <filesystem>
 
 struct Canvas::Impl {
@@ -200,8 +203,11 @@ void Canvas::update(float deltaTime) {
 void Canvas::render() {
     // Shape rendering is now handled by ECS system
     if (m_graphics) {
-        // Clear the canvas
-        m_graphics->clear(0.0f, 0.0f, 0.0f, 0.0f);
+        // Clear the canvas with white background
+        m_graphics->clear(1.0f, 1.0f, 1.0f, 1.0f);
+        
+        // Render ECS shapes
+        renderECSShapes();
     }
     // Upload Blend2D image to OpenGL texture
     Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());
@@ -209,14 +215,118 @@ void Canvas::render() {
         const BLImage& img = renderer->getImage();
         BLImageData imgData;
         if (img.getData(&imgData) == BL_SUCCESS) {
+            printf("[Canvas] Uploading texture: size=%dx%d, format=%u, textureID=%u\n", 
+                   img.width(), img.height(), img.format(), m_impl->colorTexture);
             glBindTexture(GL_TEXTURE_2D, m_impl->colorTexture);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.width(), img.height(), GL_BGRA, GL_UNSIGNED_BYTE, imgData.pixelData);
+            // Blend2D uses BGRA format, but OpenGL might need RGBA
+            GLenum format = GL_BGRA;
+            if (img.format() == BL_FORMAT_PRGB32) {
+                format = GL_BGRA;  // BGRA for Blend2D
+            } else if (img.format() == BL_FORMAT_XRGB32) {
+                format = GL_BGRA;  // BGRA for Blend2D
+            }
+            printf("[Canvas] Using format: %u for image format: %u\n", format, img.format());
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.width(), img.height(), format, GL_UNSIGNED_BYTE, imgData.pixelData);
             glBindTexture(GL_TEXTURE_2D, 0);
+        } else {
+            printf("[Canvas] ERROR: Failed to get image data\n");
         }
 		
         // Debug: Save the image after drawing
         renderer->flush();
         img.writeToFile("debug_after_render.png");
+    } else {
+        printf("[Canvas] ERROR: No Blend2DRenderer found\n");
+    }
+}
+
+void Canvas::renderECSShapes() {
+    if (!m_ecs || !m_graphics) {
+        printf("[Canvas] renderECSShapes: m_ecs=%p, m_graphics=%p\n", (void*)m_ecs, (void*)m_graphics.get());
+        return;
+    }
+    
+    // Get the renderer from graphics
+    Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());
+    if (!renderer) {
+        printf("[Canvas] renderECSShapes: No Blend2DRenderer found\n");
+        return;
+    }
+    
+    // Get all entities with Transform, Shape, and Style components
+    auto view = m_ecs->view<Transform, blot::components::Shape, blot::components::Style>();
+    
+    printf("[Canvas] renderECSShapes: Checking for entities with shapes...\n");
+    
+    for (auto entity : view) {
+        auto& transform = view.get<Transform>(entity);
+        auto& shape = view.get<blot::components::Shape>(entity);
+        auto& style = view.get<blot::components::Style>(entity);
+        
+        // Set fill and stroke colors
+        if (style.hasFill) {
+            m_graphics->setFillColor(style.fillR, style.fillG, style.fillB, style.fillA);
+        }
+        if (style.hasStroke) {
+            m_graphics->setStrokeColor(style.strokeR, style.strokeG, style.strokeB, style.strokeA);
+            m_graphics->setStrokeWidth(style.strokeWidth);
+        }
+        
+        // Calculate position with transform
+        float x = transform.x + shape.x1;
+        float y = transform.y + shape.y1;
+        float width = shape.x2 - shape.x1;
+        float height = shape.y2 - shape.y1;
+        
+        // Apply transform scaling
+        x *= transform.scaleX;
+        y *= transform.scaleY;
+        width *= transform.scaleX;
+        height *= transform.scaleY;
+        
+        // Render based on shape type
+        printf("[Canvas] Rendering shape: type=%d, x=%.2f, y=%.2f, w=%.2f, h=%.2f, hasFill=%d, hasStroke=%d\n", 
+               (int)shape.type, x, y, width, height, style.hasFill, style.hasStroke);
+        
+        switch (shape.type) {
+            case blot::components::Shape::Type::Rectangle:
+                if (style.hasFill) {
+                    printf("[Canvas] Drawing filled rectangle\n");
+                    m_graphics->drawRect(x, y, width, height);
+                }
+                if (style.hasStroke) {
+                    printf("[Canvas] Drawing stroked rectangle\n");
+                    m_graphics->drawRect(x, y, width, height);
+                }
+                break;
+                
+            case blot::components::Shape::Type::Ellipse:
+                if (style.hasFill) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                if (style.hasStroke) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                break;
+                
+            case blot::components::Shape::Type::Line:
+                if (style.hasStroke) {
+                    float x2 = transform.x + shape.x2;
+                    float y2 = transform.y + shape.y2;
+                    x2 *= transform.scaleX;
+                    y2 *= transform.scaleY;
+                    m_graphics->drawLine(x, y, x2, y2);
+                }
+                break;
+                
+            case blot::components::Shape::Type::Polygon:
+                // For now, render as circle - can be enhanced later
+                if (style.hasFill) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                if (style.hasStroke) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                break;
+                
+            case blot::components::Shape::Type::Star:
+                // For now, render as circle - can be enhanced later
+                if (style.hasFill) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                if (style.hasStroke) m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f, width * 0.5f, height * 0.5f);
+                break;
+        }
     }
 }
 
