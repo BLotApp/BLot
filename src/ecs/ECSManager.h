@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "imgui.h"
+#include "components/ShapeComponent.h"
+#include "components/StyleComponent.h"
 
 // Forward declarations
 class Canvas;
@@ -18,28 +21,9 @@ struct Transform {
     float scaleX = 1.0f, scaleY = 1.0f;
 };
 
-struct Shape {
-    enum Type {
-        Circle,
-        Rectangle,
-        Ellipse,
-        Triangle,
-        Line,
-        Custom
-    };
-    
-    Type type = Circle;
-    float width = 50.0f, height = 50.0f;
-    std::string customPath;
-};
-
-struct Style {
-    float fillR = 1.0f, fillG = 1.0f, fillB = 1.0f, fillA = 1.0f;
-    float strokeR = 0.0f, strokeG = 0.0f, strokeB = 0.0f, strokeA = 1.0f;
-    float strokeWidth = 1.0f;
-    bool hasFill = true;
-    bool hasStroke = true;
-};
+// Use the new component types from the blot::components namespace
+using Shape = blot::components::Shape;
+using Style = blot::components::Style;
 
 struct Animation {
     float duration = 1.0f;
@@ -79,6 +63,23 @@ struct Script {
     std::string code;
     bool isActive = true;
     std::string language = "cpp";
+};
+
+// Drawing state component for UI interaction
+struct Drawing {
+    bool isActive = false;
+    bool isSelected = false;
+    bool isHovered = false;
+    ImVec2 startPos = ImVec2(0, 0);
+    ImVec2 currentPos = ImVec2(0, 0);
+    ImVec2 endPos = ImVec2(0, 0);
+};
+
+// Selection component for UI state
+struct Selection {
+    bool isSelected = false;
+    bool isMultiSelected = false;
+    int selectionIndex = -1;
 };
 
 class ECSManager {
@@ -121,6 +122,20 @@ public:
     void createNode(const std::string& nodeType, float x, float y);
     void connectNodes(entt::entity sourceNode, const std::string& output,
                      entt::entity targetNode, const std::string& input);
+    
+    // Shape creation helpers
+    entt::entity createRectangle(float x, float y, float width, float height);
+    entt::entity createEllipse(float x, float y, float width, float height);
+    entt::entity createLine(float x1, float y1, float x2, float y2);
+    entt::entity createPolygon(float x, float y, float radius, int sides);
+    entt::entity createStar(float x, float y, float outerRadius, float innerRadius, int points);
+    
+    // Drawing system
+    void startDrawing(entt::entity entity, const ImVec2& startPos);
+    void updateDrawing(entt::entity entity, const ImVec2& currentPos);
+    void finishDrawing(entt::entity entity, const ImVec2& endPos);
+    void selectEntity(entt::entity entity, bool multiSelect = false);
+    void clearSelection();
     
     // Utility functions
     void clear();

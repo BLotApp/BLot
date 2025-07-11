@@ -198,10 +198,10 @@ void Canvas::update(float deltaTime) {
 }
 
 void Canvas::render() {
-    // Draw a simple filled rectangle using Blend2D
+    // Shape rendering is now handled by ECS system
     if (m_graphics) {
-        m_graphics->setFillColor(1.0f, 0.0f, 0.0f, 1.0f); // bright red
-        m_graphics->rect(10, 10, 500, 500);
+        // Clear the canvas
+        m_graphics->clear(0.0f, 0.0f, 0.0f, 0.0f);
     }
     // Upload Blend2D image to OpenGL texture
     Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());

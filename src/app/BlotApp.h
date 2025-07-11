@@ -10,9 +10,10 @@
 #include "ecs/ECSManager.h"
 #include <unordered_map>
 #include "rendering/Blend2DRenderer.h"
+#include "rendering/ResourceManager.h"
+#include "systems/ShapeRenderingSystem.h"
 
 // Forward declarations
-class Canvas;
 class Graphics;
 class TextRenderer;
 class CodeEditor;
@@ -27,71 +28,13 @@ public:
     void run();
     void renderProperties();
     
-private:
-    void initWindow();
-    void initImGui();
-    void initGraphics();
-    void initAddons();
-    void renderUI();
-    void renderCanvas();
-    void renderAddonUI();
-    void handleInput();
-    void update();
-    
-    // Window and OpenGL
-    GLFWwindow* m_window;
-    int m_windowWidth;
-    int m_windowHeight;
-    
-    // ImGui with enhanced text rendering
-    std::unique_ptr<TextRenderer> m_textRenderer;
-    std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
-    
-    // ECS core for all entities/components (including canvases)
-    ECSManager m_ecs;
-    entt::entity m_activeCanvasId = entt::null; // Now refers to ECS entity
-    std::shared_ptr<Graphics> m_graphics;
-    std::unique_ptr<CodeEditor> m_codeEditor;
-    std::unique_ptr<ScriptEngine> m_scriptEngine;
-    
-    // Addon system
-    std::unique_ptr<AddonManager> m_addonManager;
-    
-    // Renderer system
-    std::unique_ptr<IRenderer> m_currentRenderer;
-    RendererType m_currentRendererType = RendererType::Blend2D;
-    std::vector<std::string> m_availableRenderers;
-    
-    // Application state
-    bool m_running;
-    float m_deltaTime;
-    float m_lastFrameTime;
-    
-    // UI state
-    bool m_showDemoWindow;
-    bool m_showCodeEditor;
-    bool m_showCanvas;
-    bool m_showProperties;
-    bool m_showAddonManager;
-    bool m_showNodeEditor = false;
-    // Toolbar and drawing mode
-    bool m_showToolbar = true;
-    bool m_drawCircleMode = false;
-    
-    // Toolbar tool type and state
-    enum class ToolType { Select, Rectangle, Ellipse, Line };
+    // Toolbar tool type and state (moved to public for external access)
+    enum class ToolType { Select, Rectangle, Ellipse, Line, Polygon, Star, Pen };
     ToolType m_currentTool = ToolType::Select;
     ImVec2 m_toolStartPos = ImVec2(0,0);
     bool m_toolActive = false;
 
-    // Shape representation
-    struct Shape {
-        enum class Type { Circle };
-        Type type;
-        ImVec2 pos;
-        float radius;
-    };
-    std::vector<Shape> m_shapes;
+    // ECS-based shape management - no longer need local shape vector
 
     // Drag state for placing shapes
     bool m_isDragging = false;
@@ -141,8 +84,62 @@ private:
     void loadTheme(const std::string& path);
     bool m_showThemeEditor = false;
 
-    // Resource maps for ECS canvas entities
+    // Resource management
+    std::unique_ptr<ResourceManager> m_resourceManager;
+    
+    // Resource maps for ECS canvas entities (simplified)
     std::unordered_map<entt::entity, std::unique_ptr<Canvas>> m_canvasResources;
     std::unordered_map<entt::entity, std::shared_ptr<Graphics>> m_graphicsResources;
-    std::unordered_map<entt::entity, std::unique_ptr<Blend2DRenderer>> m_rendererResources;
+
+private:
+    void initWindow();
+    void initImGui();
+    void initGraphics();
+    void initAddons();
+    void renderUI();
+    void renderCanvas();
+    void renderAddonUI();
+    void handleInput();
+    void update();
+
+    // Window and OpenGL
+    GLFWwindow* m_window;
+    int m_windowWidth;
+    int m_windowHeight;
+
+    // ImGui with enhanced text rendering
+    std::unique_ptr<TextRenderer> m_textRenderer;
+    std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
+
+    // ECS core for all entities/components (including canvases)
+    ECSManager m_ecs;
+    entt::entity m_activeCanvasId = entt::null; // Now refers to ECS entity
+    std::shared_ptr<Graphics> m_graphics;
+    std::unique_ptr<ShapeRenderingSystem> m_shapeRenderer;
+    std::unique_ptr<CodeEditor> m_codeEditor;
+    std::unique_ptr<ScriptEngine> m_scriptEngine;
+
+    // Addon system
+    std::unique_ptr<AddonManager> m_addonManager;
+
+    // Renderer system
+    std::unique_ptr<IRenderer> m_currentRenderer;
+    RendererType m_currentRendererType = RendererType::Blend2D;
+    std::vector<std::string> m_availableRenderers;
+
+    // Application state
+    bool m_running;
+    float m_deltaTime;
+    float m_lastFrameTime;
+
+    // UI state
+    bool m_showDemoWindow;
+    bool m_showCodeEditor;
+    bool m_showCanvas;
+    bool m_showProperties;
+    bool m_showAddonManager;
+    bool m_showNodeEditor = false;
+    // Toolbar and drawing mode
+    bool m_showToolbar = true;
+    bool m_drawCircleMode = false;
 }; 

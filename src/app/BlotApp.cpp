@@ -1,3 +1,4 @@
+#define NOMINMAX
 #if defined(_WIN32) || (defined(__linux__) && !defined(__arm__) && !defined(__aarch64__))
     #include <glad/gl.h>
     #define GLAD_LOAD_FN gladLoaderLoadGL
@@ -45,6 +46,7 @@ namespace ed = ax::NodeEditor;
 #include "ecs/ECSManager.h"
 #include "components/TextureComponent.h"
 #include "systems/CanvasUpdateSystem.h"
+#include "systems/ShapeRenderingSystem.h"
 
 #include "implot.h"
 #include "implot3d.h"
@@ -52,10 +54,51 @@ namespace ed = ax::NodeEditor;
 #include "imgui_markdown.h"
 #include "imfilebrowser.h"
 
-enum class ToolType { Select, Rectangle, Ellipse, Line };
-ToolType m_currentTool = ToolType::Select;
+#include <vector>
+
+// Use the new component types
+using Shape = blot::components::Shape;
+using Style = blot::components::Style;
+
+inline ImVec2 operator+(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x + b.x, a.y + b.y); }
+inline ImVec2 operator-(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x - b.x, a.y - b.y); }
+inline ImVec2 operator*(const ImVec2& a, float s) { return ImVec2(a.x * s, a.y * s); }
+inline ImVec2 operator/(const ImVec2& a, float s) { return ImVec2(a.x / s, a.y / s); }
+
+// Use BlotApp::ToolType everywhere
 ImVec2 m_toolStartPos = ImVec2(0,0);
 bool m_toolActive = false;
+
+// Color picker variables
+ImVec4 m_fillColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+ImVec4 m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+// Swatch data
+std::vector<ImVec4> m_swatches = {
+    ImVec4(0,0,0,1), ImVec4(1,1,1,1), ImVec4(1,0,0,1), ImVec4(0,1,0,1), ImVec4(0,0,1,1)
+};
+int m_activeSwatchType = 0; // 0 = fill, 1 = stroke
+std::string m_swatchesFile = "swatches.json";
+
+void SaveSwatches(const std::string& path) {
+    nlohmann::json j;
+    for (const auto& c : m_swatches) {
+        j.push_back({c.x, c.y, c.z, c.w});
+    }
+    std::ofstream out(path);
+    out << j.dump(2);
+}
+void LoadSwatches(const std::string& path) {
+    std::ifstream in(path);
+    if (!in) return;
+    nlohmann::json j;
+    in >> j;
+    m_swatches.clear();
+    for (const auto& c : j) {
+        if (c.is_array() && c.size() == 4)
+            m_swatches.push_back(ImVec4(c[0], c[1], c[2], c[3]));
+    }
+}
 
 // Add a member variable to control ImPlot demo window visibility
 static bool showImPlotDemo = false;
@@ -67,6 +110,56 @@ static std::string loadedMarkdownPath;
 static std::string loadedMarkdown;
 
 bool showFileBrowser = false;
+bool m_showSwatches = false;
+bool m_showStrokePalette = false;
+int m_selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
+float m_strokeWidth = 2.0f;
+int m_strokeCap = 0; // 0=Butt, 1=Square, 2=Round
+int m_strokeJoin = 0; // 0=Miter, 1=Bevel, 2=Round
+float m_dashPattern[4] = {0};
+int m_dashCount = 0;
+float m_dashOffset = 0.0f;
+
+// Add polygon/star sides control to stroke palette
+static int m_polygonSides = 5;
+
+// Add pen tool state variables at file scope
+static std::vector<ImVec2> penPoints;
+static std::vector<ImVec2> penHandles;
+static bool penDraggingHandle = false;
+static int penHandleIndex = -1;
+
+// Add ToolButton helper at file scope
+static void ToolButton(const char* icon, BlotApp::ToolType type) {
+    ImGui::PushID(icon);
+    extern BlotApp* g_blotAppInstance; // We'll set this pointer to the running app instance
+    bool selected = (g_blotAppInstance && g_blotAppInstance->m_currentTool == type);
+    if (selected) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+    if (ImGui::Button(icon) && g_blotAppInstance) g_blotAppInstance->m_currentTool = type;
+    if (selected) ImGui::PopStyleColor();
+    ImGui::PopID();
+    ImGui::SameLine();
+}
+
+// Replace AddEllipse and AddEllipseFilled usages with custom ellipse drawing
+auto DrawEllipseFilled = [](ImDrawList* drawList, ImVec2 center, float rx, float ry, ImU32 color, int num_segments = 64) {
+    std::vector<ImVec2> pts;
+    for (int i = 0; i < num_segments; ++i) {
+        float a = 2.0f * 3.1415926f * i / num_segments;
+        pts.push_back(center + ImVec2(cosf(a) * rx, sinf(a) * ry));
+    }
+    drawList->AddConvexPolyFilled(pts.data(), static_cast<int>(pts.size()), color);
+};
+auto DrawEllipse = [](ImDrawList* drawList, ImVec2 center, float rx, float ry, ImU32 color, float thickness = 1.0f, int num_segments = 64) {
+    std::vector<ImVec2> pts;
+    for (int i = 0; i < num_segments; ++i) {
+        float a = 2.0f * 3.1415926f * i / num_segments;
+        pts.push_back(center + ImVec2(cosf(a) * rx, sinf(a) * ry));
+    }
+    drawList->AddPolyline(pts.data(), static_cast<int>(pts.size()), color, true, thickness);
+};
+
+BlotApp* g_blotAppInstance = nullptr;
 
 BlotApp::BlotApp() 
     : m_window(nullptr)
@@ -200,6 +293,10 @@ void BlotApp::initGraphics() {
     m_currentRenderer = std::make_unique<Blend2DRenderer>();
     m_currentRenderer->initialize(m_windowWidth, m_windowHeight);
     m_graphics->setRenderer(m_currentRenderer.get());
+    
+    // Initialize resource manager
+    m_resourceManager = std::make_unique<ResourceManager>();
+    
     // Create a default canvas as an ECS entity and resources
     m_activeCanvasId = m_ecs.createEntity();
     TextureComponent texComp;
@@ -208,15 +305,22 @@ void BlotApp::initGraphics() {
     texComp.renderTarget = true;
     // texComp.textureId will be set by resource manager
     m_ecs.addComponent<TextureComponent>(m_activeCanvasId, texComp);
-    // Create resources for this canvas entity
-    auto renderer = std::make_unique<Blend2DRenderer>();
-    renderer->initialize(m_windowWidth, m_windowHeight);
+    (void)texComp; // Suppress unused variable warning
+    
+    // Create renderer through resource manager (returns shared_ptr)
+    auto renderer = m_resourceManager->createRenderer(m_activeCanvasId, m_windowWidth, m_windowHeight);
+    if (!renderer) {
+        throw std::runtime_error("Failed to create renderer for canvas");
+    }
+    
     auto graphics = std::make_shared<Graphics>();
     graphics->setRenderer(renderer.get());
     auto canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, graphics);
-    m_rendererResources[m_activeCanvasId] = std::move(renderer);
     m_graphicsResources[m_activeCanvasId] = graphics;
     m_canvasResources[m_activeCanvasId] = std::move(canvas);
+    
+    // Initialize shape rendering system with the shared_ptr renderer
+    m_shapeRenderer = std::make_unique<ShapeRenderingSystem>(renderer);
     
     // Run the default sketch on launch
     m_scriptEngine->runCode(m_codeEditor->getCode());
@@ -253,6 +357,7 @@ void BlotApp::loadDefaultAddons() {
 }
 
 void BlotApp::run() {
+    g_blotAppInstance = this;
     while (!glfwWindowShouldClose(m_window) && m_running) {
         float currentTime = static_cast<float>(glfwGetTime());
         m_deltaTime = currentTime - m_lastFrameTime;
@@ -364,16 +469,17 @@ void BlotApp::renderUI() {
                 texComp.height = h;
                 texComp.renderTarget = true;
                 m_ecs.addComponent<TextureComponent>(newId, texComp);
-                // Create resources for this canvas entity
-                auto renderer = std::make_unique<Blend2DRenderer>();
-                renderer->initialize(w, h);
-                auto graphics = std::make_shared<Graphics>();
-                graphics->setRenderer(renderer.get());
-                auto canvas = std::make_unique<Canvas>(w, h, graphics);
-                m_rendererResources[newId] = std::move(renderer);
-                m_graphicsResources[newId] = graphics;
-                m_canvasResources[newId] = std::move(canvas);
-                m_activeCanvasId = newId;
+                (void)texComp; // Suppress unused variable warning
+                // Create resources for this canvas entity using ResourceManager
+                auto renderer = m_resourceManager->createRenderer(newId, w, h);
+                if (renderer) {
+                    auto graphics = std::make_shared<Graphics>();
+                    graphics->setRenderer(renderer.get());
+                    auto canvas = std::make_unique<Canvas>(w, h, graphics);
+                    m_graphicsResources[newId] = graphics;
+                    m_canvasResources[newId] = std::move(canvas);
+                    m_activeCanvasId = newId;
+                }
             }
             ImGui::Separator();
             auto view = m_ecs.view<TextureComponent>();
@@ -387,7 +493,7 @@ void BlotApp::renderUI() {
                 ImGui::SameLine();
                 if (ImGui::SmallButton((std::string("x##close_") + std::to_string((int)entity)).c_str())) {
                     m_ecs.destroyEntity(entity);
-                    m_rendererResources.erase(entity);
+                    m_resourceManager->destroyRenderer(entity);
                     m_graphicsResources.erase(entity);
                     m_canvasResources.erase(entity);
                     if (m_activeCanvasId == entity) {
@@ -509,100 +615,164 @@ void BlotApp::renderUI() {
         ImGui::End();
     }
     
-    // Canvas Window
+    // Canvas Window for Drawing
     if (m_showCanvas) {
         ImGui::Begin("Canvas", &m_showCanvas);
-        if (m_activeCanvasId != entt::null && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
-            auto& texComp = m_ecs.getComponent<TextureComponent>(m_activeCanvasId);
-            auto it = m_canvasResources.find(m_activeCanvasId);
-            if (it != m_canvasResources.end()) {
-                Canvas* canvas = it->second.get();
-                ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-                ImVec2 canvas_size = ImVec2((float)texComp.width, (float)texComp.height);
-
-                // UI controls
-                if (ImGui::Button("Reset View")) {
-                    texComp.zoom = 1.0f;
-                    texComp.offset = glm::vec2(0.0f, 0.0f);
-                }
-                ImGui::SameLine();
-                ImGui::Checkbox("Show Rulers", &texComp.showRulers);
-                ImGui::SameLine();
-                ImGui::Checkbox("Show Guides", &texComp.showGuides);
-
-                // Add guide UI
-                if (texComp.showGuides) {
-                    static float guidePos = 100.0f;
-                    static bool vertical = true;
-                    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-                    ImGui::InputFloat("Guide Position", &guidePos);
-                    ImGui::Checkbox("Vertical", &vertical);
-                    ImGui::ColorEdit4("Guide Color", color);
-                    if (ImGui::Button("Add Guide")) {
-                        texComp.guides.push_back({guidePos, vertical, glm::vec4(color[0], color[1], color[2], color[3])});
-                    }
-                    if (!texComp.guides.empty()) {
-                        ImGui::SameLine();
-                        if (ImGui::Button("Clear Guides")) {
-                            texComp.guides.clear();
+        
+        // Get the canvas area
+        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
+        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+        ImVec2 canvasEnd = ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
+        
+        // Draw a background for the canvas
+        ImGui::GetWindowDrawList()->AddRectFilled(canvasPos, canvasEnd, IM_COL32(255, 255, 255, 255));
+        ImGui::GetWindowDrawList()->AddRect(canvasPos, canvasEnd, IM_COL32(0, 0, 0, 255));
+        
+        // Handle mouse input for drawing
+        if (ImGui::IsWindowHovered()) {
+            ImVec2 mousePos = ImGui::GetMousePos();
+            if (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x && 
+                mousePos.y >= canvasPos.y && mousePos.y <= canvasEnd.y) {
+                
+                // Convert to canvas coordinates
+                ImVec2 canvasMousePos = ImVec2(mousePos.x - canvasPos.x, mousePos.y - canvasPos.y);
+                
+                // Pen tool logic
+                if (m_currentTool == BlotApp::ToolType::Pen) {
+                    // Add point on click
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                        if (!penDraggingHandle) {
+                            penPoints.push_back(canvasMousePos);
+                            // Add default handles for cubic Bezier
+                            penHandles.push_back(canvasMousePos + ImVec2(40, 0));
+                            penHandles.push_back(canvasMousePos - ImVec2(40, 0));
                         }
                     }
-                }
-
-                // Handle zoom with mouse wheel
-                if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y))) {
-                    float wheel = ImGui::GetIO().MouseWheel;
-                    if (wheel != 0.0f) {
-                        float zoom_factor = 1.1f;
-                        if (wheel > 0) texComp.zoom *= zoom_factor;
-                        if (wheel < 0) texComp.zoom /= zoom_factor;
-                        texComp.zoom = std::clamp(texComp.zoom, 0.1f, 10.0f);
+                    // Drag handles
+                    for (int i = 0; i < penHandles.size(); ++i) {
+                        ImVec2 handleScreen = ImVec2(canvasPos.x + penHandles[i].x, canvasPos.y + penHandles[i].y);
+                        if (!penDraggingHandle && ImGui::IsMouseHoveringRect(handleScreen - ImVec2(5,5), handleScreen + ImVec2(5,5)) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                            penDraggingHandle = true;
+                            penHandleIndex = i;
+                        }
                     }
-                    // Pan with middle mouse drag
-                    if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
-                        ImVec2 delta = ImGui::GetIO().MouseDelta;
-                        texComp.offset.x += delta.x;
-                        texComp.offset.y += delta.y;
+                    if (penDraggingHandle && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                        penHandles[penHandleIndex] = canvasMousePos;
+                    } else if (penDraggingHandle && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                        penDraggingHandle = false;
+                        penHandleIndex = -1;
                     }
-                }
-
-                // Draw the canvas texture with zoom and pan
-                ImVec2 uv0 = ImVec2(0, 1);
-                ImVec2 uv1 = ImVec2(1, 0);
-                ImVec2 center = ImVec2(canvas_pos.x + canvas_size.x * 0.5f, canvas_pos.y + canvas_size.y * 0.5f);
-                ImVec2 draw_size = ImVec2(canvas_size.x * texComp.zoom, canvas_size.y * texComp.zoom);
-                ImVec2 draw_pos = ImVec2(center.x - draw_size.x * 0.5f + texComp.offset.x, center.y - draw_size.y * 0.5f + texComp.offset.y);
-
-                ImTextureID tex_id = (ImTextureID)(intptr_t)canvas->getColorTexture();
-                ImGui::SetCursorScreenPos(draw_pos);
-                ImGui::Image(tex_id, draw_size, uv0, uv1);
-
-                // Draw rulers
-                if (texComp.showRulers) {
-                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                    float ruler_thickness = 1.0f;
-                    ImU32 ruler_color = IM_COL32(200, 200, 200, 255);
-                    // Top ruler
-                    draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x + draw_size.x, draw_pos.y), ruler_color, ruler_thickness);
-                    // Left ruler
-                    draw_list->AddLine(ImVec2(draw_pos.x, draw_pos.y), ImVec2(draw_pos.x, draw_pos.y + draw_size.y), ruler_color, ruler_thickness);
-                }
-                // Draw guides
-                if (texComp.showGuides) {
-                    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                    for (const auto& guide : texComp.guides) {
-                        ImU32 guide_color = ImGui::ColorConvertFloat4ToU32(ImVec4(guide.color.r, guide.color.g, guide.color.b, guide.color.a));
-                        if (guide.vertical) {
-                            float x = draw_pos.x + guide.position * texComp.zoom;
-                            draw_list->AddLine(ImVec2(x, draw_pos.y), ImVec2(x, draw_pos.y + draw_size.y), guide_color, 2.0f);
-                        } else {
-                            float y = draw_pos.y + guide.position * texComp.zoom;
-                            draw_list->AddLine(ImVec2(draw_pos.x, y), ImVec2(draw_pos.x + draw_size.x, y), guide_color, 2.0f);
+                    // Draw points and handles
+                    for (int i = 0; i < penPoints.size(); ++i) {
+                        ImVec2 pt = ImVec2(canvasPos.x + penPoints[i].x, canvasPos.y + penPoints[i].y);
+                        ImGui::GetWindowDrawList()->AddCircleFilled(pt, 4, IM_COL32(0,0,0,255));
+                        if (i*2+1 < penHandles.size()) {
+                            ImVec2 h1 = ImVec2(canvasPos.x + penHandles[i*2].x, canvasPos.y + penHandles[i*2].y);
+                            ImVec2 h2 = ImVec2(canvasPos.x + penHandles[i*2+1].x, canvasPos.y + penHandles[i*2+1].y);
+                            ImGui::GetWindowDrawList()->AddCircleFilled(h1, 3, IM_COL32(100,100,255,255));
+                            ImGui::GetWindowDrawList()->AddCircleFilled(h2, 3, IM_COL32(100,100,255,255));
+                            ImGui::GetWindowDrawList()->AddLine(pt, h1, IM_COL32(100,100,255,255), 1.0f);
+                            ImGui::GetWindowDrawList()->AddLine(pt, h2, IM_COL32(100,100,255,255), 1.0f);
+                        }
+                    }
+                    // Draw Bezier curve
+                    for (int i = 0; i+1 < penPoints.size(); ++i) {
+                        ImVec2 p0 = penPoints[i];
+                        ImVec2 p1 = penHandles[i*2];
+                        ImVec2 p2 = penHandles[i*2+1];
+                        ImVec2 p3 = penPoints[i+1];
+                        ImGui::GetWindowDrawList()->AddBezierCubic(
+                            ImVec2(canvasPos.x + p0.x, canvasPos.y + p0.y),
+                            ImVec2(canvasPos.x + p1.x, canvasPos.y + p1.y),
+                            ImVec2(canvasPos.x + p2.x, canvasPos.y + p2.y),
+                            ImVec2(canvasPos.x + p3.x, canvasPos.y + p3.y),
+                            ImGui::ColorConvertFloat4ToU32(m_strokeColor), m_strokeWidth, 0
+                        );
+                    }
+                    // Finish path on right-click
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                        penPoints.clear();
+                        penHandles.clear();
+                        penDraggingHandle = false;
+                        penHandleIndex = -1;
+                    }
+                } else {
+                    // Other shapes
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                        m_toolStartPos = canvasMousePos;
+                        m_toolActive = true;
+                    }
+                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_toolActive) {
+                        ImVec2 start = m_toolStartPos;
+                        ImVec2 end = canvasMousePos;
+                        float x1 = std::min(start.x, end.x);
+                        float y1 = std::min(start.y, end.y);
+                        float x2 = std::max(start.x, end.x);
+                        float y2 = std::max(start.y, end.y);
+                        // Create ECS entity with shape components
+                        entt::entity shapeEntity = m_ecs.createEntity();
+                        
+                        // Add Transform component
+                        Transform transform;
+                        transform.x = 0.0f;
+                        transform.y = 0.0f;
+                        m_ecs.addComponent<Transform>(shapeEntity, transform);
+                        
+                        // Add Shape component
+                        Shape shape;
+                        shape.x1 = x1; shape.y1 = y1; shape.x2 = x2; shape.y2 = y2;
+                        // Use the new component namespace
+                        if (m_selectedShape == 0) shape.type = blot::components::Shape::Type::Rectangle;
+                        else if (m_selectedShape == 1) shape.type = blot::components::Shape::Type::Ellipse;
+                        else if (m_selectedShape == 2) shape.type = blot::components::Shape::Type::Line;
+                        else if (m_selectedShape == 3) shape.type = blot::components::Shape::Type::Polygon;
+                        else if (m_selectedShape == 4) shape.type = blot::components::Shape::Type::Star;
+                        shape.sides = m_polygonSides;
+                        m_ecs.addComponent<Shape>(shapeEntity, shape);
+                        
+                        // Add Style component
+                        Style style;
+                        style.fillR = m_fillColor.x; style.fillG = m_fillColor.y; 
+                        style.fillB = m_fillColor.z; style.fillA = m_fillColor.w;
+                        style.strokeR = m_strokeColor.x; style.strokeG = m_strokeColor.y;
+                        style.strokeB = m_strokeColor.z; style.strokeA = m_strokeColor.w;
+                        style.strokeWidth = m_strokeWidth;
+                        style.strokeCap = static_cast<blot::components::Style::StrokeCap>(m_strokeCap);
+                        style.strokeJoin = static_cast<blot::components::Style::StrokeJoin>(m_strokeJoin);
+                        m_ecs.addComponent<Style>(shapeEntity, style);
+                        m_toolActive = false;
+                    }
+                    // Draw preview while dragging
+                    if (m_toolActive && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                        ImVec2 start = m_toolStartPos;
+                        ImVec2 end = canvasMousePos;
+                        float x1 = std::min(start.x, end.x);
+                        float y1 = std::min(start.y, end.y);
+                        float x2 = std::max(start.x, end.x);
+                        float y2 = std::max(start.y, end.y);
+                        if (m_selectedShape == 0) {
+                            ImGui::GetWindowDrawList()->AddRect(
+                                ImVec2(canvasPos.x + x1, canvasPos.y + y1),
+                                ImVec2(canvasPos.x + x2, canvasPos.y + y2),
+                                ImGui::ColorConvertFloat4ToU32(m_strokeColor),
+                                0.0f, 0, 1.0f
+                            );
+                        } else if (m_selectedShape == 1) {
+                            ImVec2 center = ImVec2((x1 + x2) * 0.5f, (y1 + y2) * 0.5f);
+                            ImVec2 radius = ImVec2((x2 - x1) * 0.5f, (y2 - y1) * 0.5f);
+                            DrawEllipse(ImGui::GetWindowDrawList(), ImVec2(canvasPos.x + center.x, canvasPos.y + center.y), radius.x, radius.y, ImGui::ColorConvertFloat4ToU32(m_strokeColor), 1.0f, m_polygonSides);
+                        } else if (m_selectedShape == 2) {
+                            ImGui::GetWindowDrawList()->AddLine(
+                                ImVec2(canvasPos.x + start.x, canvasPos.y + start.y),
+                                ImVec2(canvasPos.x + end.x, canvasPos.y + end.y),
+                                ImGui::ColorConvertFloat4ToU32(m_strokeColor), 1.0f
+                            );
                         }
                     }
                 }
             }
         }
+        
         ImGui::End();
     }
     
@@ -610,21 +780,57 @@ void BlotApp::renderUI() {
         ImGui::Begin("Toolbar", &m_showToolbar, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
         ImVec4 selectedColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
         ImVec4 normalColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-        auto ToolButton = [&](const char* icon, ToolType type) {
-            if (m_currentTool == type)
-                ImGui::PushStyleColor(ImGuiCol_Button, selectedColor);
-            else
-                ImGui::PushStyleColor(ImGuiCol_Button, normalColor);
-            bool pressed = ImGui::Button(icon);
-            ImGui::PopStyleColor();
-            if (pressed) m_currentTool = type;
-            ImGui::SameLine();
-        };
-        ToolButton(ICON_FA_MOUSE_POINTER, ToolType::Select);
-        ToolButton(ICON_FA_SQUARE, ToolType::Rectangle);
-        ToolButton(ICON_FA_CIRCLE, ToolType::Ellipse);
-        ToolButton(ICON_FA_PEN, ToolType::Line);
+        // Shape tool with popup
+        ImGui::PushID("ShapeTool");
+        if (ImGui::Button(ICON_FA_SHAPES)) ImGui::OpenPopup("ShapeMenu");
+        ImGui::SameLine();
+        if (ImGui::BeginPopup("ShapeMenu")) {
+            if (ImGui::Selectable("Rectangle", m_selectedShape == 0)) { m_selectedShape = 0; m_currentTool = BlotApp::ToolType::Rectangle; }
+            if (ImGui::Selectable("Ellipse", m_selectedShape == 1)) { m_selectedShape = 1; m_currentTool = BlotApp::ToolType::Ellipse; }
+            if (ImGui::Selectable("Line", m_selectedShape == 2)) { m_selectedShape = 2; m_currentTool = BlotApp::ToolType::Line; }
+            if (ImGui::Selectable("Polygon", m_selectedShape == 3)) { m_selectedShape = 3; m_currentTool = BlotApp::ToolType::Polygon; }
+            if (ImGui::Selectable("Star", m_selectedShape == 4)) { m_selectedShape = 4; m_currentTool = BlotApp::ToolType::Star; }
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        // Show current shape icon
+        ImGui::SameLine();
+        ToolButton(ICON_FA_MOUSE_POINTER, BlotApp::ToolType::Select);
+        ToolButton(ICON_FA_SQUARE, BlotApp::ToolType::Rectangle);
+        ToolButton(ICON_FA_CIRCLE, BlotApp::ToolType::Ellipse);
+        ToolButton(ICON_FA_PEN, BlotApp::ToolType::Line);
+        // Stroke palette icon
+        if (ImGui::Button(ICON_FA_SLIDERS_H)) m_showStrokePalette = !m_showStrokePalette;
+        ImGui::SameLine();
+        // Palette icon for swatches
+        if (ImGui::Button(ICON_FA_PALETTE)) m_showSwatches = !m_showSwatches;
+        ImGui::SameLine();
         ImGui::NewLine();
+        
+        // Color pickers
+        ImGui::Text("Fill:");
+        ImGui::SameLine();
+        ImGui::ColorEdit4("##FillColor", (float*)&m_fillColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+        ImGui::SameLine();
+        ImGui::Text("Stroke:");
+        ImGui::SameLine();
+        ImGui::ColorEdit4("##StrokeColor", (float*)&m_strokeColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+        ImGui::End();
+    }
+    
+    if (m_showStrokePalette) {
+        if (ImGui::Begin("Stroke Palette", &m_showStrokePalette)) {
+            ImGui::SliderFloat("Width", &m_strokeWidth, 0.1f, 20.0f);
+            ImGui::Combo("Cap", &m_strokeCap, "Butt\0Square\0Round\0");
+            ImGui::Combo("Join", &m_strokeJoin, "Miter\0Bevel\0Round\0");
+            ImGui::InputInt("Dash Count", &m_dashCount);
+            for (int i = 0; i < m_dashCount && i < 4; ++i) {
+                ImGui::InputFloat(("Dash[" + std::to_string(i) + "]").c_str(), &m_dashPattern[i]);
+            }
+            ImGui::SliderFloat("Dash Offset", &m_dashOffset, 0.0f, 100.0f);
+            ImGui::InputInt("Polygon/Star Sides", &m_polygonSides);
+            if (m_polygonSides < 3) m_polygonSides = 3;
+        }
         ImGui::End();
     }
     
@@ -837,6 +1043,66 @@ void BlotApp::renderUI() {
         ImGui::Markdown(markdownEditorBuffer.c_str(), markdownEditorBuffer.size(), mdConfig);
         ImGui::End();
     }
+
+    // Swatches window/component
+    if (m_showSwatches) {
+        if (ImGui::Begin("Swatches", &m_showSwatches)) {
+            ImGui::RadioButton("Fill", &m_activeSwatchType, 0); ImGui::SameLine();
+            ImGui::RadioButton("Stroke", &m_activeSwatchType, 1);
+            ImGui::SameLine();
+            if (ImGui::Button("Save")) SaveSwatches(m_swatchesFile);
+            ImGui::SameLine();
+            if (ImGui::Button("Load")) LoadSwatches(m_swatchesFile);
+            ImGui::Separator();
+            // Drag-and-drop reordering
+            int swatchesPerRow = 8;
+            int swatchToMove = -1, swatchTarget = -1;
+            for (int i = 0; i < m_swatches.size(); ++i) {
+                if (i > 0 && i % swatchesPerRow == 0) ImGui::NewLine();
+                ImGui::PushID(i);
+                if (ImGui::ColorButton("##swatch", m_swatches[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(24,24))) {
+                    if (m_activeSwatchType == 0) m_fillColor = m_swatches[i];
+                    else m_strokeColor = m_swatches[i];
+                }
+                // Drag source
+                if (ImGui::BeginDragDropSource()) {
+                    ImGui::SetDragDropPayload("SWATCH", &i, sizeof(int));
+                    ImGui::ColorButton("##drag", m_swatches[i], ImGuiColorEditFlags_NoTooltip, ImVec2(24,24));
+                    ImGui::EndDragDropSource();
+                }
+                // Drag target
+                if (ImGui::BeginDragDropTarget()) {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SWATCH")) {
+                        int src = *(const int*)payload->Data;
+                        swatchToMove = src;
+                        swatchTarget = i;
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+                if (ImGui::BeginPopupContextItem()) {
+                    if (ImGui::Button("Remove")) {
+                        m_swatches.erase(m_swatches.begin() + i);
+                        ImGui::EndPopup();
+                        ImGui::PopID();
+                        break;
+                    }
+                    ImGui::EndPopup();
+                }
+                ImGui::PopID();
+                ImGui::SameLine();
+            }
+            if (swatchToMove != -1 && swatchTarget != -1 && swatchToMove != swatchTarget) {
+                auto c = m_swatches[swatchToMove];
+                m_swatches.erase(m_swatches.begin() + swatchToMove);
+                m_swatches.insert(m_swatches.begin() + swatchTarget, c);
+            }
+            ImGui::NewLine();
+            if (ImGui::Button("Add Current Color")) {
+                m_swatches.push_back(m_activeSwatchType == 0 ? m_fillColor : m_strokeColor);
+            }
+        }
+        ImGui::End();
+    }
 }
 
 void BlotApp::renderCanvas() {
@@ -845,6 +1111,11 @@ void BlotApp::renderCanvas() {
         auto it = m_canvasResources.find(m_activeCanvasId);
         if (it != m_canvasResources.end()) {
             it->second->render();
+        }
+        
+        // Render ECS shapes using the shape rendering system
+        if (m_shapeRenderer) {
+            m_shapeRenderer->renderShapes(m_ecs);
         }
     }
 }
@@ -1001,7 +1272,7 @@ void BlotApp::handleInput() {
     }
 
     // Removed ImGui window/mouse code from here. If you need mouse position relative to a window, do it in the UI rendering code.
-    if (m_currentTool == ToolType::Ellipse) {
+    if (m_currentTool == BlotApp::ToolType::Ellipse) {
         // This logic should also be moved to the UI code if it depends on ImGui window state.
         // For now, leave as is if it does not use ImGui functions.
         // If it does, move it to renderUI or renderCanvas.
@@ -1015,6 +1286,9 @@ void BlotApp::update() {
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);
     }
+    
+    // Update ECS systems
+    m_ecs.updateSystems(m_deltaTime);
 } 
 
 void BlotApp::switchRenderer(RendererType type) {

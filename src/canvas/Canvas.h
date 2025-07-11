@@ -4,8 +4,11 @@
 #include <vector>
 #include <string>
 #include <glm/glm.hpp>
+#include <variant>
 
 class Graphics;
+
+// Shape management is now handled by ECS. No Shape struct or shape list here.
 
 class Canvas {
 public:
@@ -61,6 +64,8 @@ public:
     std::shared_ptr<Graphics> getGraphics() { return m_graphics; }
     unsigned int getColorTexture() const;
     
+    // Shape management moved to ECS system
+
 private:
     void initFramebuffer();
     void initShaders();

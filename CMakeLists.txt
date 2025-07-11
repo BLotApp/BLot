@@ -97,6 +97,10 @@ set(SOURCES
     src/ecs/ECSManager.cpp
     src/node/NodeEditor.cpp
     src/scripting/ScriptEngine.cpp
+    src/systems/ShapeRenderingSystem.cpp
+    src/systems/ShapeRenderingSystem.h
+    src/rendering/ResourceManager.cpp
+    src/rendering/ResourceManager.h
     # ImPlot sources
     third_party/implot/implot.cpp
     third_party/implot/implot_items.cpp
@@ -127,6 +131,8 @@ set(SOURCES
     third_party/imgui/backends/imgui_impl_opengl3.h
     third_party/imgui/backends/imgui_impl_opengl3_loader.h
     # (Add more backend files here if you want them visible)
+    src/components/ShapeComponent.h
+    src/components/StyleComponent.h
 )
 
 # ImGui sources (submodule)

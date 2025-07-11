@@ -266,23 +266,20 @@ void ECSManager::renderShapeSystem() {
             
             // Draw shape based on type
             switch (shape.type) {
-                case Shape::Circle:
-                    m_graphics->drawCircle(transform.x, transform.y, shape.width);
+                case blot::components::Shape::Type::Rectangle:
+                    m_graphics->drawRect(shape.x1, shape.y1, shape.x2 - shape.x1, shape.y2 - shape.y1);
                     break;
-                case Shape::Rectangle:
-                    m_graphics->drawRect(transform.x, transform.y, shape.width, shape.height);
+                case blot::components::Shape::Type::Ellipse:
+                    m_graphics->drawEllipse(shape.x1, shape.y1, shape.x2 - shape.x1, shape.y2 - shape.y1);
                     break;
-                case Shape::Ellipse:
-                    m_graphics->drawEllipse(transform.x, transform.y, shape.width, shape.height);
+                case blot::components::Shape::Type::Line:
+                    m_graphics->drawLine(shape.x1, shape.y1, shape.x2, shape.y2);
                     break;
-                case Shape::Triangle:
-                    m_graphics->drawTriangle(transform.x, transform.y,
-                                          transform.x + shape.width, transform.y,
-                                          transform.x + shape.width * 0.5f, transform.y + shape.height);
+                case blot::components::Shape::Type::Polygon:
+                    // TODO: Implement polygon drawing
                     break;
-                case Shape::Line:
-                    m_graphics->drawLine(transform.x, transform.y,
-                                       transform.x + shape.width, transform.y + shape.height);
+                case blot::components::Shape::Type::Star:
+                    // TODO: Implement star drawing
                     break;
             }
         }
