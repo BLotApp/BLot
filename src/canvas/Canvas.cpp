@@ -257,6 +257,18 @@ void Canvas::renderECSShapes() {
     auto view = m_ecs->view<Transform, blot::components::Shape, blot::components::Style>();
     
     printf("[Canvas] renderECSShapes: Checking for entities with shapes...\n");
+    printf("[Canvas] Total entities in registry: %zu\n", m_ecs->getEntityCount());
+    
+    // Debug: Check what components each entity has
+    auto allEntities = m_ecs->getAllEntities();
+    printf("[Canvas] All entities: %zu\n", allEntities.size());
+    for (auto entity : allEntities) {
+        bool hasTransform = m_ecs->hasComponent<Transform>(entity);
+        bool hasShape = m_ecs->hasComponent<blot::components::Shape>(entity);
+        bool hasStyle = m_ecs->hasComponent<blot::components::Style>(entity);
+        printf("[Canvas] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
+               (unsigned int)entity, hasTransform, hasShape, hasStyle);
+    }
     
     for (auto entity : view) {
         auto& transform = view.get<Transform>(entity);
@@ -283,6 +295,12 @@ void Canvas::renderECSShapes() {
         y *= transform.scaleY;
         width *= transform.scaleX;
         height *= transform.scaleY;
+        
+        // Debug: Print raw shape coordinates
+        printf("[Canvas] Raw shape coords: x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f\n", 
+               shape.x1, shape.y1, shape.x2, shape.y2);
+        printf("[Canvas] Transform: x=%.2f, y=%.2f, scale=(%.2f,%.2f)\n", 
+               transform.x, transform.y, transform.scaleX, transform.scaleY);
         
         // Render based on shape type
         printf("[Canvas] Rendering shape: type=%d, x=%.2f, y=%.2f, w=%.2f, h=%.2f, hasFill=%d, hasStroke=%d\n", 

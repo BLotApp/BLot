@@ -193,8 +193,9 @@ void AppSettings::resetToDefaults() {
     showMouseCoordinates = true;
     mouseCoordinateSystem = 0;
     
-    fillColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    // Set default colors to something visible
+    fillColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);  // Red fill
+    strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f); // Black stroke
     strokeWidth = 2.0f;
     strokeCap = 0;
     strokeJoin = 0;

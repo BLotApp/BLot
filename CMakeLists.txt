@@ -95,6 +95,12 @@ set(SOURCES
     src/resources/Shader.cpp
     src/ui/TextRenderer.cpp
     src/ui/ImGuiRenderer.cpp
+    src/ui/CoordinateSystem.cpp
+    src/ui/Window.cpp
+    src/ui/ImGuiWindow.cpp
+    src/ui/CanvasWindow.cpp
+    src/ui/InfoPanelWindow.cpp
+    src/ui/ToolbarWindow.cpp
     src/ecs/ECSManager.cpp
     src/node/NodeEditor.cpp
     src/scripting/ScriptEngine.cpp
@@ -258,7 +264,7 @@ source_group("ThirdParty\\ImGui" FILES
 )
 source_group("Addons" FILES src/addons/AddonBase.cpp src/addons/AddonManager.cpp)
 source_group("Resources" FILES src/resources/VertexBuffer.cpp src/resources/Shader.cpp)
-source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp)
+source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Window.cpp src/ui/ImGuiWindow.cpp src/ui/CanvasWindow.cpp src/ui/InfoPanelWindow.cpp src/ui/ToolbarWindow.cpp)
 source_group("ECS" FILES src/ecs/ECSManager.cpp)
 source_group("Node" FILES src/node/NodeEditor.cpp)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 

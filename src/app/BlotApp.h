@@ -12,6 +12,7 @@
 #include "rendering/Blend2DRenderer.h"
 #include "rendering/ResourceManager.h"
 #include "systems/ShapeRenderingSystem.h"
+#include "ui/CoordinateSystem.h"
 #include "AppSettings.h"
 
 // Forward declarations
@@ -135,6 +136,9 @@ private:
 
     // Application settings
     AppSettings m_settings;
+    
+    // Coordinate system utility
+    blot::CoordinateSystem m_coordSystem;
     
     // UI state (now managed by AppSettings)
     bool m_showDemoWindow;
