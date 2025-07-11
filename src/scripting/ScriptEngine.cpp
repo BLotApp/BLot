@@ -1,6 +1,6 @@
-#include "ScriptEngine.h"
-#include "Canvas.h"
-#include "Graphics.h"
+#include "scripting/ScriptEngine.h"
+#include "rendering/Graphics.h"
+#include "canvas/Canvas.h"
 #include <iostream>
 #include <random>
 #include <cmath>

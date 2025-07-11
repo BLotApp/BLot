@@ -4,7 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <memory>
-#include "Renderer.h"
+#include "rendering/Renderer.h"
 
 class Graphics {
 public:

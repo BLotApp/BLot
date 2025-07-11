@@ -1,7 +1,7 @@
 #include <memory>
 #include <map>
-#include "Renderer.h"
-#include "Blend2DRenderer.h"
+#include "rendering/Renderer.h"
+#include "rendering/Blend2DRenderer.h"
 
 std::unique_ptr<IRenderer> createRenderer(RendererType type) {
     switch (type) {

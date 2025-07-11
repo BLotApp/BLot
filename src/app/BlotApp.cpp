@@ -10,15 +10,15 @@
 
 #include <iostream>
 #include <chrono>
-#include "BlotApp.h"
-#include "Canvas.h"
-#include "Graphics.h"
-#include "TextRenderer.h"
-#include "ImGuiRenderer.h"
-#include "CodeEditor.h"
-#include "ScriptEngine.h"
-#include "AddonManager.h"
-#include "NodeEditor.h"
+#include "app/BlotApp.h"
+#include "canvas/Canvas.h"
+#include "rendering/Graphics.h"
+#include "ui/TextRenderer.h"
+#include "ui/ImGuiRenderer.h"
+#include "codeeditor/CodeEditor.h"
+#include "scripting/ScriptEngine.h"
+#include "addons/AddonManager.h"
+#include "node/NodeEditor.h"
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
@@ -34,15 +34,16 @@ namespace ed = ax::NodeEditor;
 #include <fstream>
 
 #include "../assets/fonts/fontRobotoRegular.h"
-#include "Blend2DRenderer.h"
+#include "rendering/Blend2DRenderer.h"
 #include "../third_party/portable-file-dialogs/portable-file-dialogs.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-#include "ECSManager.h"
+#include "ecs/ECSManager.h"
 #include "components/TextureComponent.h"
+#include "systems/CanvasUpdateSystem.h"
 
 enum class ToolType { Select, Rectangle, Ellipse, Line };
 ToolType m_currentTool = ToolType::Select;

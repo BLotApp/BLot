@@ -5,11 +5,11 @@
 #include <vector>
 #include <GLFW/glfw3.h>
 #include "imgui.h"
-#include "Renderer.h"
-#include "ImGuiRenderer.h"
-#include "ECSManager.h"
+#include "rendering/Renderer.h"
+#include "ui/ImGuiRenderer.h"
+#include "ecs/ECSManager.h"
 #include <unordered_map>
-#include "Blend2DRenderer.h"
+#include "rendering/Blend2DRenderer.h"
 
 // Forward declarations
 class Canvas;

@@ -1,7 +1,6 @@
-#include "ECSManager.h"
-#include "Canvas.h"
-#include "Graphics.h"
-#include "ScriptEngine.h"
+#include "ecs/ECSManager.h"
+#include "rendering/Graphics.h"
+#include "scripting/ScriptEngine.h"
 #include <iostream>
 #include <algorithm>
 #include <entt/entt.hpp>

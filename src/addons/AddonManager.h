@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AddonBase.h"
+#include "addons/AddonBase.h"
 #include <memory>
 #include <unordered_map>
 #include <vector>

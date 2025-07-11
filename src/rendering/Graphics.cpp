@@ -4,8 +4,8 @@
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Graphics.h"
-#include "Blend2DRenderer.h"
+#include "rendering/Graphics.h"
+#include "rendering/Blend2DRenderer.h"
 #include <blend2d.h>
 
 struct Graphics::Impl {

@@ -162,7 +162,7 @@ T& ECSManager::getComponent(entt::entity entity) {
 
 template<typename T>
 bool ECSManager::hasComponent(entt::entity entity) {
-    return m_registry.has<T>(entity);
+    return m_registry.all_of<T>(entity);
 }
 
 template<typename T>

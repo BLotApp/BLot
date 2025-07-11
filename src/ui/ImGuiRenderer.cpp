@@ -1,7 +1,7 @@
-#include "ImGuiRenderer.h"
+#include "ui/ImGuiRenderer.h"
 #include "imgui_impl_opengl3.h"
 #include <iostream>
-#include "TextRenderer.h"
+#include "ui/TextRenderer.h"
 
 ImGuiRenderer::ImGuiRenderer(TextRenderer* textRenderer)
     : m_textRenderer(textRenderer)

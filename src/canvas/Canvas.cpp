@@ -1,8 +1,8 @@
 #include <glad/gl.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Canvas.h"
-#include "Graphics.h"
-#include "Blend2DRenderer.h"
+#include "rendering/Graphics.h"
+#include "rendering/Blend2DRenderer.h"
 #include <filesystem>
 
 struct Canvas::Impl {

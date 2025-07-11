@@ -1,4 +1,4 @@
-#include "AddonBase.h"
+#include "addons/AddonBase.h"
 #include <iostream>
 
 AddonBase::AddonBase(const std::string& name, const std::string& version)

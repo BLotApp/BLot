@@ -1,4 +1,4 @@
-#include "CodeEditor.h"
+#include "codeeditor/CodeEditor.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>

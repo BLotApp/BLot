@@ -1,4 +1,4 @@
-#include "AddonManager.h"
+#include "addons/AddonManager.h"
 #include <iostream>
 #include <algorithm>
 #include <filesystem>

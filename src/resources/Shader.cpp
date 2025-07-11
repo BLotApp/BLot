@@ -1,5 +1,5 @@
 #include <glad/gl.h>
-#include "Shader.h"
+#include "resources/Shader.h"
 
 Shader::Shader() {}
 Shader::~Shader() {}
