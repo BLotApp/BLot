@@ -203,3 +203,15 @@ target_link_libraries(blot PRIVATE ImGuizmo)
 
 add_executable(blend2d_test blend2d_test.cpp)
 target_link_libraries(blend2d_test PRIVATE blend2d::blend2d) 
+
+# Organize source files into folders for Visual Studio
+source_group("App" FILES src/app/main.cpp src/app/BlotApp.cpp)
+source_group("Canvas" FILES src/canvas/Canvas.cpp)
+source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Blend2DRenderer.cpp src/rendering/Renderer.cpp)
+source_group("CodeEditor" FILES src/codeeditor/CodeEditor.cpp)
+source_group("Addons" FILES src/addons/AddonBase.cpp src/addons/AddonManager.cpp)
+source_group("Resources" FILES src/resources/VertexBuffer.cpp src/resources/Shader.cpp)
+source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp)
+source_group("ECS" FILES src/ecs/ECSManager.cpp)
+source_group("Node" FILES src/node/NodeEditor.cpp)
+source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
