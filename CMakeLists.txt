@@ -73,9 +73,9 @@ include_directories(third_party/portable-file-dialogs)
 
 # Source files
 set(SOURCES
-    src/main.cpp
-    src/BlotApp.cpp
-    src/Canvas.cpp
+    src/app/main.cpp
+    src/app/BlotApp.cpp
+    src/canvas/Canvas.cpp
     src/Graphics.cpp
     src/Blend2DRenderer.cpp
     src/Renderer.cpp

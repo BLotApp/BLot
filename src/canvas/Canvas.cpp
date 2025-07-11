@@ -213,6 +213,7 @@ void Canvas::render() {
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.width(), img.height(), GL_BGRA, GL_UNSIGNED_BYTE, imgData.pixelData);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
+		
         // Debug: Save the image after drawing
         renderer->flush();
         img.writeToFile("debug_after_render.png");
