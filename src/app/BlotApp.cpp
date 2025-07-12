@@ -78,11 +78,11 @@ static std::string markdownEditorBuffer;
 static std::string loadedMarkdownPath;
 static std::string loadedMarkdown;
 
-static bool showFileBrowser = false;
-static int selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
-static float dashPattern[4] = {0};
-static int dashCount = 0;
-static float dashOffset = 0.0f;
+bool showFileBrowser = false;
+int m_selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
+float m_dashPattern[4] = {0};
+int m_dashCount = 0;
+float m_dashOffset = 0.0f;
 
 // Add polygon/star sides control
 static int m_polygonSides = 5;
@@ -924,7 +924,13 @@ void BlotApp::renderUI() {
         
         ImGui::End();
     }
-    
+
+    // else {
+    //    if (ImGui::Button("🎨 Not so Random Theme")) {
+    //    ImGui::Begin("Not so Random Theme", &showNotSoRandomTheme);
+    //    ImGui::End();
+    //}
+
     // Render all windows through the window manager
     m_uiManager->getWindowManager()->renderAllWindows();
     
@@ -952,8 +958,8 @@ void BlotApp::renderUI() {
     // ImPlot Demo Window - DISABLED to fix canvas layout issues
     // if (showImPlotDemo) {
     //     ImPlot::ShowDemoWindow(&showImPlotDemo);
-    // }
-    
+    // } // TODO: Move to UI
+
     // DISABLE ALL DEMO WINDOWS to fix canvas layout issues
     showImPlotDemo = false;
     m_settings.showImPlotDemo = false;
