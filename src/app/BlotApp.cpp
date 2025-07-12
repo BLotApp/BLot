@@ -196,6 +196,16 @@ BlotApp::BlotApp()
     initImGui();
     initGraphics();
     initAddons();
+    
+    // Initialize ECS-based window management
+    m_windowManager = std::make_unique<blot::WindowManager>();
+    
+    // Create canvas display window
+    m_canvasWindow = std::make_shared<blot::CanvasDisplayWindow>("Canvas###MainCanvas", 
+                                                          blot::Window::Flags::NoScrollbar | blot::Window::Flags::NoCollapse);
+    
+    // Register canvas window with window manager
+    m_windowManager->createWindow("Canvas", m_canvasWindow);
 }
 
 BlotApp::~BlotApp() {
@@ -634,153 +644,115 @@ void BlotApp::renderUI() {
         ImGui::End();
     }
     
-    // Canvas Window for Drawing
+    // Canvas Window for Drawing (ECS-based)
     if (m_showCanvas) {
-        // Make the canvas window take up the full available space
-        ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Canvas###MainCanvas", &m_showCanvas, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
-        
-        // Get the canvas area - use the full available space
-        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        ImVec2 canvasEnd = ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y);
-        
-        // Draw the Blend2D canvas texture
+        // Update canvas texture in the display window
         auto it = m_canvasResources.find(m_activeCanvasId);
         if (it != m_canvasResources.end()) {
             unsigned int texId = it->second->getColorTexture();
-            printf("[ImGui] Displaying texture: ID=%u, size=%.1fx%.1f\n", texId, canvasSize.x, canvasSize.y);
-            
-            // Get the actual image position after drawing
-            ImGui::Image((void*)(intptr_t)texId, canvasSize);
-            
-
-            
-            // Update canvas position to match the actual image position
-            canvasPos = ImGui::GetItemRectMin();
-            canvasEnd = ImGui::GetItemRectMax();
-            canvasSize = ImVec2(canvasEnd.x - canvasPos.x, canvasEnd.y - canvasPos.y);
-            
-            printf("[ImGui] Image bounds: pos=(%.1f,%.1f), size=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
-                   canvasPos.x, canvasPos.y, canvasSize.x, canvasSize.y, canvasEnd.x, canvasEnd.y);
+            int width = it->second->getWidth();
+            int height = it->second->getHeight();
+            m_canvasWindow->setCanvasTexture(texId, width, height);
         } else {
-            printf("[ImGui] ERROR: No canvas resource found for active canvas\n");
+            m_canvasWindow->clearCanvasTexture();
         }
         
-        // Handle mouse input for drawing
-        if (ImGui::IsWindowHovered()) {
-            // Check if we're dragging the window (mouse over title bar)
-            bool isDraggingWindow = ImGui::IsMouseDragging(ImGuiMouseButton_Left) && 
-                                  ImGui::GetIO().MouseClickedPos[0].y < ImGui::GetCursorPosY();
+        // Render all windows through the window manager
+        m_windowManager->renderAllWindows();
+        
+        // Handle input through the window manager
+        m_windowManager->handleInput();
+        
+        // Handle mouse input for drawing tools
+        if (m_canvasWindow->isMouseInsideCanvas()) {
+            ImVec2 canvasMousePos = m_canvasWindow->getCanvasMousePos();
             
-            // Always allow window dragging regardless of tool state
-            if (isDraggingWindow) {
-                // Window is being dragged, don't handle tool input
-                // This allows normal window dragging behavior
-            } else {
-                // Only handle tool input if we're not dragging the window
-                // Debug: Check if any mouse clicks are detected anywhere
-                static bool lastMouseDown = false;
-                bool currentMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-                if (currentMouseDown && !lastMouseDown) {
-                    printf("[Mouse] DEBUG: Mouse down detected anywhere in window\n");
+            // Pen tool logic
+            if (m_currentTool == BlotApp::ToolType::Pen) {
+                // Add point on click
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    if (!penDraggingHandle) {
+                        penPoints.push_back(canvasMousePos);
+                        // Add default handles for cubic Bezier
+                        penHandles.push_back(canvasMousePos + ImVec2(40, 0));
+                        penHandles.push_back(canvasMousePos - ImVec2(40, 0));
+                    }
                 }
-                lastMouseDown = currentMouseDown;
-                
-                ImVec2 mousePos = ImGui::GetMousePos();
-                printf("[Mouse] Window hovered, mousePos=(%.1f,%.1f), canvasBounds=(%.1f,%.1f)-(%.1f,%.1f)\n", 
-                       mousePos.x, mousePos.y, canvasPos.x, canvasPos.y, canvasEnd.x, canvasEnd.y);
-                
-                // Debug: Check if mouse is inside canvas bounds
-                bool insideCanvas = (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x && 
-                                    mousePos.y >= canvasPos.y && mousePos.y <= canvasEnd.y);
-                printf("[Mouse] Inside canvas: %s\n", insideCanvas ? "YES" : "NO");
-                if (mousePos.x >= canvasPos.x && mousePos.x <= canvasEnd.x && 
-                    mousePos.y >= canvasPos.y && mousePos.y <= canvasEnd.y) {
-                    printf("[Mouse] Inside canvas bounds!\n");
-                    
-                    // Convert to canvas coordinates
-                    ImVec2 canvasMousePos = ImVec2(mousePos.x - canvasPos.x, mousePos.y - canvasPos.y);
-                    printf("[Mouse] mousePos=(%.1f,%.1f), canvasPos=(%.1f,%.1f), canvasMousePos=(%.1f,%.1f)\n", 
-                           mousePos.x, mousePos.y, canvasPos.x, canvasPos.y, canvasMousePos.x, canvasMousePos.y);
-                    
-                    // Debug: Check if coordinates are valid
-                    if (canvasMousePos.x == 0.0f && canvasMousePos.y == 0.0f) {
-                        printf("[Mouse] WARNING: canvasMousePos is (0,0)! This indicates a coordinate calculation issue.\n");
+                // Drag handles
+                for (int i = 0; i < penHandles.size(); ++i) {
+                    ImVec2 handleScreen = ImVec2(m_canvasWindow->getPosition().x + penHandles[i].x, 
+                                                m_canvasWindow->getPosition().y + penHandles[i].y);
+                    if (!penDraggingHandle && ImGui::IsMouseHoveringRect(handleScreen - ImVec2(5,5), handleScreen + ImVec2(5,5)) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                        penDraggingHandle = true;
+                        penHandleIndex = i;
+                    }
+                }
+                if (penDraggingHandle && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                    penHandles[penHandleIndex] = canvasMousePos;
+                } else if (penDraggingHandle && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                    penDraggingHandle = false;
+                    penHandleIndex = -1;
+                }
+                // Draw points and handles
+                for (int i = 0; i < penPoints.size(); ++i) {
+                    ImVec2 pt = ImVec2(m_canvasWindow->getPosition().x + penPoints[i].x, 
+                                      m_canvasWindow->getPosition().y + penPoints[i].y);
+                    ImGui::GetWindowDrawList()->AddCircleFilled(pt, 4, IM_COL32(0,0,0,255));
+                    if (i*2+1 < penHandles.size()) {
+                        ImVec2 h1 = ImVec2(m_canvasWindow->getPosition().x + penHandles[i*2].x, 
+                                          m_canvasWindow->getPosition().y + penHandles[i*2].y);
+                        ImVec2 h2 = ImVec2(m_canvasWindow->getPosition().x + penHandles[i*2+1].x, 
+                                          m_canvasWindow->getPosition().y + penHandles[i*2+1].y);
+                        ImGui::GetWindowDrawList()->AddCircleFilled(h1, 3, IM_COL32(100,100,255,255));
+                        ImGui::GetWindowDrawList()->AddCircleFilled(h2, 3, IM_COL32(100,100,255,255));
+                        ImGui::GetWindowDrawList()->AddLine(pt, h1, IM_COL32(100,100,255,255), 1.0f);
+                        ImGui::GetWindowDrawList()->AddLine(pt, h2, IM_COL32(100,100,255,255), 1.0f);
+                    }
+                }
+                // Draw Bezier curve
+                for (int i = 0; i+1 < penPoints.size(); ++i) {
+                    ImVec2 p0 = penPoints[i];
+                    ImVec2 p1 = penHandles[i*2];
+                    ImVec2 p2 = penHandles[i*2+1];
+                    ImVec2 p3 = penPoints[i+1];
+                    ImGui::GetWindowDrawList()->AddBezierCubic(
+                        ImVec2(m_canvasWindow->getPosition().x + p0.x, m_canvasWindow->getPosition().y + p0.y),
+                        ImVec2(m_canvasWindow->getPosition().x + p1.x, m_canvasWindow->getPosition().y + p1.y),
+                        ImVec2(m_canvasWindow->getPosition().x + p2.x, m_canvasWindow->getPosition().y + p2.y),
+                        ImVec2(m_canvasWindow->getPosition().x + p3.x, m_canvasWindow->getPosition().y + p3.y),
+                        ImGui::ColorConvertFloat4ToU32(m_strokeColor), m_strokeWidth, 0
+                    );
+                }
+                // Finish path on right-click
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+                    penPoints.clear();
+                    penHandles.clear();
+                    penDraggingHandle = false;
+                    penHandleIndex = -1;
+                }
+            } else {
+                // Other shapes
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    printf("[Mouse] Left mouse clicked! canvasMousePos=(%.1f,%.1f)\n", canvasMousePos.x, canvasMousePos.y);
+                    m_toolStartPos = canvasMousePos;
+                    m_toolActive = true;
+                        printf("[Mouse] Tool activated: m_toolActive=%d, m_toolStartPos=(%.1f,%.1f)\n", m_toolActive, m_toolStartPos.x, m_toolStartPos.y);
+                    }
+                        
+                                            // Debug: Check if mouse is being clicked at all
+                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                        printf("[Mouse] DEBUG: Left click detected anywhere in window\n");
                     }
                     
-                    // Pen tool logic
-                    if (m_currentTool == BlotApp::ToolType::Pen) {
-                        // Add point on click
-                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                            if (!penDraggingHandle) {
-                                penPoints.push_back(canvasMousePos);
-                                // Add default handles for cubic Bezier
-                                penHandles.push_back(canvasMousePos + ImVec2(40, 0));
-                                penHandles.push_back(canvasMousePos - ImVec2(40, 0));
-                            }
-                        }
-                        // Drag handles
-                        for (int i = 0; i < penHandles.size(); ++i) {
-                            ImVec2 handleScreen = ImVec2(canvasPos.x + penHandles[i].x, canvasPos.y + penHandles[i].y);
-                            if (!penDraggingHandle && ImGui::IsMouseHoveringRect(handleScreen - ImVec2(5,5), handleScreen + ImVec2(5,5)) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                                penDraggingHandle = true;
-                                penHandleIndex = i;
-                            }
-                        }
-                        if (penDraggingHandle && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                            penHandles[penHandleIndex] = canvasMousePos;
-                        } else if (penDraggingHandle && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                            penDraggingHandle = false;
-                            penHandleIndex = -1;
-                        }
-                        // Draw points and handles
-                        for (int i = 0; i < penPoints.size(); ++i) {
-                            ImVec2 pt = ImVec2(canvasPos.x + penPoints[i].x, canvasPos.y + penPoints[i].y);
-                            ImGui::GetWindowDrawList()->AddCircleFilled(pt, 4, IM_COL32(0,0,0,255));
-                            if (i*2+1 < penHandles.size()) {
-                                ImVec2 h1 = ImVec2(canvasPos.x + penHandles[i*2].x, canvasPos.y + penHandles[i*2].y);
-                                ImVec2 h2 = ImVec2(canvasPos.x + penHandles[i*2+1].x, canvasPos.y + penHandles[i*2+1].y);
-                                ImGui::GetWindowDrawList()->AddCircleFilled(h1, 3, IM_COL32(100,100,255,255));
-                                ImGui::GetWindowDrawList()->AddCircleFilled(h2, 3, IM_COL32(100,100,255,255));
-                                ImGui::GetWindowDrawList()->AddLine(pt, h1, IM_COL32(100,100,255,255), 1.0f);
-                                ImGui::GetWindowDrawList()->AddLine(pt, h2, IM_COL32(100,100,255,255), 1.0f);
-                            }
-                        }
-                        // Draw Bezier curve
-                        for (int i = 0; i+1 < penPoints.size(); ++i) {
-                            ImVec2 p0 = penPoints[i];
-                            ImVec2 p1 = penHandles[i*2];
-                            ImVec2 p2 = penHandles[i*2+1];
-                            ImVec2 p3 = penPoints[i+1];
-                            ImGui::GetWindowDrawList()->AddBezierCubic(
-                                ImVec2(canvasPos.x + p0.x, canvasPos.y + p0.y),
-                                ImVec2(canvasPos.x + p1.x, canvasPos.y + p1.y),
-                                ImVec2(canvasPos.x + p2.x, canvasPos.y + p2.y),
-                                ImVec2(canvasPos.x + p3.x, canvasPos.y + p3.y),
-                                ImGui::ColorConvertFloat4ToU32(m_strokeColor), m_strokeWidth, 0
-                            );
-                        }
-                        // Finish path on right-click
-                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-                            penPoints.clear();
-                            penHandles.clear();
-                            penDraggingHandle = false;
-                            penHandleIndex = -1;
-                        }
-                    } else {
-                        // Other shapes
-                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                            printf("[Mouse] Left mouse clicked! canvasMousePos=(%.1f,%.1f)\n", canvasMousePos.x, canvasMousePos.y);
-                            m_toolStartPos = canvasMousePos;
-                            m_toolActive = true;
-                        }
-                        
-                        // Debug: Check if mouse is being clicked at all
-                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                            printf("[Mouse] DEBUG: Left click detected anywhere in window\n");
-                        }
+                    // Debug: Check if mouse is down
+                    if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                        printf("[Mouse] DEBUG: Left mouse is down\n");
+                    }
+                    
+                    // Debug: Check if mouse is released
+                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                        printf("[Mouse] DEBUG: Left mouse released, m_toolActive=%d\n", m_toolActive);
+                    }
                         
                         // Debug: Check if mouse is released but tool not active
                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !m_toolActive) {
@@ -791,6 +763,8 @@ void BlotApp::renderUI() {
                             printf("[Mouse] Left mouse released, creating shape...\n");
                             printf("[Mouse] DEBUG: Tool was active, creating shape with start=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
                                    m_toolStartPos.x, m_toolStartPos.y, canvasMousePos.x, canvasMousePos.y);
+                            printf("[Mouse] DEBUG: Direction check - start.x=%.1f, end.x=%.1f, delta=%.1f\n", 
+                                   m_toolStartPos.x, canvasMousePos.x, canvasMousePos.x - m_toolStartPos.x);
                             ImVec2 start = m_toolStartPos;
                             ImVec2 end = canvasMousePos;
                             float x1 = std::min(start.x, end.x);
@@ -815,6 +789,8 @@ void BlotApp::renderUI() {
                                 }
                             }
                             
+                            // Get canvas size from the canvas window
+                            ImVec2 canvasSize = m_canvasWindow->getCanvasSize();
                             float scaleX = canvasWidth / canvasSize.x;
                             float scaleY = canvasHeight / canvasSize.y;
                             
@@ -868,6 +844,8 @@ void BlotApp::renderUI() {
                         }
                         // Draw preview while dragging
                         if (m_toolActive && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                            printf("[Mouse] DEBUG: Dragging - start=(%.1f,%.1f), current=(%.1f,%.1f)\n", 
+                                   m_toolStartPos.x, m_toolStartPos.y, canvasMousePos.x, canvasMousePos.y);
                             ImVec2 start = m_toolStartPos;
                             ImVec2 end = canvasMousePos;
                             float x1 = std::min(start.x, end.x);
@@ -897,8 +875,6 @@ void BlotApp::renderUI() {
                 }
             }
         }
-        
-        ImGui::End();
     }
     
     // Info Panel
@@ -1829,6 +1805,11 @@ void BlotApp::update() {
     
     // Update ECS systems
     m_ecs.updateSystems(m_deltaTime);
+    
+    // Update window manager
+    if (m_windowManager) {
+        m_windowManager->update();
+    }
 } 
 
 void BlotApp::switchRenderer(RendererType type) {

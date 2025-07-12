@@ -4,7 +4,7 @@
 #include "ecs/ECSManager.h"
 #include "components/ShapeComponent.h"
 #include "components/StyleComponent.h"
-#include "components/TransformComponent.h"
+// Transform component is defined in ECSManager.h
 #include "rendering/Graphics.h"
 #include <imgui.h>
 #include <iostream>
@@ -159,24 +159,30 @@ void CanvasWindow::createShape(const ImVec2& start, const ImVec2& end) {
         return;
     }
     
+    printf("[CanvasWindow] Input coordinates: start=(%.1f,%.1f), end=(%.1f,%.1f)\n", start.x, start.y, end.x, end.y);
+    
     ImVec2 blend2DStart = convertToBlend2DCoordinates(start);
     ImVec2 blend2DEnd = convertToBlend2DCoordinates(end);
+    
+    printf("[CanvasWindow] Converted coordinates: start=(%.1f,%.1f), end=(%.1f,%.1f)\n", blend2DStart.x, blend2DStart.y, blend2DEnd.x, blend2DEnd.y);
     
     float x1 = std::min(blend2DStart.x, blend2DEnd.x);
     float y1 = std::min(blend2DStart.y, blend2DEnd.y);
     float x2 = std::max(blend2DStart.x, blend2DEnd.x);
     float y2 = std::max(blend2DStart.y, blend2DEnd.y);
     
-    printf("[CanvasWindow] Creating shape: (%.1f,%.1f) to (%.1f,%.1f)\n", x1, y1, x2, y2);
+    printf("[CanvasWindow] Final shape coordinates: (%.1f,%.1f) to (%.1f,%.1f)\n", x1, y1, x2, y2);
     
     // Create ECS entity with shape components
     entt::entity shapeEntity = m_ecs->createEntity();
     
     // Add Transform component
-    TransformComponent transform;
-    transform.position = glm::vec2(0.0f, 0.0f);
-    transform.scale = glm::vec2(1.0f, 1.0f);
-    m_ecs->addComponent<TransformComponent>(shapeEntity, transform);
+    Transform transform;
+    transform.x = 0.0f;
+    transform.y = 0.0f;
+    transform.scaleX = 1.0f;
+    transform.scaleY = 1.0f;
+    m_ecs->addComponent<Transform>(shapeEntity, transform);
     
     // Add Shape component
     blot::components::Shape shape;
@@ -204,6 +210,8 @@ ImVec2 CanvasWindow::convertToCanvasCoordinates(const ImVec2& screenPos) const {
 }
 
 ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const {
+    printf("[CanvasWindow] convertToBlend2DCoordinates: input=(%.1f,%.1f)\n", canvasPos.x, canvasPos.y);
+    
     // Get actual canvas dimensions from the canvas resource
     if (!m_canvasResources || m_activeCanvasId == entt::null) {
         printf("[CanvasWindow] ERROR: No canvas resources or active canvas\n");
@@ -231,6 +239,8 @@ ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const 
     float canvasWidth = static_cast<float>(renderer->getWidth());
     float canvasHeight = static_cast<float>(renderer->getHeight());
     
+    printf("[CanvasWindow] Canvas dimensions: %.1fx%.1f, ImGui size: %.1fx%.1f\n", canvasWidth, canvasHeight, m_canvasSize.x, m_canvasSize.y);
+    
     if (m_canvasSize.x <= 0.0f || m_canvasSize.y <= 0.0f) {
         printf("[CanvasWindow] ERROR: Invalid canvas size: %.1fx%.1f\n", m_canvasSize.x, m_canvasSize.y);
         return canvasPos; // Return unchanged if invalid size
@@ -239,7 +249,10 @@ ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const 
     float scaleX = canvasWidth / m_canvasSize.x;
     float scaleY = canvasHeight / m_canvasSize.y;
     
-    return ImVec2(canvasPos.x * scaleX, canvasPos.y * scaleY);
+    ImVec2 result = ImVec2(canvasPos.x * scaleX, canvasPos.y * scaleY);
+    printf("[CanvasWindow] Scale: (%.2f,%.2f), result: (%.1f,%.1f)\n", scaleX, scaleY, result.x, result.y);
+    
+    return result;
 }
 
 } // namespace blot 

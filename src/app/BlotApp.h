@@ -13,6 +13,8 @@
 #include "rendering/ResourceManager.h"
 #include "systems/ShapeRenderingSystem.h"
 #include "ui/CoordinateSystem.h"
+#include "ui/WindowManager.h"
+#include "ui/CanvasDisplayWindow.h"
 #include "AppSettings.h"
 
 // Forward declarations
@@ -150,4 +152,8 @@ private:
     // Toolbar and drawing mode
     bool m_showToolbar = true;
     bool m_drawCircleMode = false;
+    
+    // Window management (ECS-based)
+    std::unique_ptr<blot::WindowManager> m_windowManager;
+    std::shared_ptr<blot::CanvasDisplayWindow> m_canvasWindow;
 }; 

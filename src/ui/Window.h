@@ -88,6 +88,10 @@ public:
     virtual WindowState& getState() = 0;
     virtual const WindowState& getState() const = 0;
 
+    // Window identification
+    virtual std::string getName() const = 0;
+    virtual std::string getTitle() const = 0;
+
     // Rendering
     virtual void begin() = 0;
     virtual void end() = 0;

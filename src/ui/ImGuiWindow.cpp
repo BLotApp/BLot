@@ -104,6 +104,14 @@ const Window::WindowState& ImGuiWindow::getState() const {
     return m_state;
 }
 
+std::string ImGuiWindow::getName() const {
+    return m_title;
+}
+
+std::string ImGuiWindow::getTitle() const {
+    return m_title;
+}
+
 void ImGuiWindow::begin() {
     // Set window properties
     ImGui::SetNextWindowSize(m_state.size, ImGuiCond_FirstUseEver);

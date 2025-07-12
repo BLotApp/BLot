@@ -44,6 +44,10 @@ public:
     virtual WindowState& getState() override;
     virtual const WindowState& getState() const override;
 
+    // Window identification
+    virtual std::string getName() const override;
+    virtual std::string getTitle() const override;
+
     // Rendering
     virtual void begin() override;
     virtual void end() override;
