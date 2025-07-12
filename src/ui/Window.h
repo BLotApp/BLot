@@ -26,6 +26,7 @@ public:
         NoFocusOnAppearing = ImGuiWindowFlags_NoFocusOnAppearing,
         NoBackground = ImGuiWindowFlags_NoBackground,
         NoDecoration = ImGuiWindowFlags_NoDecoration,
+        NoTitleBar = ImGuiWindowFlags_NoTitleBar,
         UnsavedDocument = ImGuiWindowFlags_UnsavedDocument,
         ChildWindow = ImGuiWindowFlags_ChildWindow,
         Tooltip = ImGuiWindowFlags_Tooltip,

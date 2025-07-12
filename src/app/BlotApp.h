@@ -13,8 +13,18 @@
 #include "rendering/ResourceManager.h"
 #include "systems/ShapeRenderingSystem.h"
 #include "ui/CoordinateSystem.h"
-#include "ui/WindowManager.h"
-#include "ui/CanvasDisplayWindow.h"
+#include "ui/UIManager.h"
+#include "ui/TextureViewerWindow.h"
+#include "ui/PropertiesWindow.h"
+#include "ui/ToolbarWindow.h"
+#include "ui/InfoWindow.h"
+#include "ui/MainMenuBar.h"
+#include "ui/CodeEditorWindow.h"
+#include "ui/AddonManagerWindow.h"
+#include "ui/NodeEditorWindow.h"
+#include "ui/ThemeEditorWindow.h"
+#include "ui/StrokeWindow.h"
+
 #include "AppSettings.h"
 
 // Forward declarations
@@ -30,48 +40,37 @@ public:
     ~BlotApp();
     
     void run();
-    void renderProperties();
     
-    // Toolbar tool type and state (moved to public for external access)
-    enum class ToolType { Select, Rectangle, Ellipse, Line, Polygon, Star, Pen };
-    ToolType m_currentTool = ToolType::Select;
-    ImVec2 m_toolStartPos = ImVec2(0,0);
-    bool m_toolActive = false;
-
-    // ECS-based shape management - no longer need local shape vector
-
-    // Drag state for placing shapes
-    bool m_isDragging = false;
-    ImVec2 m_dragStart = ImVec2(0,0);
-    ImVec2 m_dragEnd = ImVec2(0,0);
-    
-    // Node system for Node Editor
-    struct NodeParam {
-        std::string name;
-        float value;
-    };
-    struct NodeConnection {
-        int fromNodeId;
-        std::string fromParam;
-        int toNodeId;
-        std::string toParam;
-    };
-    enum class NodeType { Circle, Add, Subtract, Multiply, Divide, Sin, Cos, Grid, Copy };
-    struct Node {
-        int id;
-        NodeType type;
-        std::vector<NodeParam> params;
-        std::vector<NodeConnection> inputs;
-        std::vector<NodeConnection> outputs;
-    };
-    std::vector<Node> m_nodes;
-    int m_nextNodeId = 1;
+    // UI Components
+    std::shared_ptr<blot::ToolbarWindow> getToolbar() { 
+        return std::dynamic_pointer_cast<blot::ToolbarWindow>(m_uiManager->getWindowManager()->getWindow("Toolbar")); 
+    }
+    std::shared_ptr<blot::InfoWindow> getInfoWindow() {
+        return std::dynamic_pointer_cast<blot::InfoWindow>(m_uiManager->getWindowManager()->getWindow("InfoWindow"));
+    }
+    std::shared_ptr<blot::PropertiesWindow> getPropertiesWindow() { 
+        return std::dynamic_pointer_cast<blot::PropertiesWindow>(m_uiManager->getWindowManager()->getWindow("Properties")); 
+    }
+    std::shared_ptr<blot::MainMenuBar> getMainMenuBar() { 
+        return std::dynamic_pointer_cast<blot::MainMenuBar>(m_uiManager->getWindowManager()->getWindow("MainMenuBar")); 
+    }
+    std::shared_ptr<blot::CodeEditorWindow> getCodeEditorWindow() { 
+        return std::dynamic_pointer_cast<blot::CodeEditorWindow>(m_uiManager->getWindowManager()->getWindow("CodeEditor")); 
+    }
+    std::shared_ptr<blot::AddonManagerWindow> getAddonManagerWindow() { 
+        return std::dynamic_pointer_cast<blot::AddonManagerWindow>(m_uiManager->getWindowManager()->getWindow("AddonManager")); 
+    }
+    std::shared_ptr<blot::NodeEditorWindow> getNodeEditorWindow() { 
+        return std::dynamic_pointer_cast<blot::NodeEditorWindow>(m_uiManager->getWindowManager()->getWindow("NodeEditor")); 
+    }
+    std::shared_ptr<blot::ThemeEditorWindow> getThemeEditorWindow() { 
+        return std::dynamic_pointer_cast<blot::ThemeEditorWindow>(m_uiManager->getWindowManager()->getWindow("ThemeEditor")); 
+    }
+    std::shared_ptr<blot::ToolbarWindow> getToolbarWindow() const { return m_toolbarWindow; }
+    std::shared_ptr<StrokeWindow> getStrokeWindow() const { return m_strokeWindow; }
     
     // Addon management
     void loadDefaultAddons();
-    void renderAddonManager();
-    void renderAddonList();
-    void renderAddonDetails();
     
     // Renderer management
     void initRenderer();
@@ -82,22 +81,15 @@ public:
     enum class ImGuiTheme { Dark, Light, Classic, Corporate, Dracula };
     ImGuiTheme m_currentTheme = ImGuiTheme::Dark;
     void setImGuiTheme(ImGuiTheme theme);
-    void renderThemeEditor();
     void saveCurrentTheme(const std::string& path);
     std::string m_lastThemePath;
     void loadTheme(const std::string& path);
-    bool m_showThemeEditor = false;
 
     // Resource management
     std::unique_ptr<ResourceManager> m_resourceManager;
-    
-    // Resource maps for ECS canvas entities (simplified)
-    std::unordered_map<entt::entity, std::unique_ptr<Canvas>> m_canvasResources;
-    std::unordered_map<entt::entity, std::shared_ptr<Graphics>> m_graphicsResources;
 
 private:
     void initWindow();
-    void initImGui();
     void initGraphics();
     void initAddons();
     void renderUI();
@@ -105,15 +97,13 @@ private:
     void renderAddonUI();
     void handleInput();
     void update();
+    void configureMainMenuBarCallbacks();
+    void updateMainMenuBarCanvasList();
 
     // Window and OpenGL
     GLFWwindow* m_window;
     int m_windowWidth;
     int m_windowHeight;
-
-    // ImGui with enhanced text rendering
-    std::unique_ptr<TextRenderer> m_textRenderer;
-    std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
 
     // ECS core for all entities/components (including canvases)
     ECSManager m_ecs;
@@ -142,18 +132,14 @@ private:
     // Coordinate system utility
     blot::CoordinateSystem m_coordSystem;
     
-    // UI state (now managed by AppSettings)
-    bool m_showDemoWindow;
-    bool m_showCodeEditor;
-    bool m_showCanvas;
-    bool m_showProperties;
-    bool m_showAddonManager;
-    bool m_showNodeEditor = false;
-    // Toolbar and drawing mode
-    bool m_showToolbar = true;
-    bool m_drawCircleMode = false;
+    // UI management
+    std::unique_ptr<blot::UIManager> m_uiManager;
+    
+    // Node editor state (for NodeEditorWindow)
+    std::vector<blot::Node> m_nodes;
+    int m_nextNodeId = 1;
     
     // Window management (ECS-based)
-    std::unique_ptr<blot::WindowManager> m_windowManager;
-    std::shared_ptr<blot::CanvasDisplayWindow> m_canvasWindow;
+    std::shared_ptr<blot::ToolbarWindow> m_toolbarWindow;
+    std::shared_ptr<StrokeWindow> m_strokeWindow;
 }; 

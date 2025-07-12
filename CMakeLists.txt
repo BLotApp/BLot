@@ -98,9 +98,24 @@ set(SOURCES
     src/ui/CoordinateSystem.cpp
     src/ui/Window.cpp
     src/ui/ImGuiWindow.cpp
+    src/ui/ImGuiWindow.h
     src/ui/CanvasWindow.cpp
-    src/ui/InfoPanelWindow.cpp
+    src/ui/InfoWindow.cpp
     src/ui/ToolbarWindow.cpp
+    src/ui/StrokeWindow.cpp
+    src/ui/StrokeWindow.h
+    src/ui/TextureViewerWindow.cpp
+    src/ui/TextureViewerWindow.h
+    src/ui/DebugPanel.cpp
+    src/ui/DebugPanel.h
+    src/ui/ThemePanel.cpp
+    src/ui/ThemePanel.h
+    src/ui/TerminalWindow.cpp
+    src/ui/TerminalWindow.h
+    src/ui/LogWindow.cpp
+    src/ui/LogWindow.h
+    src/ui/UIManager.cpp
+    src/ui/UIManager.h
     src/ecs/ECSManager.cpp
     src/node/NodeEditor.cpp
     src/scripting/ScriptEngine.cpp
@@ -264,7 +279,7 @@ source_group("ThirdParty\\ImGui" FILES
 )
 source_group("Addons" FILES src/addons/AddonBase.cpp src/addons/AddonManager.cpp)
 source_group("Resources" FILES src/resources/VertexBuffer.cpp src/resources/Shader.cpp)
-source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Window.cpp src/ui/ImGuiWindow.cpp src/ui/CanvasWindow.cpp src/ui/InfoPanelWindow.cpp src/ui/ToolbarWindow.cpp)
+source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Window.cpp src/ui/ImGuiWindow.cpp src/ui/CanvasWindow.cpp src/ui/InfoWindow.cpp src/ui/ToolbarWindow.cpp src/ui/StrokeWindow.cpp src/ui/StrokeWindow.h src/ui/TextureViewerWindow.cpp src/ui/TextureViewerWindow.h src/ui/DebugPanel.cpp src/ui/DebugPanel.h src/ui/ThemePanel.cpp src/ui/ThemePanel.h src/ui/TerminalWindow.cpp src/ui/TerminalWindow.h src/ui/LogWindow.cpp src/ui/LogWindow.h src/ui/UIManager.cpp src/ui/UIManager.h)
 source_group("ECS" FILES src/ecs/ECSManager.cpp)
 source_group("Node" FILES src/node/NodeEditor.cpp)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 

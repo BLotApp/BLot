@@ -56,56 +56,19 @@ namespace ed = ax::NodeEditor;
 
 #include <vector>
 
-// Use the new component types
-using Shape = blot::components::Shape;
-using Style = blot::components::Style;
+#include "ui/StrokeWindow.h"
 
 inline ImVec2 operator+(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x + b.x, a.y + b.y); }
 inline ImVec2 operator-(const ImVec2& a, const ImVec2& b) { return ImVec2(a.x - b.x, a.y - b.y); }
 inline ImVec2 operator*(const ImVec2& a, float s) { return ImVec2(a.x * s, a.y * s); }
 inline ImVec2 operator/(const ImVec2& a, float s) { return ImVec2(a.x / s, a.y / s); }
 
-// Use BlotApp::ToolType everywhere
-ImVec2 m_toolStartPos = ImVec2(0,0);
-bool m_toolActive = false;
-
-// Color picker variables - will be initialized from settings
-ImVec4 m_fillColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);  // Default to red
-ImVec4 m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f); // Default to black
-
-// Swatch data
-std::vector<ImVec4> m_swatches = {
-    ImVec4(0,0,0,1), ImVec4(1,1,1,1), ImVec4(1,0,0,1), ImVec4(0,1,0,1), ImVec4(0,0,1,1)
-};
-int m_activeSwatchType = 0; // 0 = fill, 1 = stroke
-std::string m_swatchesFile = "swatches.json";
-
-void SaveSwatches(const std::string& path) {
-    nlohmann::json j;
-    for (const auto& c : m_swatches) {
-        j.push_back({c.x, c.y, c.z, c.w});
-    }
-    std::ofstream out(path);
-    out << j.dump(2);
-}
-void LoadSwatches(const std::string& path) {
-    std::ifstream in(path);
-    if (!in) return;
-    nlohmann::json j;
-    in >> j;
-    m_swatches.clear();
-    for (const auto& c : j) {
-        if (c.is_array() && c.size() == 4)
-            m_swatches.push_back(ImVec4(c[0], c[1], c[2], c[3]));
-    }
-}
-
 // Add a member variable to control ImPlot demo window visibility
 static bool showImPlotDemo = false;
 static bool showImGuiMarkdownDemo = false;
 
 // Mouse coordinate display
-static bool showMouseCoordinates = true;
+
 static int mouseCoordinateSystem = 0; // 0=Screen, 1=App, 2=Window, 3=Canvas
 static const char* coordinateSystemNames[] = { "Screen", "App", "Window", "Canvas" };
 static bool showMarkdownEditor = false;
@@ -115,36 +78,15 @@ static std::string loadedMarkdownPath;
 static std::string loadedMarkdown;
 
 bool showFileBrowser = false;
-bool m_showSwatches = false;
-bool m_showStrokePalette = false;
 int m_selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
-float m_strokeWidth = 2.0f;
-int m_strokeCap = 0; // 0=Butt, 1=Square, 2=Round
-int m_strokeJoin = 0; // 0=Miter, 1=Bevel, 2=Round
 float m_dashPattern[4] = {0};
 int m_dashCount = 0;
 float m_dashOffset = 0.0f;
 
-// Add polygon/star sides control to stroke palette
+// Add polygon/star sides control
 static int m_polygonSides = 5;
 
-// Add pen tool state variables at file scope
-static std::vector<ImVec2> penPoints;
-static std::vector<ImVec2> penHandles;
-static bool penDraggingHandle = false;
-static int penHandleIndex = -1;
 
-// Add ToolButton helper at file scope
-static void ToolButton(const char* icon, BlotApp::ToolType type) {
-    ImGui::PushID(icon);
-    extern BlotApp* g_blotAppInstance; // We'll set this pointer to the running app instance
-    bool selected = (g_blotAppInstance && g_blotAppInstance->m_currentTool == type);
-    if (selected) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-    if (ImGui::Button(icon) && g_blotAppInstance) g_blotAppInstance->m_currentTool = type;
-    if (selected) ImGui::PopStyleColor();
-    ImGui::PopID();
-    ImGui::SameLine();
-}
 
 // Replace AddEllipse and AddEllipseFilled usages with custom ellipse drawing
 auto DrawEllipseFilled = [](ImDrawList* drawList, ImVec2 center, float rx, float ry, ImU32 color, int num_segments = 64) {
@@ -173,39 +115,196 @@ BlotApp::BlotApp()
     , m_running(true)
     , m_deltaTime(0.0f)
     , m_lastFrameTime(0.0f)
-    , m_showDemoWindow(false)
-    , m_showCodeEditor(true)
-    , m_showCanvas(true)
-    , m_showProperties(true)
-    , m_showAddonManager(false)
-    , m_showNodeEditor(false)
-    , m_showToolbar(true)
-    , m_drawCircleMode(false)
-    , m_showThemeEditor(false)
     , m_lastThemePath("theme.json")
 {
     // Load application settings
     m_settings.loadSettings();
     
-    // Sync colors with settings
-    m_fillColor = m_settings.fillColor;
-    m_strokeColor = m_settings.strokeColor;
-    m_strokeWidth = m_settings.strokeWidth;
+    // Sync colors with settings (now handled by ToolbarWindow)
     
     initWindow();
-    initImGui();
     initGraphics();
     initAddons();
     
-    // Initialize ECS-based window management
-    m_windowManager = std::make_unique<blot::WindowManager>();
+    // Initialize UI management
+    m_uiManager = std::make_unique<blot::UIManager>(m_window);
+    m_uiManager->initImGui();
     
-    // Create canvas display window
-    m_canvasWindow = std::make_shared<blot::CanvasDisplayWindow>("Canvas###MainCanvas", 
+    // Create and register texture viewer window
+    auto textureWindow = std::make_shared<blot::TextureViewerWindow>("Texture###MainTexture", 
                                                           blot::Window::Flags::NoScrollbar | blot::Window::Flags::NoCollapse);
+    m_uiManager->getWindowManager()->createWindow("Texture", textureWindow);
     
-    // Register canvas window with window manager
-    m_windowManager->createWindow("Canvas", m_canvasWindow);
+    // Create and register UI component windows
+    m_toolbarWindow = std::make_shared<blot::ToolbarWindow>("Toolbar###MainToolbar", 
+                                                      blot::Window::Flags::NoTitleBar | blot::Window::Flags::AlwaysAutoResize);
+    m_uiManager->getWindowManager()->createWindow("Toolbar", m_toolbarWindow);
+    
+    auto infoWindow = std::make_shared<blot::InfoWindow>("Info Window###MainInfoWindow", 
+                                                          blot::Window::Flags::AlwaysAutoResize);
+    m_uiManager->getWindowManager()->createWindow("InfoWindow", infoWindow);
+    
+    auto propertiesWindow = std::make_shared<blot::PropertiesWindow>("Properties###MainProperties", 
+                                                            blot::Window::Flags::None);
+    m_uiManager->getWindowManager()->createWindow("Properties", propertiesWindow);
+    
+    // Configure window settings
+    blot::WindowSettingsComponent toolbarSettings;
+    toolbarSettings.category = "Tools";
+    toolbarSettings.showByDefault = true;
+    toolbarSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("Toolbar", toolbarSettings);
+    
+    // Connect toolbar stroke width changes to stroke window
+    m_toolbarWindow->setOnStrokeWidthChanged([this](float width) {
+        if (m_strokeWindow) {
+            m_strokeWindow->setStrokeWidth(static_cast<double>(width));
+        }
+    });
+    
+    blot::WindowSettingsComponent infoPanelSettings;
+    infoPanelSettings.category = "Debug";
+    infoPanelSettings.showByDefault = true;
+    infoPanelSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("InfoPanel", infoPanelSettings);
+    
+    blot::WindowSettingsComponent propertiesSettings;
+    propertiesSettings.category = "Tools";
+    propertiesSettings.showByDefault = false;
+    propertiesSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("Properties", propertiesSettings);
+    
+    blot::WindowSettingsComponent canvasSettings;
+    canvasSettings.category = "Main";
+    canvasSettings.showByDefault = true;
+    canvasSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("Canvas", canvasSettings);
+    
+    // Create and register code editor window
+    auto codeEditorWindow = std::make_shared<blot::CodeEditorWindow>("Code Editor###MainCodeEditor", 
+                                                           blot::Window::Flags::None);
+    m_uiManager->getWindowManager()->createWindow("CodeEditor", codeEditorWindow);
+    
+    // Configure code editor window settings
+    blot::WindowSettingsComponent codeEditorSettings;
+    codeEditorSettings.category = "Tools";
+    codeEditorSettings.showByDefault = true;
+    codeEditorSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("CodeEditor", codeEditorSettings);
+    
+    // Set the code editor in the window
+    codeEditorWindow->setCodeEditor(std::shared_ptr<CodeEditor>(m_codeEditor.release()));
+    
+    // Create and register main menu bar
+    auto mainMenuBar = std::make_shared<blot::MainMenuBar>("MainMenuBar###MainMenuBar", 
+                                                   blot::Window::Flags::None);
+    m_uiManager->getWindowManager()->createWindow("MainMenuBar", mainMenuBar);
+    
+    // Configure main menu bar settings
+    blot::WindowSettingsComponent menuBarSettings;
+    menuBarSettings.category = "Main";
+    menuBarSettings.showByDefault = true;
+    menuBarSettings.showInMenu = false; // Don't show in Windows menu since it's always visible
+    m_uiManager->getWindowManager()->setWindowSettings("MainMenuBar", menuBarSettings);
+    
+    // Configure main menu bar callbacks
+    configureMainMenuBarCallbacks();
+
+    // Create and register Addon Manager window
+    auto addonManagerWindow = std::make_shared<blot::AddonManagerWindow>("Addon Manager###AddonManager", blot::Window::Flags::None);
+    addonManagerWindow->setAddonManager(std::shared_ptr<AddonManager>(m_addonManager.get(), [](AddonManager*){})); // non-owning
+    m_uiManager->getWindowManager()->createWindow("AddonManager", addonManagerWindow);
+    blot::WindowSettingsComponent addonManagerSettings;
+    addonManagerSettings.category = "Tools";
+    addonManagerSettings.showByDefault = false;
+    addonManagerSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("AddonManager", addonManagerSettings);
+
+    // Create and register Node Editor window
+    auto nodeEditorWindow = std::make_shared<blot::NodeEditorWindow>("Node Editor###NodeEditor", blot::Window::Flags::None);
+    nodeEditorWindow->setNodes(&m_nodes);
+    nodeEditorWindow->setNextNodeId(&m_nextNodeId);
+    m_uiManager->getWindowManager()->createWindow("NodeEditor", nodeEditorWindow);
+    blot::WindowSettingsComponent nodeEditorSettings;
+    nodeEditorSettings.category = "Tools";
+    nodeEditorSettings.showByDefault = false;
+    nodeEditorSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("NodeEditor", nodeEditorSettings);
+
+    // Create and register Theme Editor window
+    auto themeEditorWindow = std::make_shared<blot::ThemeEditorWindow>("Theme Editor###ThemeEditor", blot::Window::Flags::None);
+    themeEditorWindow->setThemePath(&m_lastThemePath);
+    themeEditorWindow->setCurrentTheme(reinterpret_cast<int*>(&m_currentTheme));
+    m_uiManager->getWindowManager()->createWindow("ThemeEditor", themeEditorWindow);
+    blot::WindowSettingsComponent themeEditorSettings;
+    themeEditorSettings.category = "Tools";
+    themeEditorSettings.showByDefault = false;
+    themeEditorSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("ThemeEditor", themeEditorSettings);
+
+    // Create and register stroke window with comprehensive stroke options
+    auto strokeWindow = std::make_shared<StrokeWindow>();
+    m_strokeWindow = strokeWindow;
+    
+    // Connect stroke window callbacks to Blend2D renderer
+    strokeWindow->setStrokeWidthCallback([this](double width) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeWidth(static_cast<float>(width));
+        }
+        // Sync with toolbar
+        if (m_toolbarWindow) {
+            m_toolbarWindow->setStrokeWidth(static_cast<float>(width));
+        }
+    });
+    
+    strokeWindow->setStrokeCapCallback([this](BLStrokeCap cap) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeCap(cap);
+        }
+    });
+    
+    strokeWindow->setStrokeJoinCallback([this](BLStrokeJoin join) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeJoin(join);
+        }
+    });
+    
+    strokeWindow->setMiterLimitCallback([this](double limit) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeMiterLimit(limit);
+        }
+    });
+    
+    strokeWindow->setDashArrayCallback([this](const std::vector<double>& dashes) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeDashArray(dashes);
+        }
+    });
+    
+    strokeWindow->setDashOffsetCallback([this](double offset) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeDashOffset(offset);
+        }
+    });
+    
+    strokeWindow->setTransformOrderCallback([this](BLStrokeTransformOrder order) {
+        if (auto blend2dRenderer = dynamic_cast<Blend2DRenderer*>(m_currentRenderer.get())) {
+            blend2dRenderer->setStrokeTransformOrder(order);
+        }
+    });
+    
+    // Create a wrapper window for the StrokeWindow
+    auto strokeWindowWrapper = std::make_shared<blot::ImGuiWindow>("Stroke###StrokeWindow", blot::Window::Flags::None);
+    strokeWindowWrapper->setRenderCallback([strokeWindow]() {
+        strokeWindow->render();
+    });
+    
+    m_uiManager->getWindowManager()->createWindow("Stroke", strokeWindowWrapper);
+    blot::WindowSettingsComponent strokeSettings;
+    strokeSettings.category = "Tools";
+    strokeSettings.showByDefault = false;
+    strokeSettings.showInMenu = true;
+    m_uiManager->getWindowManager()->setWindowSettings("Stroke", strokeSettings);
 }
 
 BlotApp::~BlotApp() {
@@ -258,54 +357,6 @@ void BlotApp::initWindow() {
     });
 }
 
-void BlotApp::initImGui() {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-    // Set up ImGui style (Light theme)
-    ImGui::StyleColorsLight();
-    ImGuiStyle& style = ImGui::GetStyle();
-    // Optionally scale UI by monitor DPI (like ofxBapp)
-    float uiScale = 1.0f;
-#ifdef _WIN32
-    // Windows: use GetDpiForSystem or GetDpiForMonitor if available
-    HDC screen = GetDC(0);
-    int dpi = GetDeviceCaps(screen, LOGPIXELSX);
-    ReleaseDC(0, screen);
-    uiScale = dpi / 96.0f;
-#endif
-    style.ScaleAllSizes(uiScale);
-
-    // Load Roboto font from memory
-    ImFontConfig font_cfg;
-    font_cfg.FontDataOwnedByAtlas = false;
-    io.Fonts->AddFontFromMemoryTTF(fontRobotoRegular, sizeof(fontRobotoRegular), 16.0f * uiScale, &font_cfg);
-    // Optionally set as default font
-    io.FontDefault = io.Fonts->Fonts.back();
-
-    // Load FontAwesome Solid font and merge
-    float baseFontSize = 16.0f * uiScale;
-    float iconFontSize = baseFontSize * 2.0f / 3.0f;
-    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
-    ImFontConfig icons_config;
-    icons_config.MergeMode = true;
-    icons_config.PixelSnapH = true;
-    icons_config.GlyphMinAdvanceX = iconFontSize;
-    io.Fonts->AddFontFromFileTTF("assets/fonts/fa-solid-900.ttf", iconFontSize, &icons_config, icons_ranges);
-
-    // Initialize ImGui with GLFW and OpenGL
-    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-    // Initialize enhanced text renderer
-    m_textRenderer = std::make_unique<TextRenderer>();
-    m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_textRenderer.get());
-}
-
 void BlotApp::initGraphics() {
     m_graphics = std::make_shared<Graphics>();
     m_codeEditor = std::make_unique<CodeEditor>();
@@ -343,8 +394,8 @@ void BlotApp::initGraphics() {
     graphics->setRenderer(renderer.get());
     auto canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, graphics);
     canvas->setECSManager(&m_ecs); // Connect Canvas to ECS
-    m_graphicsResources[m_activeCanvasId] = graphics;
-    m_canvasResources[m_activeCanvasId] = std::move(canvas);
+    m_resourceManager->addGraphics(m_activeCanvasId, graphics);
+    m_resourceManager->addCanvas(m_activeCanvasId, std::move(canvas));
     
     // Initialize shape rendering system with the shared_ptr renderer
     m_shapeRenderer = std::make_unique<ShapeRenderingSystem>(renderer);
@@ -441,200 +492,6 @@ void BlotApp::renderUI() {
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
     ImGui::End();
 
-    // Ensure the code editor is always visible and dockable
-    if (m_showCodeEditor) {
-        ImGui::Begin("Code Editor", &m_showCodeEditor);
-        m_codeEditor->render();
-        ImGui::End();
-    }
-
-    // Main menu bar and windows
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("BLot")) {
-            ImGui::Text("BLot");
-            ImGui::Separator();
-            if (ImGui::MenuItem("Preferences...")) {
-                // TODO: Show preferences window
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Quit.")) {
-                m_running = false;
-            }
-            // Add Samples submenu
-            if (ImGui::BeginMenu("Samples")) {
-                if (ImGui::MenuItem("ImPlot")) {
-                    showImPlotDemo = true;
-                }
-                if (ImGui::MenuItem("ImGui Markdown Demo")) {
-                    showImGuiMarkdownDemo = true;
-                }
-                if (ImGui::MenuItem("Markdown Editor/Viewer")) {
-                    showMarkdownEditor = true;
-                    showMarkdownViewer = true;
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Renderer")) {
-            if (ImGui::MenuItem("Blend2D", nullptr, m_currentRendererType == RendererType::Blend2D)) {
-                switchRenderer(RendererType::Blend2D);
-                m_graphics->setRenderer(m_currentRenderer.get());
-            }
-            if (ImGui::MenuItem("OpenGL/ES", nullptr, m_currentRendererType == RendererType::OpenGL)) {
-                switchRenderer(RendererType::OpenGL);
-                m_graphics->setRenderer(m_currentRenderer.get());
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Canvases")) {
-            if (ImGui::MenuItem("New Canvas")) {
-                int w = 1280, h = 720;
-                auto newId = m_ecs.createEntity();
-                TextureComponent texComp;
-                texComp.width = w;
-                texComp.height = h;
-                texComp.renderTarget = true;
-                m_ecs.addComponent<TextureComponent>(newId, texComp);
-                (void)texComp; // Suppress unused variable warning
-                // Create resources for this canvas entity using ResourceManager
-                auto renderer = m_resourceManager->createRenderer(newId, w, h);
-                if (renderer) {
-                    auto graphics = std::make_shared<Graphics>();
-                    graphics->setRenderer(renderer.get());
-                    auto canvas = std::make_unique<Canvas>(w, h, graphics);
-                    canvas->setECSManager(&m_ecs); // Connect Canvas to ECS
-                    m_graphicsResources[newId] = graphics;
-                    m_canvasResources[newId] = std::move(canvas);
-                    m_activeCanvasId = newId;
-                }
-            }
-            ImGui::Separator();
-            auto view = m_ecs.view<TextureComponent>();
-            for (auto entity : view) {
-                auto& texComp = view.get<TextureComponent>(entity);
-                char label[64];
-                snprintf(label, sizeof(label), "Canvas %d%s", (int)entity, (entity == m_activeCanvasId ? " (active)" : ""));
-                if (ImGui::Selectable(label, entity == m_activeCanvasId)) {
-                    m_activeCanvasId = entity;
-                }
-                ImGui::SameLine();
-                if (ImGui::SmallButton((std::string("x##close_") + std::to_string((int)entity)).c_str())) {
-                    m_ecs.destroyEntity(entity);
-                    m_resourceManager->destroyRenderer(entity);
-                    m_graphicsResources.erase(entity);
-                    m_canvasResources.erase(entity);
-                    if (m_activeCanvasId == entity) {
-                        auto all = m_ecs.view<TextureComponent>();
-                        if (!all.empty())
-                            m_activeCanvasId = *all.begin();
-                        else
-                            m_activeCanvasId = entt::null;
-                    }
-                    break;
-                }
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New Sketch")) {
-                m_codeEditor->newSketch();
-            }
-            if (ImGui::MenuItem("Open Sketch")) {
-                m_codeEditor->openSketch();
-            }
-            if (ImGui::MenuItem("Save Sketch")) {
-                m_codeEditor->saveSketch();
-            }
-            if (ImGui::MenuItem("Save As...")) {
-                auto result = pfd::save_file("Save Canvas As", ".", {"PNG Files (*.png)", "*.png", "All Files", "*"}).result();
-                if (!result.empty() && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
-                    auto it = m_canvasResources.find(m_activeCanvasId);
-                    if (it != m_canvasResources.end()) {
-                        it->second->saveFrame(result);
-                    }
-                }
-            }
-            if (ImGui::MenuItem("Open Markdown...")) {
-                auto result = pfd::open_file("Open Markdown File", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
-                if (!result.empty()) {
-                    std::ifstream in(result[0]);
-                    if (in) {
-                        markdownEditorBuffer.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-                        loadedMarkdownPath = result[0];
-                        showImGuiMarkdownDemo = true;
-                    }
-                }
-            }
-            if (ImGui::MenuItem("Save Markdown As...")) {
-                auto result = pfd::save_file("Save Markdown As", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
-                if (!result.empty() && !markdownEditorBuffer.empty()) {
-                    std::ofstream out(result);
-                    if (out) {
-                        out << markdownEditorBuffer;
-                        loadedMarkdownPath = result;
-                    }
-                }
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Exit")) {
-                m_running = false;
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Edit")) {
-            // Add edit actions here
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Windows")) {
-            ImGui::MenuItem("Code Editor", nullptr, &m_showCodeEditor);
-            ImGui::MenuItem("Canvas", nullptr, &m_showCanvas);
-            ImGui::MenuItem("Properties", nullptr, &m_showProperties);
-            ImGui::MenuItem("Addon Manager", nullptr, &m_showAddonManager);
-            ImGui::MenuItem("Node Editor", nullptr, &m_showNodeEditor);
-            ImGui::MenuItem("ImGui Demo", nullptr, &m_showDemoWindow);
-            ImGui::MenuItem("File Browser", nullptr, &showFileBrowser);
-            ImGui::MenuItem("Info Panel", nullptr, &showMouseCoordinates);
-            ImGui::EndMenu();
-        }
-        
-        if (ImGui::BeginMenu("Run")) {
-            if (ImGui::MenuItem("Run Sketch")) {
-                m_scriptEngine->runCode(m_codeEditor->getCode());
-            }
-            if (ImGui::MenuItem("Stop")) {
-                m_scriptEngine->stop();
-            }
-            ImGui::EndMenu();
-        }
-        
-        if (ImGui::BeginMenu("Addons")) {
-            if (ImGui::MenuItem("Addon Manager")) {
-                m_showAddonManager = true;
-            }
-            if (ImGui::MenuItem("Reload Addons")) {
-                // Reload all addons
-                m_addonManager->cleanupAll();
-                loadDefaultAddons();
-                m_addonManager->initAll();
-            }
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Theme")) {
-            if (ImGui::MenuItem("Dark", nullptr, m_currentTheme == ImGuiTheme::Dark)) setImGuiTheme(ImGuiTheme::Dark);
-            if (ImGui::MenuItem("Light", nullptr, m_currentTheme == ImGuiTheme::Light)) setImGuiTheme(ImGuiTheme::Light);
-            if (ImGui::MenuItem("Classic", nullptr, m_currentTheme == ImGuiTheme::Classic)) setImGuiTheme(ImGuiTheme::Classic);
-            if (ImGui::MenuItem("Corporate", nullptr, m_currentTheme == ImGuiTheme::Corporate)) setImGuiTheme(ImGuiTheme::Corporate);
-            if (ImGui::MenuItem("Dracula", nullptr, m_currentTheme == ImGuiTheme::Dracula)) setImGuiTheme(ImGuiTheme::Dracula);
-            ImGui::Separator();
-            if (ImGui::MenuItem("Theme Editor...")) m_showThemeEditor = true;
-            ImGui::EndMenu();
-        }
-        
-        ImGui::EndMainMenuBar();
-    }
-    
     // File Browser Window
     if (showFileBrowser) {
         ImGui::Begin("File Browser", &showFileBrowser);
@@ -644,439 +501,220 @@ void BlotApp::renderUI() {
         ImGui::End();
     }
     
-    // Canvas Window for Drawing (ECS-based)
-    if (m_showCanvas) {
+    // Texture Viewer Window for Display
+    if (m_uiManager->getWindowManager()->isWindowVisible("Texture")) {
+        // Get texture viewer window through WindowManager
+        auto textureWindow = std::dynamic_pointer_cast<blot::TextureViewerWindow>(m_uiManager->getWindowManager()->getWindow("Texture"));
+        
         // Update canvas texture in the display window
-        auto it = m_canvasResources.find(m_activeCanvasId);
-        if (it != m_canvasResources.end()) {
-            unsigned int texId = it->second->getColorTexture();
-            int width = it->second->getWidth();
-            int height = it->second->getHeight();
-            m_canvasWindow->setCanvasTexture(texId, width, height);
-        } else {
-            m_canvasWindow->clearCanvasTexture();
+        if (textureWindow) {
+            auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+            if (canvasPtr && *canvasPtr) {
+                unsigned int texId = (*canvasPtr)->getColorTexture();
+                int width = (*canvasPtr)->getWidth();
+                int height = (*canvasPtr)->getHeight();
+                textureWindow->setTexture(texId, width, height);
+            } else {
+                textureWindow->clearTexture();
+            }
         }
         
         // Render all windows through the window manager
-        m_windowManager->renderAllWindows();
+        m_uiManager->getWindowManager()->renderAllWindows();
         
         // Handle input through the window manager
-        m_windowManager->handleInput();
+        m_uiManager->getWindowManager()->handleInput();
         
-        // Handle mouse input for drawing tools
-        if (m_canvasWindow->isMouseInsideCanvas()) {
-            ImVec2 canvasMousePos = m_canvasWindow->getCanvasMousePos();
-            
-            // Pen tool logic
-            if (m_currentTool == BlotApp::ToolType::Pen) {
-                // Add point on click
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                    if (!penDraggingHandle) {
-                        penPoints.push_back(canvasMousePos);
-                        // Add default handles for cubic Bezier
-                        penHandles.push_back(canvasMousePos + ImVec2(40, 0));
-                        penHandles.push_back(canvasMousePos - ImVec2(40, 0));
-                    }
-                }
-                // Drag handles
-                for (int i = 0; i < penHandles.size(); ++i) {
-                    ImVec2 handleScreen = ImVec2(m_canvasWindow->getPosition().x + penHandles[i].x, 
-                                                m_canvasWindow->getPosition().y + penHandles[i].y);
-                    if (!penDraggingHandle && ImGui::IsMouseHoveringRect(handleScreen - ImVec2(5,5), handleScreen + ImVec2(5,5)) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                        penDraggingHandle = true;
-                        penHandleIndex = i;
-                    }
-                }
-                if (penDraggingHandle && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                    penHandles[penHandleIndex] = canvasMousePos;
-                } else if (penDraggingHandle && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                    penDraggingHandle = false;
-                    penHandleIndex = -1;
-                }
-                // Draw points and handles
-                for (int i = 0; i < penPoints.size(); ++i) {
-                    ImVec2 pt = ImVec2(m_canvasWindow->getPosition().x + penPoints[i].x, 
-                                      m_canvasWindow->getPosition().y + penPoints[i].y);
-                    ImGui::GetWindowDrawList()->AddCircleFilled(pt, 4, IM_COL32(0,0,0,255));
-                    if (i*2+1 < penHandles.size()) {
-                        ImVec2 h1 = ImVec2(m_canvasWindow->getPosition().x + penHandles[i*2].x, 
-                                          m_canvasWindow->getPosition().y + penHandles[i*2].y);
-                        ImVec2 h2 = ImVec2(m_canvasWindow->getPosition().x + penHandles[i*2+1].x, 
-                                          m_canvasWindow->getPosition().y + penHandles[i*2+1].y);
-                        ImGui::GetWindowDrawList()->AddCircleFilled(h1, 3, IM_COL32(100,100,255,255));
-                        ImGui::GetWindowDrawList()->AddCircleFilled(h2, 3, IM_COL32(100,100,255,255));
-                        ImGui::GetWindowDrawList()->AddLine(pt, h1, IM_COL32(100,100,255,255), 1.0f);
-                        ImGui::GetWindowDrawList()->AddLine(pt, h2, IM_COL32(100,100,255,255), 1.0f);
-                    }
-                }
-                // Draw Bezier curve
-                for (int i = 0; i+1 < penPoints.size(); ++i) {
-                    ImVec2 p0 = penPoints[i];
-                    ImVec2 p1 = penHandles[i*2];
-                    ImVec2 p2 = penHandles[i*2+1];
-                    ImVec2 p3 = penPoints[i+1];
-                    ImGui::GetWindowDrawList()->AddBezierCubic(
-                        ImVec2(m_canvasWindow->getPosition().x + p0.x, m_canvasWindow->getPosition().y + p0.y),
-                        ImVec2(m_canvasWindow->getPosition().x + p1.x, m_canvasWindow->getPosition().y + p1.y),
-                        ImVec2(m_canvasWindow->getPosition().x + p2.x, m_canvasWindow->getPosition().y + p2.y),
-                        ImVec2(m_canvasWindow->getPosition().x + p3.x, m_canvasWindow->getPosition().y + p3.y),
-                        ImGui::ColorConvertFloat4ToU32(m_strokeColor), m_strokeWidth, 0
-                    );
-                }
-                // Finish path on right-click
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-                    penPoints.clear();
-                    penHandles.clear();
-                    penDraggingHandle = false;
-                    penHandleIndex = -1;
-                }
-            } else {
-                // Other shapes
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                    printf("[Mouse] Left mouse clicked! canvasMousePos=(%.1f,%.1f)\n", canvasMousePos.x, canvasMousePos.y);
-                    m_toolStartPos = canvasMousePos;
-                    m_toolActive = true;
-                        printf("[Mouse] Tool activated: m_toolActive=%d, m_toolStartPos=(%.1f,%.1f)\n", m_toolActive, m_toolStartPos.x, m_toolStartPos.y);
-                    }
-                        
-                                            // Debug: Check if mouse is being clicked at all
-                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                        printf("[Mouse] DEBUG: Left click detected anywhere in window\n");
-                    }
-                    
-                    // Debug: Check if mouse is down
-                    if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                        printf("[Mouse] DEBUG: Left mouse is down\n");
-                    }
-                    
-                    // Debug: Check if mouse is released
-                    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-                        printf("[Mouse] DEBUG: Left mouse released, m_toolActive=%d\n", m_toolActive);
-                    }
-                        
-                        // Debug: Check if mouse is released but tool not active
-                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !m_toolActive) {
-                            printf("[Mouse] DEBUG: Left mouse released but tool not active (m_toolActive=%d)\n", m_toolActive);
-                        }
-                        
-                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_toolActive) {
-                            printf("[Mouse] Left mouse released, creating shape...\n");
-                            printf("[Mouse] DEBUG: Tool was active, creating shape with start=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
-                                   m_toolStartPos.x, m_toolStartPos.y, canvasMousePos.x, canvasMousePos.y);
-                            printf("[Mouse] DEBUG: Direction check - start.x=%.1f, end.x=%.1f, delta=%.1f\n", 
-                                   m_toolStartPos.x, canvasMousePos.x, canvasMousePos.x - m_toolStartPos.x);
-                            ImVec2 start = m_toolStartPos;
-                            ImVec2 end = canvasMousePos;
-                            float x1 = std::min(start.x, end.x);
-                            float y1 = std::min(start.y, end.y);
-                            float x2 = std::max(start.x, end.x);
-                            float y2 = std::max(start.y, end.y);
-                            
-                            // Scale coordinates from ImGui window to Blend2D canvas
-                            // Get actual canvas dimensions from the canvas resource
-                            auto canvasIt = m_canvasResources.find(m_activeCanvasId);
-                            float canvasWidth = 1280.0f;  // Default fallback
-                            float canvasHeight = 720.0f;   // Default fallback
-                            if (canvasIt != m_canvasResources.end()) {
-                                // Get the actual canvas dimensions from the Graphics object
-                                auto graphics = canvasIt->second->getGraphics();
-                                if (graphics) {
-                                    auto renderer = graphics->getRenderer();
-                                    if (renderer) {
-                                        canvasWidth = static_cast<float>(renderer->getWidth());
-                                        canvasHeight = static_cast<float>(renderer->getHeight());
-                                    }
-                                }
-                            }
-                            
-                            // Get canvas size from the canvas window
-                            ImVec2 canvasSize = m_canvasWindow->getCanvasSize();
-                            float scaleX = canvasWidth / canvasSize.x;
-                            float scaleY = canvasHeight / canvasSize.y;
-                            
-                            printf("[Canvas] Coordinate scaling: ImGui(%.1f,%.1f) -> Blend2D(%.1f,%.1f), scale=(%.2f,%.2f), canvas=%.0fx%.0f\n", 
-                                   x1, y1, x1 * scaleX, y1 * scaleY, scaleX, scaleY, canvasWidth, canvasHeight);
-                            printf("[BlotApp] Mouse coordinates: start=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
-                                   m_toolStartPos.x, m_toolStartPos.y, canvasMousePos.x, canvasMousePos.y);
-                            
-                            // Create ECS entity with shape components
-                            entt::entity shapeEntity = m_ecs.createEntity();
-                            
-                            // Add Transform component
-                            Transform transform;
-                            transform.x = 0.0f;
-                            transform.y = 0.0f;
-                            m_ecs.addComponent<Transform>(shapeEntity, transform);
-                            
-                            // Add Shape component with scaled coordinates
-                            Shape shape;
-                            shape.x1 = x1 * scaleX; 
-                            shape.y1 = y1 * scaleY; 
-                            shape.x2 = x2 * scaleX; 
-                            shape.y2 = y2 * scaleY;
-                            
-                            printf("[BlotApp] Raw coordinates: x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f\n", x1, y1, x2, y2);
-                            printf("[BlotApp] Scaled coordinates: x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f\n", shape.x1, shape.y1, shape.x2, shape.y2);
-                            // Use the new component namespace
-                            if (m_selectedShape == 0) shape.type = blot::components::Shape::Type::Rectangle;
-                            else if (m_selectedShape == 1) shape.type = blot::components::Shape::Type::Ellipse;
-                            else if (m_selectedShape == 2) shape.type = blot::components::Shape::Type::Line;
-                            else if (m_selectedShape == 3) shape.type = blot::components::Shape::Type::Polygon;
-                            else if (m_selectedShape == 4) shape.type = blot::components::Shape::Type::Star;
-                            shape.sides = m_polygonSides;
-                            
-                            printf("[BlotApp] Creating shape: type=%d, x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f, scale=(%.2f,%.2f)\n", 
-                                   (int)shape.type, shape.x1, shape.y1, shape.x2, shape.y2, scaleX, scaleY);
-                            
-                            m_ecs.addComponent<Shape>(shapeEntity, shape);
-                            
-                            // Add Style component
-                            Style style;
-                            style.fillR = m_fillColor.x; style.fillG = m_fillColor.y; 
-                            style.fillB = m_fillColor.z; style.fillA = m_fillColor.w;
-                            style.strokeR = m_strokeColor.x; style.strokeG = m_strokeColor.y;
-                            style.strokeB = m_strokeColor.z; style.strokeA = m_strokeColor.w;
-                            style.strokeWidth = m_strokeWidth;
-                            style.strokeCap = static_cast<blot::components::Style::StrokeCap>(m_strokeCap);
-                            style.strokeJoin = static_cast<blot::components::Style::StrokeJoin>(m_strokeJoin);
-                            m_ecs.addComponent<Style>(shapeEntity, style);
-                            m_toolActive = false;
-                        }
-                        // Draw preview while dragging
-                        if (m_toolActive && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                            printf("[Mouse] DEBUG: Dragging - start=(%.1f,%.1f), current=(%.1f,%.1f)\n", 
-                                   m_toolStartPos.x, m_toolStartPos.y, canvasMousePos.x, canvasMousePos.y);
-                            ImVec2 start = m_toolStartPos;
-                            ImVec2 end = canvasMousePos;
-                            float x1 = std::min(start.x, end.x);
-                            float y1 = std::min(start.y, end.y);
-                            float x2 = std::max(start.x, end.x);
-                            float y2 = std::max(start.y, end.y);
-                            if (m_selectedShape == 0) {
-                                ImGui::GetWindowDrawList()->AddRect(
-                                    ImVec2(canvasPos.x + x1, canvasPos.y + y1),
-                                    ImVec2(canvasPos.x + x2, canvasPos.y + y2),
-                                    ImGui::ColorConvertFloat4ToU32(m_strokeColor),
-                                    0.0f, 0, 1.0f
-                                );
-                            } else if (m_selectedShape == 1) {
-                                ImVec2 center = ImVec2((x1 + x2) * 0.5f, (y1 + y2) * 0.5f);
-                                ImVec2 radius = ImVec2((x2 - x1) * 0.5f, (y2 - y1) * 0.5f);
-                                DrawEllipse(ImGui::GetWindowDrawList(), ImVec2(canvasPos.x + center.x, canvasPos.y + center.y), radius.x, radius.y, ImGui::ColorConvertFloat4ToU32(m_strokeColor), 1.0f, m_polygonSides);
-                            } else if (m_selectedShape == 2) {
-                                ImGui::GetWindowDrawList()->AddLine(
-                                    ImVec2(canvasPos.x + start.x, canvasPos.y + start.y),
-                                    ImVec2(canvasPos.x + end.x, canvasPos.y + end.y),
-                                    ImGui::ColorConvertFloat4ToU32(m_strokeColor), 1.0f
-                                );
-                            }
-                        }
-                    }
-                }
+        // Render all windows through the window manager
+        m_uiManager->getWindowManager()->renderAllWindows();
+        
+        // Handle input through the window manager
+        m_uiManager->getWindowManager()->handleInput();
+    }
+    
+    // Coordinate system debug info
+    ImVec2 mousePos = ImGui::GetMousePos();
+    ImVec2 screenPos = ImGui::GetIO().DisplaySize;
+    
+    // Get canvas coordinates if canvas window is open
+    ImVec2 canvasPos = ImVec2(0, 0);
+    ImVec2 canvasSize = ImVec2(0, 0);
+    // TODO: Get actual canvas window position and size
+    
+    // Dropdown for coordinate system
+    ImGui::Text("Coordinate System:");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##CoordSystem", coordinateSystemNames[mouseCoordinateSystem])) {
+        for (int i = 0; i < IM_ARRAYSIZE(coordinateSystemNames); i++) {
+            const bool isSelected = (mouseCoordinateSystem == i);
+            if (ImGui::Selectable(coordinateSystemNames[i], isSelected)) {
+                mouseCoordinateSystem = i;
+            }
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    
+    ImGui::Separator();
+    
+    // Update coordinate system with current information
+    m_coordSystem.setScreenSize(screenPos.x, screenPos.y);
+    
+    // Get window position
+    int windowX, windowY;
+    glfwGetWindowPos(m_window, &windowX, &windowY);
+    m_coordSystem.setAppWindow(windowX, windowY, m_windowWidth, m_windowHeight);
+    
+    // Get canvas window info if available
+    auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+    if (canvasPtr && *canvasPtr) {
+        auto graphics = (*canvasPtr)->getGraphics();
+        if (graphics) {
+            auto renderer = graphics->getRenderer();
+            if (renderer) {
+                float canvasWidth = static_cast<float>(renderer->getWidth());
+                float canvasHeight = static_cast<float>(renderer->getHeight());
+                m_coordSystem.setCanvasImage(canvasWidth, canvasHeight);
+                
+                // For now, use estimated canvas window position
+                // This could be improved by tracking the actual canvas window position
+                m_coordSystem.setCanvasWindow(windowX + 100, windowY + 100, 800, 600);
             }
         }
     }
     
-    // Info Panel
-    if (showMouseCoordinates) {
-        ImGui::Begin("Info Panel", &showMouseCoordinates, ImGuiWindowFlags_AlwaysAutoResize);
-        
-        ImVec2 mousePos = ImGui::GetMousePos();
-        ImVec2 screenPos = ImGui::GetIO().DisplaySize;
-        
-        // Get canvas coordinates if canvas window is open
-        ImVec2 canvasPos = ImVec2(0, 0);
-        ImVec2 canvasSize = ImVec2(0, 0);
-        if (m_showCanvas) {
-            // We need to get the actual canvas position and size
-            // For now, we'll use the window position
-            canvasPos = ImGui::GetWindowPos();
-            canvasSize = ImGui::GetContentRegionAvail();
-        }
-        
-        // Dropdown for coordinate system
-        ImGui::Text("Coordinate System:");
-        ImGui::SameLine();
-        if (ImGui::BeginCombo("##CoordSystem", coordinateSystemNames[mouseCoordinateSystem])) {
-            for (int i = 0; i < IM_ARRAYSIZE(coordinateSystemNames); i++) {
-                const bool isSelected = (mouseCoordinateSystem == i);
-                if (ImGui::Selectable(coordinateSystemNames[i], isSelected)) {
-                    mouseCoordinateSystem = i;
-                }
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
+    // Display coordinates based on selected system
+    glm::vec2 mousePosGLM(mousePos.x, mousePos.y);
+    auto coordInfo = m_coordSystem.getCoordinateInfo(mousePosGLM, static_cast<blot::CoordinateSpace>(mouseCoordinateSystem));
+    
+    ImGui::Text("%s Coordinates:", coordInfo.spaceName.c_str());
+    ImGui::Text("  %s", coordInfo.description.c_str());
+    ImGui::Text("  Mouse: (%.1f, %.1f)", coordInfo.mouse.x, coordInfo.mouse.y);
+    ImGui::Text("  Relative: (%.1f, %.1f)", coordInfo.relative.x, coordInfo.relative.y);
+    ImGui::Text("  Bounds: (%.0f, %.0f)", coordInfo.bounds.x, coordInfo.bounds.y);
+    
+    // Show additional info for specific coordinate systems
+    switch (mouseCoordinateSystem) {
+        case 0: { // Screen
+            GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+            if (primaryMonitor) {
+                const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+                if (mode) {
+                    ImGui::Text("  Monitor: %dx%d @ %dHz", mode->width, mode->height, mode->refreshRate);
                 }
             }
-            ImGui::EndCombo();
+            break;
         }
-        
-        ImGui::Separator();
-        
-        // Update coordinate system with current information
-        m_coordSystem.setScreenSize(screenPos.x, screenPos.y);
-        
-        // Get window position
-        int windowX, windowY;
-        glfwGetWindowPos(m_window, &windowX, &windowY);
-        m_coordSystem.setAppWindow(windowX, windowY, m_windowWidth, m_windowHeight);
-        
-        // Get canvas window info if available
-        if (m_showCanvas) {
-            auto canvasIt = m_canvasResources.find(m_activeCanvasId);
-            if (canvasIt != m_canvasResources.end()) {
-                auto graphics = canvasIt->second->getGraphics();
+        case 1: { // App
+            ImGui::Text("  Window Pos: (%.0f, %.0f)", (float)windowX, (float)windowY);
+            break;
+        }
+        case 3: { // Canvas
+            auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+            if (canvasPtr && *canvasPtr) {
+                auto graphics = (*canvasPtr)->getGraphics();
                 if (graphics) {
                     auto renderer = graphics->getRenderer();
                     if (renderer) {
                         float canvasWidth = static_cast<float>(renderer->getWidth());
                         float canvasHeight = static_cast<float>(renderer->getHeight());
-                        m_coordSystem.setCanvasImage(canvasWidth, canvasHeight);
-                        
-                        // For now, use estimated canvas window position
-                        // This could be improved by tracking the actual canvas window position
-                        m_coordSystem.setCanvasWindow(windowX + 100, windowY + 100, 800, 600);
+                        ImGui::Text("  Canvas Image: (%.0f, %.0f)", canvasWidth, canvasHeight);
                     }
                 }
             }
+            break;
+        }
+    }
+    
+    ImGui::Separator();
+    
+    // Mouse interaction state
+    ImGui::Text("Mouse Interaction:");
+    bool mouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+    bool mouseClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+    bool mouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+    bool mouseDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
+    
+    ImGui::Text("  Left Button: %s", mouseDown ? "DOWN" : "UP");
+    ImGui::Text("  Clicked: %s", mouseClicked ? "YES" : "NO");
+    ImGui::Text("  Released: %s", mouseReleased ? "YES" : "NO");
+    ImGui::Text("  Dragging: %s", mouseDragging ? "YES" : "NO");
+    
+    // Mouse delta (movement)
+    ImVec2 mouseDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+    ImGui::Text("  Drag Delta: (%.1f, %.1f)", mouseDelta.x, mouseDelta.y);
+    
+    // Tool state (TODO: Use ToolbarWindow)
+    ImGui::Text("  Tool Active: TODO");
+    ImGui::Text("  Tool Start: TODO");
+    ImGui::Text("  Tool Current: TODO");
+    
+    ImGui::Separator();
+    ImGui::Text("Debug Info:");
+    ImGui::Text("  Delta Time: %.3f ms", m_deltaTime * 1000.0f);
+    ImGui::Text("  Frame Rate: %.1f FPS", 1.0f / m_deltaTime);
+    
+    // Debug: Clear all shapes button
+    if (ImGui::Button("Clear All Shapes")) {
+        printf("[BlotApp] === Before Clear ===\n");
+        printf("[BlotApp] Total entities: %zu\n", m_ecs.getEntityCount());
+        auto allEntities = m_ecs.getAllEntities();
+        for (auto entity : allEntities) {
+            bool hasTransform = m_ecs.hasComponent<Transform>(entity);
+            bool hasShape = m_ecs.hasComponent<blot::components::Shape>(entity);
+            bool hasStyle = m_ecs.hasComponent<blot::components::Style>(entity);
+            printf("[BlotApp] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
+                   (unsigned int)entity, hasTransform, hasShape, hasStyle);
         }
         
-        // Display coordinates based on selected system
-        glm::vec2 mousePosGLM(mousePos.x, mousePos.y);
-        auto coordInfo = m_coordSystem.getCoordinateInfo(mousePosGLM, static_cast<blot::CoordinateSpace>(mouseCoordinateSystem));
-        
-        ImGui::Text("%s Coordinates:", coordInfo.spaceName.c_str());
-        ImGui::Text("  %s", coordInfo.description.c_str());
-        ImGui::Text("  Mouse: (%.1f, %.1f)", coordInfo.mouse.x, coordInfo.mouse.y);
-        ImGui::Text("  Relative: (%.1f, %.1f)", coordInfo.relative.x, coordInfo.relative.y);
-        ImGui::Text("  Bounds: (%.0f, %.0f)", coordInfo.bounds.x, coordInfo.bounds.y);
-        
-        // Show additional info for specific coordinate systems
-        switch (mouseCoordinateSystem) {
-            case 0: { // Screen
-                GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-                if (primaryMonitor) {
-                    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
-                    if (mode) {
-                        ImGui::Text("  Monitor: %dx%d @ %dHz", mode->width, mode->height, mode->refreshRate);
-                    }
-                }
-                break;
-            }
-            case 1: { // App
-                ImGui::Text("  Window Pos: (%.0f, %.0f)", (float)windowX, (float)windowY);
-                break;
-            }
-            case 3: { // Canvas
-                if (m_showCanvas) {
-                    auto canvasIt = m_canvasResources.find(m_activeCanvasId);
-                    if (canvasIt != m_canvasResources.end()) {
-                        auto graphics = canvasIt->second->getGraphics();
-                        if (graphics) {
-                            auto renderer = graphics->getRenderer();
-                            if (renderer) {
-                                float canvasWidth = static_cast<float>(renderer->getWidth());
-                                float canvasHeight = static_cast<float>(renderer->getHeight());
-                                ImGui::Text("  Canvas Image: (%.0f, %.0f)", canvasWidth, canvasHeight);
-                            }
-                        }
-                    }
-                }
-                break;
-            }
+        auto view = m_ecs.view<Transform, Shape, Style>();
+        int count = 0;
+        for (auto entity : view) {
+            printf("[BlotApp] Destroying entity %u\n", (unsigned int)entity);
+            m_ecs.destroyEntity(entity);
+            count++;
         }
+        printf("[BlotApp] Cleared %d shapes\n", count);
         
-        ImGui::Separator();
-        
-        // Mouse interaction state
-        ImGui::Text("Mouse Interaction:");
-        bool mouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-        bool mouseClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-        bool mouseReleased = ImGui::IsMouseReleased(ImGuiMouseButton_Left);
-        bool mouseDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
-        
-        ImGui::Text("  Left Button: %s", mouseDown ? "DOWN" : "UP");
-        ImGui::Text("  Clicked: %s", mouseClicked ? "YES" : "NO");
-        ImGui::Text("  Released: %s", mouseReleased ? "YES" : "NO");
-        ImGui::Text("  Dragging: %s", mouseDragging ? "YES" : "NO");
-        
-        // Mouse delta (movement)
-        ImVec2 mouseDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
-        ImGui::Text("  Drag Delta: (%.1f, %.1f)", mouseDelta.x, mouseDelta.y);
-        
-        // Tool state
-        ImGui::Text("  Tool Active: %s", m_toolActive ? "YES" : "NO");
-        if (m_toolActive) {
-            ImGui::Text("  Tool Start: (%.1f, %.1f)", m_toolStartPos.x, m_toolStartPos.y);
-            // Calculate canvas mouse position
-            ImVec2 canvasMousePos = ImVec2(mousePos.x - canvasPos.x, mousePos.y - canvasPos.y);
-            ImGui::Text("  Tool Current: (%.1f, %.1f)", canvasMousePos.x, canvasMousePos.y);
+        printf("[BlotApp] === After Clear ===\n");
+        printf("[BlotApp] Total entities: %zu\n", m_ecs.getEntityCount());
+        allEntities = m_ecs.getAllEntities();
+        for (auto entity : allEntities) {
+            bool hasTransform = m_ecs.hasComponent<Transform>(entity);
+            bool hasShape = m_ecs.hasComponent<blot::components::Shape>(entity);
+            bool hasStyle = m_ecs.hasComponent<blot::components::Style>(entity);
+            printf("[BlotApp] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
+                   (unsigned int)entity, hasTransform, hasShape, hasStyle);
         }
+    }
+    
+    // Debug: Create test shape button
+    
+    if (ImGui::Button("🎨 Random Theme")) {
+        // Generate random colors for fun!
+        auto& style = ImGui::GetStyle();
+        auto& colors = style.Colors;
         
-        ImGui::Separator();
-        ImGui::Text("Debug Info:");
-        ImGui::Text("  Delta Time: %.3f ms", m_deltaTime * 1000.0f);
-        ImGui::Text("  Frame Rate: %.1f FPS", 1.0f / m_deltaTime);
+        // Random color generator
+        auto randomColor = []() {
+            return ImVec4(
+                static_cast<float>(rand()) / RAND_MAX,
+                static_cast<float>(rand()) / RAND_MAX,
+                static_cast<float>(rand()) / RAND_MAX,
+                1.0f
+            );
+        };
         
-        // Debug: Clear all shapes button
-        if (ImGui::Button("Clear All Shapes")) {
-            printf("[BlotApp] === Before Clear ===\n");
-            printf("[BlotApp] Total entities: %zu\n", m_ecs.getEntityCount());
-            auto allEntities = m_ecs.getAllEntities();
-            for (auto entity : allEntities) {
-                bool hasTransform = m_ecs.hasComponent<Transform>(entity);
-                bool hasShape = m_ecs.hasComponent<blot::components::Shape>(entity);
-                bool hasStyle = m_ecs.hasComponent<blot::components::Style>(entity);
-                printf("[BlotApp] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
-                       (unsigned int)entity, hasTransform, hasShape, hasStyle);
-            }
-            
-            auto view = m_ecs.view<Transform, Shape, Style>();
-            int count = 0;
-            for (auto entity : view) {
-                printf("[BlotApp] Destroying entity %u\n", (unsigned int)entity);
-                m_ecs.destroyEntity(entity);
-                count++;
-            }
-            printf("[BlotApp] Cleared %d shapes\n", count);
-            
-            printf("[BlotApp] === After Clear ===\n");
-            printf("[BlotApp] Total entities: %zu\n", m_ecs.getEntityCount());
-            allEntities = m_ecs.getAllEntities();
-            for (auto entity : allEntities) {
-                bool hasTransform = m_ecs.hasComponent<Transform>(entity);
-                bool hasShape = m_ecs.hasComponent<blot::components::Shape>(entity);
-                bool hasStyle = m_ecs.hasComponent<blot::components::Style>(entity);
-                printf("[BlotApp] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
-                       (unsigned int)entity, hasTransform, hasShape, hasStyle);
-            }
-        }
-        
-        // Debug: Create test shape button
-        
-        if (ImGui::Button("🎨 Random Theme")) {
-            // Generate random colors for fun!
-            auto& style = ImGui::GetStyle();
-            auto& colors = style.Colors;
-            
-            // Random color generator
-            auto randomColor = []() {
-                return ImVec4(
-                    static_cast<float>(rand()) / RAND_MAX,
-                    static_cast<float>(rand()) / RAND_MAX,
-                    static_cast<float>(rand()) / RAND_MAX,
-                    1.0f
-                );
-            };
-            
-            // Apply random colors to various ImGui elements
-            colors[ImGuiCol_Text] = randomColor();
-            colors[ImGuiCol_TextDisabled] = randomColor();
-            colors[ImGuiCol_WindowBg] = randomColor();
-            colors[ImGuiCol_ChildBg] = randomColor();
-            colors[ImGuiCol_PopupBg] = randomColor();
-            colors[ImGuiCol_Border] = randomColor();
-            colors[ImGuiCol_BorderShadow] = randomColor();
-            colors[ImGuiCol_FrameBg] = randomColor();
+        // Apply random colors to various ImGui elements
+        colors[ImGuiCol_Text] = randomColor();
+        colors[ImGuiCol_TextDisabled] = randomColor();
+        colors[ImGuiCol_WindowBg] = randomColor();
+        colors[ImGuiCol_ChildBg] = randomColor();
+        colors[ImGuiCol_PopupBg] = randomColor();
+        colors[ImGuiCol_Border] = randomColor();
+        colors[ImGuiCol_BorderShadow] = randomColor();            colors[ImGuiCol_FrameBg] = randomColor();
             colors[ImGuiCol_FrameBgHovered] = randomColor();
             colors[ImGuiCol_FrameBgActive] = randomColor();
             colors[ImGuiCol_TitleBg] = randomColor();
@@ -1130,40 +768,41 @@ void BlotApp::renderUI() {
         
         // Quick color presets
         if (ImGui::Button("🎨 Random Fill")) {
-            m_fillColor = ImVec4(
+            ImVec4 randomFill = ImVec4(
                 static_cast<float>(rand()) / RAND_MAX,
                 static_cast<float>(rand()) / RAND_MAX,
                 static_cast<float>(rand()) / RAND_MAX,
                 1.0f
             );
-            printf("[BlotApp] 🎨 Random fill color: (%.2f, %.2f, %.2f)\n", m_fillColor.x, m_fillColor.y, m_fillColor.z);
+            m_toolbarWindow->setFillColor(randomFill);
+            printf("[BlotApp] 🎨 Random fill color: (%.2f, %.2f, %.2f)\n", randomFill.x, randomFill.y, randomFill.z);
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("⚫ No Fill")) {
-            m_fillColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+            m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             printf("[BlotApp] ⚫ Disabled fill\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🔴 Red Fill")) {
-            m_fillColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            m_toolbarWindow->setFillColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
             printf("[BlotApp] 🔴 Set fill to red\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🟢 Green Fill")) {
-            m_fillColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+            m_toolbarWindow->setFillColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
             printf("[BlotApp] 🟢 Set fill to green\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🔵 Blue Fill")) {
-            m_fillColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+            m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
             printf("[BlotApp] 🔵 Set fill to blue\n");
         }
         
@@ -1171,48 +810,49 @@ void BlotApp::renderUI() {
         
         // Stroke color buttons
         if (ImGui::Button("⚫ No Stroke")) {
-            m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+            m_toolbarWindow->setStrokeColor(ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             printf("[BlotApp] ⚫ Disabled stroke\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("⚪ White Stroke")) {
-            m_strokeColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+            m_toolbarWindow->setStrokeColor(ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
             printf("[BlotApp] ⚪ Set stroke to white\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🔴 Red Stroke")) {
-            m_strokeColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            m_toolbarWindow->setStrokeColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
             printf("[BlotApp] 🔴 Set stroke to red\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🟢 Green Stroke")) {
-            m_strokeColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+            m_toolbarWindow->setStrokeColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
             printf("[BlotApp] 🟢 Set stroke to green\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🔵 Blue Stroke")) {
-            m_strokeColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+            m_toolbarWindow->setStrokeColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
             printf("[BlotApp] 🔵 Set stroke to blue\n");
         }
         
         ImGui::SameLine();
         
         if (ImGui::Button("🎨 Random Stroke")) {
-            m_strokeColor = ImVec4(
+            ImVec4 randomStroke = ImVec4(
                 static_cast<float>(rand()) / RAND_MAX,
                 static_cast<float>(rand()) / RAND_MAX,
                 static_cast<float>(rand()) / RAND_MAX,
                 1.0f
             );
-            printf("[BlotApp] 🎨 Random stroke color: (%.2f, %.2f, %.2f)\n", m_strokeColor.x, m_strokeColor.y, m_strokeColor.z);
+            m_toolbarWindow->setStrokeColor(randomStroke);
+            printf("[BlotApp] 🎨 Random stroke color: (%.2f, %.2f, %.2f)\n", randomStroke.x, randomStroke.y, randomStroke.z);
         }
         
         ImGui::SameLine();
@@ -1236,14 +876,16 @@ void BlotApp::renderUI() {
             m_ecs.addComponent<Shape>(shapeEntity, shape);
             
             // Add Style component
+            ImVec4 fillColor = m_toolbarWindow->getFillColor();
+            ImVec4 strokeColor = m_toolbarWindow->getStrokeColor();
             Style style;
-            style.fillR = 1.0f; style.fillG = 0.0f; 
-            style.fillB = 0.0f; style.fillA = 1.0f;
-            style.strokeR = 0.0f; style.strokeG = 0.0f;
-            style.strokeB = 0.0f; style.strokeA = 1.0f;
-            style.strokeWidth = 2.0f;
-            style.hasFill = true;
-            style.hasStroke = true;
+            style.fillR = fillColor.x; style.fillG = fillColor.y;
+            style.fillB = fillColor.z; style.fillA = fillColor.w;
+            style.strokeR = strokeColor.x; style.strokeG = strokeColor.y;
+            style.strokeB = strokeColor.z; style.strokeA = strokeColor.w;
+            style.strokeWidth = m_toolbarWindow->getStrokeWidth();
+            style.strokeCap = static_cast<blot::components::Style::StrokeCap>(0); // Default: Butt
+            style.strokeJoin = static_cast<blot::components::Style::StrokeJoin>(0); // Default: Miter
             m_ecs.addComponent<Style>(shapeEntity, style);
             
             printf("[BlotApp] Created test shape with coordinates: x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f\n", 
@@ -1288,225 +930,11 @@ void BlotApp::renderUI() {
         ImGui::End();
     }
     
-    if (m_showToolbar) {
-        ImGui::Begin("Toolbar", &m_showToolbar, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
-        ImVec4 selectedColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
-        ImVec4 normalColor = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-        // Shape tool with popup
-        ImGui::PushID("ShapeTool");
-        if (ImGui::Button(ICON_FA_SHAPES)) ImGui::OpenPopup("ShapeMenu");
-        ImGui::SameLine();
-        if (ImGui::BeginPopup("ShapeMenu")) {
-            if (ImGui::Selectable("Rectangle", m_selectedShape == 0)) { m_selectedShape = 0; m_currentTool = BlotApp::ToolType::Rectangle; }
-            if (ImGui::Selectable("Ellipse", m_selectedShape == 1)) { m_selectedShape = 1; m_currentTool = BlotApp::ToolType::Ellipse; }
-            if (ImGui::Selectable("Line", m_selectedShape == 2)) { m_selectedShape = 2; m_currentTool = BlotApp::ToolType::Line; }
-            if (ImGui::Selectable("Polygon", m_selectedShape == 3)) { m_selectedShape = 3; m_currentTool = BlotApp::ToolType::Polygon; }
-            if (ImGui::Selectable("Star", m_selectedShape == 4)) { m_selectedShape = 4; m_currentTool = BlotApp::ToolType::Star; }
-            ImGui::EndPopup();
-        }
-        ImGui::PopID();
-        // Show current shape icon
-        ImGui::SameLine();
-        ToolButton(ICON_FA_MOUSE_POINTER, BlotApp::ToolType::Select);
-        ToolButton(ICON_FA_SQUARE, BlotApp::ToolType::Rectangle);
-        ToolButton(ICON_FA_CIRCLE, BlotApp::ToolType::Ellipse);
-        ToolButton(ICON_FA_PEN, BlotApp::ToolType::Line);
-        // Stroke palette icon
-        if (ImGui::Button(ICON_FA_SLIDERS_H)) m_showStrokePalette = !m_showStrokePalette;
-        ImGui::SameLine();
-        // Palette icon for swatches
-        if (ImGui::Button(ICON_FA_PALETTE)) m_showSwatches = !m_showSwatches;
-        ImGui::SameLine();
-        ImGui::NewLine();
-        
-        // Color pickers
-        ImGui::Text("Fill:");
-        ImGui::SameLine();
-        ImGui::ColorEdit4("##FillColor", (float*)&m_fillColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-        ImGui::SameLine();
-        ImGui::Text("Stroke:");
-        ImGui::SameLine();
-        ImGui::ColorEdit4("##StrokeColor", (float*)&m_strokeColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-        ImGui::End();
-    }
+    // Render all windows through the window manager
+    m_uiManager->getWindowManager()->renderAllWindows();
     
-    if (m_showStrokePalette) {
-        if (ImGui::Begin("Stroke Palette", &m_showStrokePalette)) {
-            ImGui::SliderFloat("Width", &m_strokeWidth, 0.1f, 20.0f);
-            ImGui::Combo("Cap", &m_strokeCap, "Butt\0Square\0Round\0");
-            ImGui::Combo("Join", &m_strokeJoin, "Miter\0Bevel\0Round\0");
-            ImGui::InputInt("Dash Count", &m_dashCount);
-            for (int i = 0; i < m_dashCount && i < 4; ++i) {
-                ImGui::InputFloat(("Dash[" + std::to_string(i) + "]").c_str(), &m_dashPattern[i]);
-            }
-            ImGui::SliderFloat("Dash Offset", &m_dashOffset, 0.0f, 100.0f);
-            ImGui::InputInt("Polygon/Star Sides", &m_polygonSides);
-            if (m_polygonSides < 3) m_polygonSides = 3;
-        }
-        ImGui::End();
-    }
-    
-    // Properties Window
-    if (m_showProperties) {
-        ImGui::Begin("Properties", &m_showProperties);
-        renderProperties();
-        ImGui::End();
-    }
-    
-    // Addon Manager Window
-    if (m_showAddonManager) {
-        ImGui::Begin("Addon Manager", &m_showAddonManager);
-        renderAddonManager();
-        ImGui::End();
-    }
 
-    // Node Editor Window
-    if (m_showNodeEditor) {
-        ImGui::Begin("Node Editor", &m_showNodeEditor);
-        ed::Begin("MyNodeEditor");
-        // Add node creation button
-        if (ImGui::Button("Add Circle Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Circle;
-            n.params = { {"x", 100}, {"y", 100}, {"radius", 50} };
-            m_nodes.push_back(n);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Add Add Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Add;
-            n.params = { {"a", 0}, {"b", 0}, {"out", 0} };
-            m_nodes.push_back(n);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Add Multiply Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Multiply;
-            n.params = { {"a", 1}, {"b", 1}, {"out", 1} };
-            m_nodes.push_back(n);
-        }
-        if (ImGui::Button("Add Sin Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Sin;
-            n.params = { {"in", 0}, {"out", 0} };
-            m_nodes.push_back(n);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Add Cos Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Cos;
-            n.params = { {"in", 0}, {"out", 0} };
-            m_nodes.push_back(n);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Add Grid Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Grid;
-            n.params = { {"x", 100}, {"y", 100}, {"radius", 30}, {"rows", 3}, {"cols", 3}, {"spacing", 60} };
-            m_nodes.push_back(n);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Add Copy Node")) {
-            Node n;
-            n.id = m_nextNodeId++;
-            n.type = NodeType::Copy;
-            n.params = { {"x", 100}, {"y", 100}, {"radius", 30}, {"count", 5}, {"dx", 40}, {"dy", 0} };
-            m_nodes.push_back(n);
-        }
-        // Draw nodes and pins
-        std::unordered_map<int, std::unordered_map<std::string, ed::PinId>> nodeParamPins;
-        for (auto& node : m_nodes) {
-            ed::BeginNode(node.id);
-            ImGui::Text("%s", node.type == NodeType::Circle ? "Circle" : node.type == NodeType::Add ? "Add" : node.type == NodeType::Multiply ? "Multiply" : node.type == NodeType::Sin ? "Sin" : node.type == NodeType::Cos ? "Cos" : node.type == NodeType::Grid ? "Grid" : node.type == NodeType::Copy ? "Copy" : "Other");
-            for (auto& param : node.params) {
-                ed::PinId pinId = (node.id << 8) | std::hash<std::string>{}(param.name);
-                nodeParamPins[node.id][param.name] = pinId;
-                // For math nodes, "out" is output, others are input
-                bool isOutput = false;
-                if ((node.type == NodeType::Add || node.type == NodeType::Multiply || node.type == NodeType::Sin || node.type == NodeType::Cos) && param.name == "out")
-                    isOutput = true;
-                if ((node.type == NodeType::Circle || node.type == NodeType::Grid || node.type == NodeType::Copy) && param.name == "radius")
-                    isOutput = true; // Optionally allow shape nodes to output their radius
-                ed::BeginPin(pinId, isOutput ? ed::PinKind::Output : ed::PinKind::Input);
-                ImGui::PushID(&param);
-                ImGui::InputFloat(param.name.c_str(), &param.value);
-                ImGui::PopID();
-                ed::EndPin();
-            }
-            ed::EndNode();
-        }
-        // Draw links
-        for (const auto& node : m_nodes) {
-            for (const auto& conn : node.inputs) {
-                ed::LinkId linkId = (conn.fromNodeId << 16) | conn.toNodeId;
-                ed::PinId fromPin = nodeParamPins[conn.fromNodeId][conn.fromParam];
-                ed::PinId toPin = nodeParamPins[conn.toNodeId][conn.toParam];
-                ed::Link(linkId, fromPin, toPin);
-            }
-        }
-        // Handle new links
-        if (ed::BeginCreate()) {
-            ed::PinId startPinId, endPinId;
-            if (ed::QueryNewLink(&startPinId, &endPinId)) {
-                if (startPinId && endPinId && startPinId != endPinId) {
-                    // Find nodes/params for pins
-                    int fromNode = static_cast<int>(startPinId.Get() >> 8);
-                    int toNode = static_cast<int>(endPinId.Get() >> 8);
-                    std::string fromParam, toParam;
-                    bool fromIsOutput = false, toIsInput = false;
-                    for (auto& node : m_nodes) {
-                        if (node.id == fromNode) {
-                            for (auto& param : node.params) {
-                                if (ax::NodeEditor::PinId((fromNode << 8) | std::hash<std::string>{}(param.name)) == startPinId) {
-                                    fromParam = param.name;
-                                    if ((node.type == NodeType::Add || node.type == NodeType::Multiply || node.type == NodeType::Sin || node.type == NodeType::Cos) && param.name == "out")
-                                        fromIsOutput = true;
-                                    if ((node.type == NodeType::Circle || node.type == NodeType::Grid || node.type == NodeType::Copy) && param.name == "radius")
-                                        fromIsOutput = true;
-                                }
-                            }
-                        }
-                        if (node.id == toNode) {
-                            for (auto& param : node.params) {
-                                if (ax::NodeEditor::PinId((toNode << 8) | std::hash<std::string>{}(param.name)) == endPinId) {
-                                    toParam = param.name;
-                                    if (!(node.type == NodeType::Add || node.type == NodeType::Multiply || node.type == NodeType::Sin || node.type == NodeType::Cos) || param.name != "out")
-                                        toIsInput = true;
-                                }
-                            }
-                        }
-                    }
-                    // Only allow output->input
-                    if (fromIsOutput && toIsInput) {
-                        for (auto& node : m_nodes) {
-                            if (node.id == toNode) {
-                                node.inputs.push_back({fromNode, fromParam, toNode, toParam});
-                            }
-                        }
-                        ed::AcceptNewItem();
-                    }
-                }
-            }
-        }
-        ed::EndCreate();
-        ed::End();
-        ImGui::End();
-    }
     
-    // ImGui Demo Window - DISABLED to fix canvas layout issues
-    // if (m_showDemoWindow) {
-    //     ImGui::ShowDemoWindow(&m_showDemoWindow);
-    // }
-    
-    // DISABLE ALL DEMO WINDOWS to fix canvas layout issues
-    m_showDemoWindow = false;
-    m_settings.showDemoWindow = false;
 
     if (showImGuiMarkdownDemo) {
         ImGui::Begin("ImGui Markdown Demo", &showImGuiMarkdownDemo);
@@ -1524,10 +952,6 @@ void BlotApp::renderUI() {
             ImGui::Markdown(markdown, strlen(markdown), mdConfig);
         }
         ImGui::End();
-    }
-
-    if (m_showThemeEditor) {
-        renderThemeEditor();
     }
 
     // ImPlot Demo Window - DISABLED to fix canvas layout issues
@@ -1565,73 +989,15 @@ void BlotApp::renderUI() {
         ImGui::End();
     }
 
-    // Swatches window/component
-    if (m_showSwatches) {
-        if (ImGui::Begin("Swatches", &m_showSwatches)) {
-            ImGui::RadioButton("Fill", &m_activeSwatchType, 0); ImGui::SameLine();
-            ImGui::RadioButton("Stroke", &m_activeSwatchType, 1);
-            ImGui::SameLine();
-            if (ImGui::Button("Save")) SaveSwatches(m_swatchesFile);
-            ImGui::SameLine();
-            if (ImGui::Button("Load")) LoadSwatches(m_swatchesFile);
-            ImGui::Separator();
-            // Drag-and-drop reordering
-            int swatchesPerRow = 8;
-            int swatchToMove = -1, swatchTarget = -1;
-            for (int i = 0; i < m_swatches.size(); ++i) {
-                if (i > 0 && i % swatchesPerRow == 0) ImGui::NewLine();
-                ImGui::PushID(i);
-                if (ImGui::ColorButton("##swatch", m_swatches[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(24,24))) {
-                    if (m_activeSwatchType == 0) m_fillColor = m_swatches[i];
-                    else m_strokeColor = m_swatches[i];
-                }
-                // Drag source
-                if (ImGui::BeginDragDropSource()) {
-                    ImGui::SetDragDropPayload("SWATCH", &i, sizeof(int));
-                    ImGui::ColorButton("##drag", m_swatches[i], ImGuiColorEditFlags_NoTooltip, ImVec2(24,24));
-                    ImGui::EndDragDropSource();
-                }
-                // Drag target
-                if (ImGui::BeginDragDropTarget()) {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SWATCH")) {
-                        int src = *(const int*)payload->Data;
-                        swatchToMove = src;
-                        swatchTarget = i;
-                    }
-                    ImGui::EndDragDropTarget();
-                }
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::Button("Remove")) {
-                        m_swatches.erase(m_swatches.begin() + i);
-                        ImGui::EndPopup();
-                        ImGui::PopID();
-                        break;
-                    }
-                    ImGui::EndPopup();
-                }
-                ImGui::PopID();
-                ImGui::SameLine();
-            }
-            if (swatchToMove != -1 && swatchTarget != -1 && swatchToMove != swatchTarget) {
-                auto c = m_swatches[swatchToMove];
-                m_swatches.erase(m_swatches.begin() + swatchToMove);
-                m_swatches.insert(m_swatches.begin() + swatchTarget, c);
-            }
-            ImGui::NewLine();
-            if (ImGui::Button("Add Current Color")) {
-                m_swatches.push_back(m_activeSwatchType == 0 ? m_fillColor : m_strokeColor);
-            }
-        }
-        ImGui::End();
-    }
-}
+    // Swatches window/component - DISABLED (not properly integrated)
+    // TODO: Implement swatches functionality
 
 void BlotApp::renderCanvas() {
     // Render only the active canvas if it exists
     if (m_activeCanvasId != entt::null && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
-        auto it = m_canvasResources.find(m_activeCanvasId);
-        if (it != m_canvasResources.end()) {
-            it->second->render();
+        auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+        if (canvasPtr && *canvasPtr) {
+            (*canvasPtr)->render();
         }
     }
 }
@@ -1641,136 +1007,6 @@ void BlotApp::renderAddonUI() {
     if (m_addonManager) {
         m_addonManager->drawAll();
     }
-}
-
-void BlotApp::renderAddonManager() {
-    if (!m_addonManager) return;
-    
-    if (ImGui::BeginTabBar("AddonManagerTabs")) {
-        if (ImGui::BeginTabItem("Addons")) {
-            renderAddonList();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Details")) {
-            renderAddonDetails();
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
-    }
-}
-
-void BlotApp::renderAddonList() {
-    auto addons = m_addonManager->getAllAddons();
-    
-    ImGui::Text("Available Addons (%zu)", addons.size());
-    ImGui::Separator();
-    
-    for (const auto& addon : addons) {
-        if (!addon) continue;
-        
-        ImGui::PushID(addon->getName().c_str());
-        
-        bool enabled = addon->isEnabled();
-        if (ImGui::Checkbox(addon->getName().c_str(), &enabled)) {
-            if (enabled) {
-                m_addonManager->enableAddon(addon->getName());
-            } else {
-                m_addonManager->disableAddon(addon->getName());
-            }
-        }
-        
-        if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("%s\nVersion: %s\nAuthor: %s", 
-                             addon->getDescription().c_str(),
-                             addon->getVersion().c_str(),
-                             addon->getAuthor().c_str());
-        }
-        
-        ImGui::PopID();
-    }
-    
-    ImGui::Separator();
-    if (ImGui::Button("Reload Addons")) {
-        m_addonManager->cleanupAll();
-        loadDefaultAddons();
-        m_addonManager->initAll();
-    }
-}
-
-void BlotApp::renderAddonDetails() {
-    auto addons = m_addonManager->getAllAddons();
-    
-    for (const auto& addon : addons) {
-        if (!addon) continue;
-        
-        if (ImGui::CollapsingHeader(addon->getName().c_str())) {
-            ImGui::Text("Version: %s", addon->getVersion().c_str());
-            ImGui::Text("Description: %s", addon->getDescription().c_str());
-            ImGui::Text("Author: %s", addon->getAuthor().c_str());
-            ImGui::Text("License: %s", addon->getLicense().c_str());
-            ImGui::Text("Status: %s", addon->isEnabled() ? "Enabled" : "Disabled");
-            ImGui::Text("Initialized: %s", addon->isInitialized() ? "Yes" : "No");
-            
-            auto dependencies = addon->getDependencies();
-            if (!dependencies.empty()) {
-                ImGui::Text("Dependencies:");
-                for (const auto& dep : dependencies) {
-                    ImGui::BulletText("%s", dep.c_str());
-                }
-            }
-        }
-    }
-}
-
-void BlotApp::renderProperties() {
-    static float strokeWidth = 1.0f;
-    static float fillOpacity = 1.0f;
-    static ImVec4 strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-    static ImVec4 fillColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    static bool fillEnabled = true;
-    static bool strokeEnabled = true;
-    static int cap = 2; // 0=Butt, 1=Square, 2=Round
-    static int join = 2; // 0=Miter, 1=Bevel, 2=Round
-    static float dashPattern[4] = {0};
-    static int dashCount = 0;
-    static float dashOffset = 0.0f;
-
-    ImGui::Text("Drawing Properties");
-    ImGui::Separator();
-
-    ImGui::Checkbox("Fill Enabled", &fillEnabled);
-    ImGui::Checkbox("Stroke Enabled", &strokeEnabled);
-    ImGui::SliderFloat("Stroke Width", &strokeWidth, 0.1f, 20.0f);
-    ImGui::SliderFloat("Fill Opacity", &fillOpacity, 0.0f, 1.0f);
-    ImGui::ColorEdit4("Stroke Color", (float*)&strokeColor);
-    ImGui::ColorEdit4("Fill Color", (float*)&fillColor);
-    ImGui::Combo("Stroke Cap", &cap, "Butt\0Square\0Round\0");
-    ImGui::Combo("Stroke Join", &join, "Miter\0Bevel\0Round\0");
-    ImGui::InputInt("Dash Count", &dashCount);
-    for (int i = 0; i < dashCount && i < 4; ++i) {
-        ImGui::InputFloat(("Dash[" + std::to_string(i) + "]").c_str(), &dashPattern[i]);
-    }
-    ImGui::SliderFloat("Dash Offset", &dashOffset, 0.0f, 100.0f);
-
-    if (ImGui::Button("Apply to Canvas")) {
-        m_graphics->setStrokeWidth(strokeWidth);
-        m_graphics->setFillOpacity(fillOpacity);
-        m_graphics->setStrokeColor(strokeColor.x, strokeColor.y, strokeColor.z, strokeColor.w);
-        m_graphics->setFillColor(fillColor.x, fillColor.y, fillColor.z, fillColor.w);
-        if (fillEnabled) m_graphics->setFillColor(fillColor.x, fillColor.y, fillColor.z, fillColor.w);
-        else m_graphics->setFillOpacity(0.0f);
-        if (strokeEnabled) m_graphics->setStrokeWidth(strokeWidth);
-        else m_graphics->setStrokeWidth(0.0f);
-        m_graphics->setStrokeCap(cap);
-        m_graphics->setStrokeJoin(join);
-        std::vector<float> dashes(dashPattern, dashPattern + dashCount);
-        m_graphics->setStrokeDash(dashes, dashOffset);
-    }
-
-    ImGui::Separator();
-    ImGui::Text("Addon System");
-    ImGui::Text("Active Addons: %zu", m_addonManager ? m_addonManager->getEnabledAddons().size() : 0);
-    ImGui::Text("Total Addons: %zu", m_addonManager ? m_addonManager->getAllAddons().size() : 0);
 }
 
 void BlotApp::handleInput() {
@@ -1784,11 +1020,11 @@ void BlotApp::handleInput() {
     }
     
     if (ImGui::IsKeyDown(ImGuiKey_F7)) {
-        m_showAddonManager = !m_showAddonManager;
+        m_uiManager->getWindowManager()->toggleWindow("AddonManager");
     }
 
     // Removed ImGui window/mouse code from here. If you need mouse position relative to a window, do it in the UI rendering code.
-    if (m_currentTool == BlotApp::ToolType::Ellipse) {
+    if (m_toolbarWindow->getCurrentTool() == BlotApp::ToolType::Ellipse) {
         // This logic should also be moved to the UI code if it depends on ImGui window state.
         // For now, leave as is if it does not use ImGui functions.
         // If it does, move it to renderUI or renderCanvas.
@@ -1797,7 +1033,7 @@ void BlotApp::handleInput() {
 
 void BlotApp::update() {
     // Update application logic
-    CanvasUpdateSystem(m_ecs, m_canvasResources, m_deltaTime);
+            CanvasUpdateSystem(m_ecs, m_resourceManager.get(), m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);
@@ -1807,8 +1043,8 @@ void BlotApp::update() {
     m_ecs.updateSystems(m_deltaTime);
     
     // Update window manager
-    if (m_windowManager) {
-        m_windowManager->update();
+    if (m_uiManager) {
+        m_uiManager->getWindowManager()->update();
     }
 } 
 
@@ -1861,27 +1097,6 @@ void BlotApp::setImGuiTheme(ImGuiTheme theme) {
     m_currentTheme = theme;
 } 
 
-void BlotApp::renderThemeEditor() {
-    static char savePath[256] = "theme.json";
-    static char loadPath[256] = "theme.json";
-    ImGui::Begin("ImGui Theme Editor", &m_showThemeEditor);
-    ImGuiStyle& style = ImGui::GetStyle();
-    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
-        ImGui::ColorEdit4(ImGui::GetStyleColorName(i), (float*)&style.Colors[i]);
-    }
-    ImGui::InputText("Save As", savePath, sizeof(savePath));
-    if (ImGui::Button("Save Theme As")) {
-        saveCurrentTheme(savePath);
-        m_lastThemePath = savePath;
-    }
-    ImGui::InputText("Load From", loadPath, sizeof(loadPath));
-    if (ImGui::Button("Load Theme")) {
-        loadTheme(loadPath);
-        m_lastThemePath = loadPath;
-    }
-    ImGui::End();
-}
-
 void BlotApp::loadTheme(const std::string& path) {
     ImGuiStyle& style = ImGui::GetStyle();
     std::ifstream in(path);
@@ -1909,22 +1124,163 @@ void BlotApp::saveCurrentTheme(const std::string& path) {
 } 
 
 // ECS-style system: update all canvases
-void CanvasUpdateSystem(ECSManager& ecs, std::unordered_map<entt::entity, std::unique_ptr<Canvas>>& canvasResources, float deltaTime) {
+void CanvasUpdateSystem(ECSManager& ecs, ResourceManager* resourceManager, float deltaTime) {
     auto view = ecs.view<TextureComponent>();
     for (auto entity : view) {
-        auto it = canvasResources.find(entity);
-        if (it != canvasResources.end()) {
-            it->second->update(deltaTime);
+        auto canvasPtr = resourceManager->getCanvas(entity);
+        if (canvasPtr && *canvasPtr) {
+            (*canvasPtr)->update(deltaTime);
         }
     }
 }
 
 // ECS-style system: render all canvases (optionally, only active)
-void CanvasRenderSystem(ECSManager& ecs, std::unordered_map<entt::entity, std::unique_ptr<Canvas>>& canvasResources, entt::entity activeCanvasId) {
+void CanvasRenderSystem(ECSManager& ecs, ResourceManager* resourceManager, entt::entity activeCanvasId) {
     if (activeCanvasId != entt::null && ecs.hasComponent<TextureComponent>(activeCanvasId)) {
-        auto it = canvasResources.find(activeCanvasId);
-        if (it != canvasResources.end()) {
-            it->second->render();
+        auto canvasPtr = resourceManager->getCanvas(activeCanvasId);
+        if (canvasPtr && *canvasPtr) {
+            (*canvasPtr)->render();
         }
     }
+}
+
+void BlotApp::configureMainMenuBarCallbacks() {
+    auto mainMenuBar = getMainMenuBar();
+    if (!mainMenuBar) return;
+    
+    // Set up callbacks
+    mainMenuBar->setQuitCallback([this]() { m_running = false; });
+    mainMenuBar->setNewSketchCallback([this]() { m_codeEditor->newSketch(); });
+    mainMenuBar->setOpenSketchCallback([this]() { m_codeEditor->openSketch(); });
+    mainMenuBar->setSaveSketchCallback([this]() { m_codeEditor->saveSketch(); });
+    mainMenuBar->setRunSketchCallback([this]() { m_scriptEngine->runCode(m_codeEditor->getCode()); });
+    mainMenuBar->setStopSketchCallback([this]() { m_scriptEngine->stop(); });
+    mainMenuBar->setAddonManagerCallback([this]() { m_uiManager->getWindowManager()->toggleWindow("AddonManager"); });
+    mainMenuBar->setReloadAddonsCallback([this]() {
+        m_addonManager->cleanupAll();
+        loadDefaultAddons();
+        m_addonManager->initAll();
+    });
+    mainMenuBar->setThemeEditorCallback([this]() { m_uiManager->getWindowManager()->toggleWindow("ThemeEditor"); });
+    
+    // Canvas callbacks
+    mainMenuBar->setNewCanvasCallback([this]() {
+        int w = 1280, h = 720;
+        auto newId = m_ecs.createEntity();
+        TextureComponent texComp;
+        texComp.width = w;
+        texComp.height = h;
+        texComp.renderTarget = true;
+        m_ecs.addComponent<TextureComponent>(newId, texComp);
+        (void)texComp; // Suppress unused variable warning
+        // Create resources for this canvas entity using ResourceManager
+        auto renderer = m_resourceManager->createRenderer(newId, w, h);
+        if (renderer) {
+            auto graphics = std::make_shared<Graphics>();
+            graphics->setRenderer(renderer.get());
+            auto canvas = std::make_unique<Canvas>(w, h, graphics);
+            canvas->setECSManager(&m_ecs); // Connect Canvas to ECS
+            m_resourceManager->addGraphics(newId, graphics);
+            m_resourceManager->addCanvas(newId, std::move(canvas));
+            m_activeCanvasId = newId;
+            updateMainMenuBarCanvasList();
+        }
+    });
+    
+    mainMenuBar->setSaveCanvasCallback([this]() {
+        auto result = pfd::save_file("Save Canvas As", ".", {"PNG Files (*.png)", "*.png", "All Files", "*"}).result();
+        if (!result.empty() && m_ecs.hasComponent<TextureComponent>(m_activeCanvasId)) {
+            auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+            if (canvasPtr && *canvasPtr) {
+                (*canvasPtr)->saveFrame(result);
+            }
+        }
+    });
+    
+    mainMenuBar->setCloseCanvasCallback([this](entt::entity entity) {
+        m_ecs.destroyEntity(entity);
+        m_resourceManager->destroyRenderer(entity);
+        m_resourceManager->removeGraphics(entity);
+        m_resourceManager->removeCanvas(entity);
+        if (m_activeCanvasId == entity) {
+            auto all = m_ecs.view<TextureComponent>();
+            if (!all.empty())
+                m_activeCanvasId = *all.begin();
+            else
+                m_activeCanvasId = entt::null;
+        }
+        updateMainMenuBarCanvasList();
+    });
+    
+    mainMenuBar->setSelectCanvasCallback([this](entt::entity entity) {
+        m_activeCanvasId = entity;
+        updateMainMenuBarCanvasList();
+    });
+    
+    // Markdown callbacks
+    mainMenuBar->setOpenMarkdownCallback([this]() {
+        auto result = pfd::open_file("Open Markdown File", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
+        if (!result.empty()) {
+            std::ifstream in(result[0]);
+            if (in) {
+                markdownEditorBuffer.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+                loadedMarkdownPath = result[0];
+                showImGuiMarkdownDemo = true;
+            }
+        }
+    });
+    
+    mainMenuBar->setSaveMarkdownCallback([this]() {
+        auto result = pfd::save_file("Save Markdown As", ".", {"Markdown Files (*.md)", "*.md", "All Files", "*"}).result();
+        if (!result.empty() && !markdownEditorBuffer.empty()) {
+            std::ofstream out(result);
+            if (out) {
+                out << markdownEditorBuffer;
+                loadedMarkdownPath = result;
+            }
+        }
+    });
+    
+    // Demo callbacks
+    mainMenuBar->setImPlotDemoCallback([this]() { showImPlotDemo = true; });
+    mainMenuBar->setImGuiMarkdownDemoCallback([this]() { showImGuiMarkdownDemo = true; });
+    mainMenuBar->setMarkdownEditorCallback([this]() { 
+        showMarkdownEditor = true; 
+        showMarkdownViewer = true; 
+    });
+    
+    // Renderer callbacks
+    mainMenuBar->setSwitchRendererCallback([this](int type) {
+        switchRenderer(static_cast<RendererType>(type));
+        m_graphics->setRenderer(m_currentRenderer.get());
+    });
+    mainMenuBar->setCurrentRendererType(static_cast<int>(m_currentRendererType));
+    
+    // Theme callbacks
+    mainMenuBar->setSwitchThemeCallback([this](int theme) {
+        setImGuiTheme(static_cast<ImGuiTheme>(theme));
+    });
+    mainMenuBar->setCurrentTheme(static_cast<int>(m_currentTheme));
+    
+    // Update canvas list
+    updateMainMenuBarCanvasList();
+
+    mainMenuBar->setNodeEditorCallback([this]() { m_windowManager->toggleWindow("NodeEditor"); });
+}
+
+void BlotApp::updateMainMenuBarCanvasList() {
+    auto mainMenuBar = getMainMenuBar();
+    if (!mainMenuBar) return;
+    
+    // Build canvas entities list
+    std::vector<std::pair<entt::entity, std::string>> canvasEntities;
+    auto view = m_ecs.view<TextureComponent>();
+    for (auto entity : view) {
+        char label[64];
+        snprintf(label, sizeof(label), "Canvas %d%s", (int)entity, (entity == m_activeCanvasId ? " (active)" : ""));
+        canvasEntities.emplace_back(entity, std::string(label));
+    }
+    
+    mainMenuBar->setCanvasEntities(canvasEntities);
+    mainMenuBar->setActiveCanvasId(m_activeCanvasId);
 } 

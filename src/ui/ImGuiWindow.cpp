@@ -134,8 +134,12 @@ void ImGuiWindow::end() {
 void ImGuiWindow::render() {
     begin();
     if (m_state.isOpen) {
-        // Default rendering - subclasses should override this
-        ImGui::Text("ImGuiWindow base class - override render() in derived class");
+        if (m_renderCallback) {
+            m_renderCallback();
+        } else {
+            // Default rendering - subclasses should override this
+            ImGui::Text("ImGuiWindow base class - override render() in derived class");
+        }
         end();
     }
 }
@@ -166,6 +170,10 @@ void ImGuiWindow::setOnDragEnd(std::function<void()> callback) {
 
 void ImGuiWindow::setOnResize(std::function<void(const ImVec2&)> callback) {
     m_onResize = callback;
+}
+
+void ImGuiWindow::setRenderCallback(std::function<void()> callback) {
+    m_renderCallback = callback;
 }
 
 void ImGuiWindow::updateState() {

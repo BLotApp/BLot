@@ -61,11 +61,17 @@ public:
     virtual void setOnDragStart(std::function<void()> callback) override;
     virtual void setOnDragEnd(std::function<void()> callback) override;
     virtual void setOnResize(std::function<void(const ImVec2&)> callback) override;
+    
+    // Custom render callback
+    void setRenderCallback(std::function<void()> callback);
 
 protected:
     // Helper methods
     virtual void updateState() override;
     virtual void triggerCallbacks() override;
+    
+    // Custom render callback
+    std::function<void()> m_renderCallback;
 };
 
 } // namespace blot 

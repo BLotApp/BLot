@@ -1,69 +1,67 @@
-#include "InfoPanelWindow.h"
+#include "InfoWindow.h"
 #include "CoordinateSystem.h"
 #include <imgui.h>
-#include <GLFW/glfw3.h>
 
 namespace blot {
 
-const char* InfoPanelWindow::coordinateSystemNames[] = { "Screen", "App", "Window", "Canvas" };
+const char* InfoWindow::coordinateSystemNames[] = { "Current_Screen", "Main_Window", "Current_Window", "Current_Canvas" };
 
-InfoPanelWindow::InfoPanelWindow(const std::string& title, Flags flags)
+InfoWindow::InfoWindow(const std::string& title, Flags flags)
     : Window(title, flags) {
     // Set initial window size
-    m_state.size = ImVec2(300, 400);
+    m_state.size = ImVec2(300, 200);
     m_state.position = ImVec2(10, 10);
 }
 
-void InfoPanelWindow::setMousePos(const ImVec2& pos) {
+void InfoWindow::setMousePos(const ImVec2& pos) {
     m_mousePos = pos;
 }
 
-void InfoPanelWindow::setMouseDelta(const ImVec2& delta) {
+void InfoWindow::setMouseDelta(const ImVec2& delta) {
     m_mouseDelta = delta;
 }
 
-void InfoPanelWindow::setMouseClicked(bool clicked) {
+void InfoWindow::setMouseClicked(bool clicked) {
     m_mouseClicked = clicked;
 }
 
-void InfoPanelWindow::setMouseHeld(bool held) {
+void InfoWindow::setMouseHeld(bool held) {
     m_mouseHeld = held;
 }
 
-void InfoPanelWindow::setMouseDragged(bool dragged) {
+void InfoWindow::setMouseDragged(bool dragged) {
     m_mouseDragged = dragged;
 }
 
-void InfoPanelWindow::setMouseReleased(bool released) {
+void InfoWindow::setMouseReleased(bool released) {
     m_mouseReleased = released;
 }
 
-void InfoPanelWindow::setToolActive(bool active) {
+void InfoWindow::setToolActive(bool active) {
     m_toolActive = active;
 }
 
-void InfoPanelWindow::setToolStartPos(const ImVec2& pos) {
+void InfoWindow::setToolStartPos(const ImVec2& pos) {
     m_toolStartPos = pos;
 }
 
-void InfoPanelWindow::setCurrentTool(int toolType) {
+void InfoWindow::setCurrentTool(int toolType) {
     m_currentTool = toolType;
 }
 
-void InfoPanelWindow::setCoordinateSystem(int system) {
+void InfoWindow::setCoordinateSystem(int system) {
     m_coordinateSystem = system;
 }
 
-void InfoPanelWindow::setShowMouseCoordinates(bool show) {
+void InfoWindow::setShowMouseCoordinates(bool show) {
     m_showMouseCoordinates = show;
 }
 
-void InfoPanelWindow::render() {
+void InfoWindow::render() {
     // Set window size and position
     ImGui::SetNextWindowSize(m_state.size, ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowPos(m_state.position, ImGuiCond_FirstUseEver);
     
-    // Begin the window
     if (ImGui::Begin(m_title.c_str(), &m_state.isOpen, m_state.flags)) {
         renderMouseInfo();
         renderToolInfo();
@@ -72,7 +70,7 @@ void InfoPanelWindow::render() {
     ImGui::End();
 }
 
-void InfoPanelWindow::renderMouseInfo() {
+void InfoWindow::renderMouseInfo() {
     if (ImGui::CollapsingHeader("Mouse Interaction", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Position: (%.1f, %.1f)", m_mousePos.x, m_mousePos.y);
         ImGui::Text("Delta: (%.1f, %.1f)", m_mouseDelta.x, m_mouseDelta.y);
@@ -83,31 +81,36 @@ void InfoPanelWindow::renderMouseInfo() {
     }
 }
 
-void InfoPanelWindow::renderToolInfo() {
+void InfoWindow::renderToolInfo() {
     if (ImGui::CollapsingHeader("Tool State", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Active: %s", m_toolActive ? "Yes" : "No");
-        ImGui::Text("Start Pos: (%.1f, %.1f)", m_toolStartPos.x, m_toolStartPos.y);
+        ImGui::Text("Start Position: (%.1f, %.1f)", m_toolStartPos.x, m_toolStartPos.y);
         ImGui::Text("Current Tool: %d", m_currentTool);
     }
 }
 
-void InfoPanelWindow::renderCoordinateInfo() {
+void InfoWindow::renderCoordinateInfo() {
     if (ImGui::CollapsingHeader("Coordinate System", ImGuiTreeNodeFlags_DefaultOpen)) {
         // Coordinate system dropdown
         if (ImGui::Combo("System", &m_coordinateSystem, coordinateSystemNames, 4)) {
-            // Coordinate system changed
+            // Handle coordinate system change
         }
         
-        // Get coordinate info
-        CoordinateSystem::CoordinateInfo coordInfo = getCoordinateInfo();
+        // Show mouse coordinates checkbox
+        ImGui::Checkbox("Show Mouse Coordinates", &m_showMouseCoordinates);
         
-        ImGui::Text("Mouse Position: (%.1f, %.1f)", coordInfo.mouse.x, coordInfo.mouse.y);
-        ImGui::Text("Space: %s", coordInfo.spaceName.c_str());
-        ImGui::Text("Description: %s", coordInfo.description.c_str());
+        if (m_showMouseCoordinates) {
+            auto coordInfo = getCoordinateInfo();
+            ImGui::Text("Mouse: (%.1f, %.1f)", coordInfo.mouse.x, coordInfo.mouse.y);
+            ImGui::Text("Relative: (%.1f, %.1f)", coordInfo.relative.x, coordInfo.relative.y);
+            ImGui::Text("Bounds: (%.1f, %.1f)", coordInfo.bounds.x, coordInfo.bounds.y);
+            ImGui::Text("Space: %s", coordInfo.spaceName.c_str());
+            ImGui::Text("Description: %s", coordInfo.description.c_str());
+        }
     }
 }
 
-CoordinateSystem::CoordinateInfo InfoPanelWindow::getCoordinateInfo() const {
+CoordinateSystem::CoordinateInfo InfoWindow::getCoordinateInfo() const {
     CoordinateSystem coordSystem;
     return coordSystem.getCoordinateInfo(glm::vec2(m_mousePos.x, m_mousePos.y), static_cast<CoordinateSpace>(m_coordinateSystem));
 }

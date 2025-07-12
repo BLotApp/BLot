@@ -3,8 +3,8 @@
 #include "Window.h"
 #include "canvas/Canvas.h"
 #include "ecs/ECSManager.h"
+#include "rendering/ResourceManager.h"
 #include <entt/entt.hpp>
-#include <unordered_map>
 #include <memory>
 
 namespace blot {
@@ -15,7 +15,7 @@ public:
     virtual ~CanvasWindow() = default;
 
     // Canvas-specific methods
-    void setCanvasResources(std::unordered_map<entt::entity, std::unique_ptr<Canvas>>* canvasResources);
+    void setResourceManager(ResourceManager* resourceManager);
     void setECSManager(ECSManager* ecs);
     void setActiveCanvasId(entt::entity canvasId);
     void setCurrentTool(int toolType);
@@ -35,7 +35,7 @@ public:
 
 private:
     // Canvas state
-    std::unordered_map<entt::entity, std::unique_ptr<Canvas>>* m_canvasResources = nullptr;
+    ResourceManager* m_resourceManager = nullptr;
     ECSManager* m_ecs = nullptr;
     entt::entity m_activeCanvasId = entt::null;
     

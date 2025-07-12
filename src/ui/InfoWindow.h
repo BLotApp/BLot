@@ -6,12 +6,12 @@
 
 namespace blot {
 
-class InfoPanelWindow : public Window {
+class InfoWindow : public Window {
 public:
-    InfoPanelWindow(const std::string& title = "Info Panel", Flags flags = Flags::None);
-    virtual ~InfoPanelWindow() = default;
+    InfoWindow(const std::string& title = "Info Window", Flags flags = Flags::None);
+    virtual ~InfoWindow() = default;
 
-    // Info panel specific methods
+    // Info window specific methods
     void setMousePos(const ImVec2& pos);
     void setMouseDelta(const ImVec2& delta);
     void setMouseClicked(bool clicked);

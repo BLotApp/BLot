@@ -26,6 +26,7 @@ entt::entity WindowManager::createWindow(const std::string& name, std::shared_pt
     m_registry.emplace<WindowTransformComponent>(entity);
     m_registry.emplace<WindowStyleComponent>(entity);
     m_registry.emplace<WindowInputComponent>(entity);
+    m_registry.emplace<WindowSettingsComponent>(entity);
     
     // If this is the first window, make it focused
     if (m_focusedWindowEntity == entt::null) {
@@ -258,6 +259,157 @@ void WindowManager::sortWindowsByZOrder() {
     // This would sort windows by z-order for proper rendering
     // For now, we'll use the default entity order
     // In a more complex implementation, you might want to sort the view
+}
+
+// Window visibility management
+bool WindowManager::isWindowVisible(const std::string& name) {
+    auto entity = getWindowEntity(name);
+    if (entity != entt::null) {
+        auto& windowComp = m_registry.get<WindowComponent>(entity);
+        return windowComp.isVisible;
+    }
+    return false;
+}
+
+void WindowManager::setWindowVisible(const std::string& name, bool visible) {
+    auto entity = getWindowEntity(name);
+    if (entity != entt::null) {
+        auto& windowComp = m_registry.get<WindowComponent>(entity);
+        windowComp.isVisible = visible;
+        if (windowComp.window) {
+            if (visible) {
+                windowComp.window->show();
+            } else {
+                windowComp.window->hide();
+            }
+        }
+    }
+}
+
+void WindowManager::toggleWindow(const std::string& name) {
+    auto entity = getWindowEntity(name);
+    if (entity != entt::null) {
+        auto& windowComp = m_registry.get<WindowComponent>(entity);
+        windowComp.isVisible = !windowComp.isVisible;
+        if (windowComp.window) {
+            if (windowComp.isVisible) {
+                windowComp.window->show();
+            } else {
+                windowComp.window->hide();
+            }
+        }
+    }
+}
+
+void WindowManager::showAllWindows() {
+    auto view = m_registry.view<WindowComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        windowComp.isVisible = true;
+        if (windowComp.window) {
+            windowComp.window->show();
+        }
+    }
+}
+
+void WindowManager::hideAllWindows() {
+    auto view = m_registry.view<WindowComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        windowComp.isVisible = false;
+        if (windowComp.window) {
+            windowComp.window->hide();
+        }
+    }
+}
+
+// Window settings management
+void WindowManager::setWindowSettings(const std::string& name, const WindowSettingsComponent& settings) {
+    auto entity = getWindowEntity(name);
+    if (entity != entt::null) {
+        if (m_registry.has<WindowSettingsComponent>(entity)) {
+            m_registry.replace<WindowSettingsComponent>(entity, settings);
+        } else {
+            m_registry.emplace<WindowSettingsComponent>(entity, settings);
+        }
+    }
+}
+
+WindowSettingsComponent WindowManager::getWindowSettings(const std::string& name) {
+    auto entity = getWindowEntity(name);
+    if (entity != entt::null && m_registry.has<WindowSettingsComponent>(entity)) {
+        return m_registry.get<WindowSettingsComponent>(entity);
+    }
+    return WindowSettingsComponent{}; // Return default settings
+}
+
+std::vector<std::string> WindowManager::getVisibleWindows() {
+    std::vector<std::string> visibleWindows;
+    auto view = m_registry.view<WindowComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        if (windowComp.isVisible) {
+            visibleWindows.push_back(windowComp.name);
+        }
+    }
+    return visibleWindows;
+}
+
+std::vector<std::string> WindowManager::getHiddenWindows() {
+    std::vector<std::string> hiddenWindows;
+    auto view = m_registry.view<WindowComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        if (!windowComp.isVisible) {
+            hiddenWindows.push_back(windowComp.name);
+        }
+    }
+    return hiddenWindows;
+}
+
+std::vector<std::string> WindowManager::getWindowsByCategory(const std::string& category) {
+    std::vector<std::string> categoryWindows;
+    auto view = m_registry.view<WindowComponent, WindowSettingsComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        auto& settingsComp = view.get<WindowSettingsComponent>(entity);
+        if (settingsComp.category == category) {
+            categoryWindows.push_back(windowComp.name);
+        }
+    }
+    return categoryWindows;
+}
+
+// Menu integration
+void WindowManager::renderWindowMenu() {
+    if (ImGui::BeginMenu("Windows")) {
+        auto view = m_registry.view<WindowComponent, WindowSettingsComponent>();
+        for (auto entity : view) {
+            auto& windowComp = view.get<WindowComponent>(entity);
+            auto& settingsComp = view.get<WindowSettingsComponent>(entity);
+            
+            if (settingsComp.showInMenu) {
+                bool isVisible = windowComp.isVisible;
+                if (ImGui::MenuItem(windowComp.name.c_str(), nullptr, &isVisible)) {
+                    setWindowVisible(windowComp.name, isVisible);
+                }
+            }
+        }
+        ImGui::EndMenu();
+    }
+}
+
+std::vector<std::string> WindowManager::getMenuWindows() {
+    std::vector<std::string> menuWindows;
+    auto view = m_registry.view<WindowComponent, WindowSettingsComponent>();
+    for (auto entity : view) {
+        auto& windowComp = view.get<WindowComponent>(entity);
+        auto& settingsComp = view.get<WindowSettingsComponent>(entity);
+        if (settingsComp.showInMenu) {
+            menuWindows.push_back(windowComp.name);
+        }
+    }
+    return menuWindows;
 }
 
 } // namespace blot 

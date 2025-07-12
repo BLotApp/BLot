@@ -1,0 +1,20 @@
+set(UI_SOURCES
+    Window.cpp
+    ImGuiWindow.cpp
+    CanvasWindow.cpp
+    TextureViewerWindow.cpp
+    ToolbarWindow.cpp
+    InfoWindow.cpp
+    PropertiesWindow.cpp
+    MainMenuBar.cpp
+    CodeEditorWindow.cpp
+    AddonManagerWindow.cpp
+    NodeEditorWindow.cpp
+    ThemeEditorWindow.cpp
+    StrokeWindow.cpp
+    DebugPanel.cpp
+    ThemePanel.cpp
+    TerminalWindow.cpp
+    LogWindow.cpp
+    UIManager.cpp
+) 

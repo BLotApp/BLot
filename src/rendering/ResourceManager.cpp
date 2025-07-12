@@ -33,4 +33,46 @@ void ResourceManager::destroyRenderer(entt::entity entity) {
 
 void ResourceManager::cleanup() {
     m_renderers.clear();
+    m_canvases.clear();
+    m_graphics.clear();
+}
+
+// Canvas management
+std::unique_ptr<Canvas>* ResourceManager::getCanvas(entt::entity entity) {
+    auto it = m_canvases.find(entity);
+    if (it != m_canvases.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+void ResourceManager::addCanvas(entt::entity entity, std::unique_ptr<Canvas> canvas) {
+    m_canvases[entity] = std::move(canvas);
+}
+
+void ResourceManager::removeCanvas(entt::entity entity) {
+    auto it = m_canvases.find(entity);
+    if (it != m_canvases.end()) {
+        m_canvases.erase(it);
+    }
+}
+
+// Graphics management
+std::shared_ptr<Graphics> ResourceManager::getGraphics(entt::entity entity) {
+    auto it = m_graphics.find(entity);
+    if (it != m_graphics.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
+void ResourceManager::addGraphics(entt::entity entity, std::shared_ptr<Graphics> graphics) {
+    m_graphics[entity] = graphics;
+}
+
+void ResourceManager::removeGraphics(entt::entity entity) {
+    auto it = m_graphics.find(entity);
+    if (it != m_graphics.end()) {
+        m_graphics.erase(it);
+    }
 } 

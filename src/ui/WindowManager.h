@@ -36,6 +36,17 @@ struct WindowInputComponent {
     bool closeOnEscape = true;
 };
 
+struct WindowSettingsComponent {
+    bool showInMenu = true;
+    bool showByDefault = true;
+    bool canBeHidden = true;
+    bool canBeMoved = true;
+    bool canBeResized = true;
+    bool canBeFocused = true;
+    std::string menuPath = ""; // e.g., "Windows/Canvas"
+    std::string category = "General"; // e.g., "Tools", "Debug", "Main"
+};
+
 class WindowManager {
 public:
     WindowManager();
@@ -59,6 +70,24 @@ public:
     void focusWindow(const std::string& name);
     void closeFocusedWindow();
     void closeAllWindows();
+    
+    // Window visibility management
+    bool isWindowVisible(const std::string& name);
+    void setWindowVisible(const std::string& name, bool visible);
+    void toggleWindow(const std::string& name);
+    void showAllWindows();
+    void hideAllWindows();
+    
+    // Window settings management
+    void setWindowSettings(const std::string& name, const WindowSettingsComponent& settings);
+    WindowSettingsComponent getWindowSettings(const std::string& name);
+    std::vector<std::string> getVisibleWindows();
+    std::vector<std::string> getHiddenWindows();
+    std::vector<std::string> getWindowsByCategory(const std::string& category);
+    
+    // Menu integration
+    void renderWindowMenu();
+    std::vector<std::string> getMenuWindows();
     
     // Rendering and input
     void renderAllWindows();

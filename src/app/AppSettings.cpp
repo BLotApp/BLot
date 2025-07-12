@@ -9,20 +9,15 @@ void AppSettings::saveSettings() {
     nlohmann::json j;
     
     // Window visibility
-    j["windows"]["showCodeEditor"] = showCodeEditor;
-    j["windows"]["showCanvas"] = showCanvas;
-    j["windows"]["showProperties"] = showProperties;
-    j["windows"]["showAddonManager"] = showAddonManager;
-    j["windows"]["showNodeEditor"] = showNodeEditor;
-    j["windows"]["showToolbar"] = showToolbar;
+    
+    
     j["windows"]["showDemoWindow"] = showDemoWindow;
     j["windows"]["showFileBrowser"] = showFileBrowser;
-    j["windows"]["showThemeEditor"] = showThemeEditor;
     j["windows"]["showImPlotDemo"] = showImPlotDemo;
     j["windows"]["showImGuiMarkdownDemo"] = showImGuiMarkdownDemo;
     j["windows"]["showMarkdownEditor"] = showMarkdownEditor;
     j["windows"]["showMarkdownViewer"] = showMarkdownViewer;
-    j["windows"]["showMouseCoordinates"] = showMouseCoordinates;
+    
     j["windows"]["showSwatches"] = showSwatches;
     j["windows"]["showStrokePalette"] = showStrokePalette;
     
@@ -85,20 +80,15 @@ void AppSettings::loadSettings() {
         // Window visibility
         if (j.contains("windows")) {
             auto& windows = j["windows"];
-            if (windows.contains("showCodeEditor")) showCodeEditor = windows["showCodeEditor"];
-            if (windows.contains("showCanvas")) showCanvas = windows["showCanvas"];
-            if (windows.contains("showProperties")) showProperties = windows["showProperties"];
-            if (windows.contains("showAddonManager")) showAddonManager = windows["showAddonManager"];
-            if (windows.contains("showNodeEditor")) showNodeEditor = windows["showNodeEditor"];
-            if (windows.contains("showToolbar")) showToolbar = windows["showToolbar"];
+
+            
             if (windows.contains("showDemoWindow")) showDemoWindow = windows["showDemoWindow"];
             if (windows.contains("showFileBrowser")) showFileBrowser = windows["showFileBrowser"];
-            if (windows.contains("showThemeEditor")) showThemeEditor = windows["showThemeEditor"];
             if (windows.contains("showImPlotDemo")) showImPlotDemo = windows["showImPlotDemo"];
             if (windows.contains("showImGuiMarkdownDemo")) showImGuiMarkdownDemo = windows["showImGuiMarkdownDemo"];
             if (windows.contains("showMarkdownEditor")) showMarkdownEditor = windows["showMarkdownEditor"];
             if (windows.contains("showMarkdownViewer")) showMarkdownViewer = windows["showMarkdownViewer"];
-            if (windows.contains("showMouseCoordinates")) showMouseCoordinates = windows["showMouseCoordinates"];
+    
             if (windows.contains("showSwatches")) showSwatches = windows["showSwatches"];
             if (windows.contains("showStrokePalette")) showStrokePalette = windows["showStrokePalette"];
         }
@@ -177,20 +167,15 @@ void AppSettings::loadSettings() {
 
 void AppSettings::resetToDefaults() {
     // Reset all settings to default values
-    showCodeEditor = true;
-    showCanvas = true;
-    showProperties = true;
-    showAddonManager = false;
-    showNodeEditor = false;
-    showToolbar = true;
+    
+    
     showDemoWindow = false;
     showFileBrowser = false;
-    showThemeEditor = false;
     showImPlotDemo = false;
     showImGuiMarkdownDemo = false;
     showMarkdownEditor = false;
     showMarkdownViewer = false;
-    showMouseCoordinates = true;
+    
     mouseCoordinateSystem = 0;
     
     // Set default colors to something visible

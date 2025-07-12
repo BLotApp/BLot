@@ -18,8 +18,8 @@ CanvasWindow::CanvasWindow(const std::string& title, Flags flags)
     m_state.position = ImVec2(100, 100);
 }
 
-void CanvasWindow::setCanvasResources(std::unordered_map<entt::entity, std::unique_ptr<Canvas>>* canvasResources) {
-    m_canvasResources = canvasResources;
+void CanvasWindow::setResourceManager(ResourceManager* resourceManager) {
+    m_resourceManager = resourceManager;
 }
 
 void CanvasWindow::setECSManager(ECSManager* ecs) {
@@ -111,13 +111,13 @@ void CanvasWindow::render() {
 }
 
 void CanvasWindow::drawCanvasTexture() {
-    if (!m_canvasResources || m_activeCanvasId == entt::null) {
+    if (!m_resourceManager || m_activeCanvasId == entt::null) {
         return;
     }
     
-    auto it = m_canvasResources->find(m_activeCanvasId);
-    if (it != m_canvasResources->end()) {
-        unsigned int texId = it->second->getColorTexture();
+    auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+    if (canvasPtr && *canvasPtr) {
+        unsigned int texId = (*canvasPtr)->getColorTexture();
         printf("[ImGui] Displaying texture: ID=%u, size=%.1fx%.1f\n", texId, m_canvasSize.x, m_canvasSize.y);
         
         // Draw the image
@@ -213,18 +213,18 @@ ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const 
     printf("[CanvasWindow] convertToBlend2DCoordinates: input=(%.1f,%.1f)\n", canvasPos.x, canvasPos.y);
     
     // Get actual canvas dimensions from the canvas resource
-    if (!m_canvasResources || m_activeCanvasId == entt::null) {
-        printf("[CanvasWindow] ERROR: No canvas resources or active canvas\n");
+    if (!m_resourceManager || m_activeCanvasId == entt::null) {
+        printf("[CanvasWindow] ERROR: No resource manager or active canvas\n");
         return canvasPos; // Return unchanged if no canvas available
     }
     
-    auto it = m_canvasResources->find(m_activeCanvasId);
-    if (it == m_canvasResources->end()) {
+    auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+    if (!canvasPtr || !*canvasPtr) {
         printf("[CanvasWindow] ERROR: Active canvas not found in resources\n");
         return canvasPos; // Return unchanged if canvas not found
     }
     
-    auto graphics = it->second->getGraphics();
+    auto graphics = (*canvasPtr)->getGraphics();
     if (!graphics) {
         printf("[CanvasWindow] ERROR: No graphics object in canvas\n");
         return canvasPos; // Return unchanged if no graphics

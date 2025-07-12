@@ -58,9 +58,19 @@ public:
 
     void noFill();
     void noStroke();
+    
+    // Comprehensive stroke options
     void setStrokeCap(BLStrokeCap cap);
     void setStrokeJoin(BLStrokeJoin join);
+    void setStrokeMiterLimit(double limit);
+    void setStrokeDashArray(const std::vector<double>& dashes);
+    void setStrokeDashOffset(double offset);
+    void setStrokeTransformOrder(BLStrokeTransformOrder order);
+    void setStrokeOptions(const BLStrokeOptions& options);
+    
+    // Legacy method for compatibility
     void setStrokeDashPattern(const std::vector<double>& dashes, double offset = 0.0);
+    
     void setFillColor(const glm::vec4& color) override;
     void setStrokeColor(const glm::vec4& color) override;
     void setStrokeWidth(float width) override;
@@ -72,6 +82,7 @@ public:
 private:
     void setupContext();
     void renderPath();
+    void updateStrokeOptions();
     BLRgba32 convertColor(const glm::vec4& color);
     BLPoint convertPoint(const glm::vec2& point);
     
@@ -97,10 +108,9 @@ private:
     float m_currentStrokeWidth;
     bool m_hasFill = true;
     bool m_hasStroke = true;
-    BLStrokeCap m_strokeCap = BL_STROKE_CAP_ROUND;
-    BLStrokeJoin m_strokeJoin = BL_STROKE_JOIN_ROUND;
-    std::vector<double> m_dashPattern;
-    double m_dashOffset = 0.0;
+    
+    // Comprehensive stroke options
+    BLStrokeOptions m_strokeOptions;
     glm::vec4 m_fillColor = glm::vec4(1,1,1,1);
     glm::vec4 m_strokeColor = glm::vec4(0,0,0,1);
     float m_strokeWidth = 1.0f;

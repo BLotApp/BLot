@@ -1,6 +1,8 @@
 #include "ToolbarWindow.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include <imgui.h>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace blot {
 
@@ -35,6 +37,44 @@ void ToolbarWindow::setShowStrokePalette(bool show) {
     m_showStrokePalette = show;
 }
 
+void ToolbarWindow::setToolActive(bool active) {
+    m_toolActive = active;
+    if (m_onToolStateChanged) {
+        m_onToolStateChanged(m_toolActive, m_toolStartPos);
+    }
+}
+
+void ToolbarWindow::setToolStartPos(const ImVec2& pos) {
+    m_toolStartPos = pos;
+    if (m_onToolStateChanged) {
+        m_onToolStateChanged(m_toolActive, m_toolStartPos);
+    }
+}
+
+void ToolbarWindow::setSwatches(const std::vector<ImVec4>& swatches) {
+    m_swatches = swatches;
+}
+
+void ToolbarWindow::addSwatch(const ImVec4& color) {
+    m_swatches.push_back(color);
+}
+
+void ToolbarWindow::removeSwatch(int index) {
+    if (index >= 0 && index < m_swatches.size()) {
+        m_swatches.erase(m_swatches.begin() + index);
+    }
+}
+
+void ToolbarWindow::saveSwatches(const std::string& path) {
+    saveSwatchesToFile(path);
+}
+
+void ToolbarWindow::loadSwatches(const std::string& path) {
+    loadSwatchesFromFile(path);
+}
+
+// Stroke cap/join methods removed - now handled by StrokeWindow
+
 void ToolbarWindow::setOnToolChanged(std::function<void(int)> callback) {
     m_onToolChanged = callback;
 }
@@ -49,6 +89,10 @@ void ToolbarWindow::setOnStrokeColorChanged(std::function<void(const ImVec4&)> c
 
 void ToolbarWindow::setOnStrokeWidthChanged(std::function<void(float)> callback) {
     m_onStrokeWidthChanged = callback;
+}
+
+void ToolbarWindow::setOnToolStateChanged(std::function<void(bool, const ImVec2&)> callback) {
+    m_onToolStateChanged = callback;
 }
 
 void ToolbarWindow::render() {
@@ -66,9 +110,9 @@ void ToolbarWindow::render() {
             renderSwatches();
         }
         
-        if (m_showStrokePalette) {
-            renderStrokePalette();
-        }
+        // Stroke palette removed - now handled by StrokeWindow
+        
+        renderStrokeColorButtons();
     }
     ImGui::End();
 }
@@ -113,42 +157,105 @@ void ToolbarWindow::renderColors() {
             m_onStrokeWidthChanged(m_strokeWidth);
         }
     }
-}
-
-void ToolbarWindow::renderSwatches() {
-    // Simple color swatches
-    ImGui::Separator();
-    ImGui::Text("Swatches:");
     
-    ImVec4 swatches[] = {
-        ImVec4(0,0,0,1), ImVec4(1,1,1,1), ImVec4(1,0,0,1), 
-        ImVec4(0,1,0,1), ImVec4(0,0,1,1), ImVec4(1,1,0,1)
-    };
-    
-    for (int i = 0; i < 6; i++) {
-        ImGui::SameLine();
-        if (ImGui::ColorButton(("##Swatch" + std::to_string(i)).c_str(), swatches[i], ImGuiColorEditFlags_NoInputs, ImVec2(20, 20))) {
-            m_fillColor = swatches[i];
-            if (m_onFillColorChanged) {
-                m_onFillColorChanged(m_fillColor);
-            }
-        }
+    ImGui::SameLine();
+    if (ImGui::Button("Stroke Settings")) {
+        // This will be handled by the main app to show/hide the StrokeWindow
+        // The button just indicates the user wants to open stroke settings
     }
 }
 
-void ToolbarWindow::renderStrokePalette() {
+void ToolbarWindow::renderSwatches() {
     ImGui::Separator();
-    ImGui::Text("Stroke Options:");
+    ImGui::Text("Swatches:");
     
-    ImGui::DragFloat("Width", &m_strokeWidth, 0.1f, 0.0f, 50.0f, "%.1f");
+    ImGui::RadioButton("Fill", &m_activeSwatchType, 0); ImGui::SameLine();
+    ImGui::RadioButton("Stroke", &m_activeSwatchType, 1);
     
-    const char* capNames[] = { "Butt", "Square", "Round" };
-    static int capStyle = 0;
-    ImGui::Combo("Cap Style", &capStyle, capNames, 3);
+    if (ImGui::Button("Save")) saveSwatchesToFile(m_swatchesFile);
+    ImGui::SameLine();
+    if (ImGui::Button("Load")) loadSwatchesFromFile(m_swatchesFile);
     
-    const char* joinNames[] = { "Miter", "Bevel", "Round" };
-    static int joinStyle = 0;
-    ImGui::Combo("Join Style", &joinStyle, joinNames, 3);
+    int swatchesPerRow = 8;
+    for (int i = 0; i < m_swatches.size(); ++i) {
+        if (i > 0 && i % swatchesPerRow == 0) ImGui::NewLine();
+        
+        if (ImGui::ColorButton(("##swatch" + std::to_string(i)).c_str(), m_swatches[i], 
+                              ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, ImVec2(24,24))) {
+            if (m_activeSwatchType == 0) {
+                m_fillColor = m_swatches[i];
+                if (m_onFillColorChanged) {
+                    m_onFillColorChanged(m_fillColor);
+                }
+            } else {
+                m_strokeColor = m_swatches[i];
+                if (m_onStrokeColorChanged) {
+                    m_onStrokeColorChanged(m_strokeColor);
+                }
+            }
+        }
+        
+        ImGui::SameLine();
+    }
+}
+
+// Stroke palette removed - now handled by StrokeWindow
+
+void ToolbarWindow::renderStrokeColorButtons() {
+    ImGui::Separator();
+    ImGui::Text("Stroke Colors:");
+    
+    if (ImGui::Button("⚫ No Stroke")) {
+        m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("⚪ White Stroke")) {
+        m_strokeColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("🔴 Red Stroke")) {
+        m_strokeColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("🟢 Green Stroke")) {
+        m_strokeColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("🔵 Blue Stroke")) {
+        m_strokeColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
+    ImGui::SameLine();
+    
+    if (ImGui::Button("🎨 Random Stroke")) {
+        m_strokeColor = ImVec4(
+            static_cast<float>(rand()) / RAND_MAX,
+            static_cast<float>(rand()) / RAND_MAX,
+            static_cast<float>(rand()) / RAND_MAX,
+            1.0f
+        );
+        if (m_onStrokeColorChanged) {
+            m_onStrokeColorChanged(m_strokeColor);
+        }
+    }
 }
 
 void ToolbarWindow::toolButton(const char* icon, int toolType) {
@@ -170,6 +277,51 @@ void ToolbarWindow::toolButton(const char* icon, int toolType) {
     }
     ImGui::PopID();
     ImGui::SameLine();
+}
+
+void ToolbarWindow::saveSwatchesToFile(const std::string& path) {
+    nlohmann::json root;
+    nlohmann::json colors = nlohmann::json::array();
+    
+    for (const auto& c : m_swatches) {
+        nlohmann::json color = nlohmann::json::array();
+        color.push_back(c.x);
+        color.push_back(c.y);
+        color.push_back(c.z);
+        color.push_back(c.w);
+        colors.push_back(color);
+    }
+    
+    root["colors"] = colors;
+    
+    std::ofstream file(path);
+    if (file.is_open()) {
+        file << root.dump(2);
+        file.close();
+    }
+}
+
+void ToolbarWindow::loadSwatchesFromFile(const std::string& path) {
+    std::ifstream file(path);
+    if (!file.is_open()) return;
+    
+    try {
+        nlohmann::json root = nlohmann::json::parse(file);
+        m_swatches.clear();
+        const auto& colors = root["colors"];
+        for (const auto& color : colors) {
+            if (color.is_array() && color.size() >= 4) {
+                m_swatches.push_back(ImVec4(
+                    color[0].get<float>(),
+                    color[1].get<float>(),
+                    color[2].get<float>(),
+                    color[3].get<float>()
+                ));
+            }
+        }
+    } catch (const std::exception& e) {
+        // Handle JSON parsing errors silently
+    }
 }
 
 } // namespace blot 

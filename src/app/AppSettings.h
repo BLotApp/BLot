@@ -5,16 +5,9 @@
 #include <imgui.h>
 
 struct AppSettings {
-    // Window visibility flags
-    bool showCodeEditor = true;
-    bool showCanvas = true;
-    bool showProperties = true;
-    bool showAddonManager = false;
-    bool showNodeEditor = false;
-    bool showToolbar = true;
+    // Window visibility flags (some now managed by WindowManager)
     bool showDemoWindow = false;
     bool showFileBrowser = false;
-    bool showThemeEditor = false;
     
     // Demo windows
     bool showImPlotDemo = false;
@@ -23,7 +16,7 @@ struct AppSettings {
     bool showMarkdownViewer = false;
     
     // Info panel display
-    bool showMouseCoordinates = true;
+
     int mouseCoordinateSystem = 0; // 0=Screen, 1=App, 2=Window
     static const char* coordinateSystemNames[];
     
