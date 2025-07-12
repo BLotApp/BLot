@@ -17,6 +17,25 @@ LogWindow::LogWindow(const std::string& title, Flags flags)
     addInfo("Log window initialized.");
 }
 
+// Window interface implementations
+void LogWindow::show() { m_state.isOpen = true; }
+void LogWindow::hide() { m_state.isOpen = false; }
+void LogWindow::close() { m_state.isOpen = false; }
+void LogWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool LogWindow::isOpen() const { return m_state.isOpen; }
+bool LogWindow::isVisible() const { return m_state.isOpen; }
+bool LogWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool LogWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool LogWindow::isDragging() const { return false; }
+bool LogWindow::isResizing() const { return false; }
+void LogWindow::setPosition(const ImVec2& pos) { m_state.position = pos; }
+void LogWindow::setSize(const ImVec2& size) { m_state.size = size; }
+void LogWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void LogWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void LogWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int LogWindow::getFlags() const { return m_state.flags; }
+std::string LogWindow::getTitle() const { return m_title; }
+
 void LogWindow::render() {
     if (ImGui::Begin(m_title.c_str(), &m_state.isOpen, m_state.flags)) {
         renderFilterControls();

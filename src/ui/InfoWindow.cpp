@@ -13,6 +13,25 @@ InfoWindow::InfoWindow(const std::string& title, Flags flags)
     m_state.position = ImVec2(10, 10);
 }
 
+// Window interface implementations
+void InfoWindow::show() { m_state.isOpen = true; }
+void InfoWindow::hide() { m_state.isOpen = false; }
+void InfoWindow::close() { m_state.isOpen = false; }
+void InfoWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool InfoWindow::isOpen() const { return m_state.isOpen; }
+bool InfoWindow::isVisible() const { return m_state.isOpen; }
+bool InfoWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool InfoWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool InfoWindow::isDragging() const { return false; }
+bool InfoWindow::isResizing() const { return false; }
+void InfoWindow::setPosition(const ImVec2& pos) { m_state.position = pos; }
+void InfoWindow::setSize(const ImVec2& size) { m_state.size = size; }
+void InfoWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void InfoWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void InfoWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int InfoWindow::getFlags() const { return m_state.flags; }
+std::string InfoWindow::getTitle() const { return m_title; }
+
 void InfoWindow::setMousePos(const ImVec2& pos) {
     m_mousePos = pos;
 }

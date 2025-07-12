@@ -9,6 +9,25 @@ ThemePanel::ThemePanel(const std::string& title, Flags flags)
     : Window(title, flags) {
 }
 
+// Window interface implementations
+void ThemePanel::show() { m_state.isOpen = true; }
+void ThemePanel::hide() { m_state.isOpen = false; }
+void ThemePanel::close() { m_state.isOpen = false; }
+void ThemePanel::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool ThemePanel::isOpen() const { return m_state.isOpen; }
+bool ThemePanel::isVisible() const { return m_state.isOpen; }
+bool ThemePanel::isFocused() const { return ImGui::IsWindowFocused(); }
+bool ThemePanel::isHovered() const { return ImGui::IsWindowHovered(); }
+bool ThemePanel::isDragging() const { return false; }
+bool ThemePanel::isResizing() const { return false; }
+void ThemePanel::setPosition(const ImVec2& pos) { /* TODO: Implement if needed */ }
+void ThemePanel::setSize(const ImVec2& size) { /* TODO: Implement if needed */ }
+void ThemePanel::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void ThemePanel::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void ThemePanel::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int ThemePanel::getFlags() const { return m_state.flags; }
+std::string ThemePanel::getTitle() const { return m_title; }
+
 void ThemePanel::render() {
     if (ImGui::Begin(m_title.c_str(), &m_state.isOpen, m_state.flags)) {
         renderRandomThemeButton();

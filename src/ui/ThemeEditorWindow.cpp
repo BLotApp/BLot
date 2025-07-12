@@ -8,6 +8,25 @@ namespace blot {
 ThemeEditorWindow::ThemeEditorWindow(const std::string& title, Flags flags)
     : Window(title, flags) {}
 
+// Window interface implementations
+void ThemeEditorWindow::show() { m_state.isOpen = true; }
+void ThemeEditorWindow::hide() { m_state.isOpen = false; }
+void ThemeEditorWindow::close() { m_state.isOpen = false; }
+void ThemeEditorWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool ThemeEditorWindow::isOpen() const { return m_state.isOpen; }
+bool ThemeEditorWindow::isVisible() const { return m_state.isOpen; }
+bool ThemeEditorWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool ThemeEditorWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool ThemeEditorWindow::isDragging() const { return false; }
+bool ThemeEditorWindow::isResizing() const { return false; }
+void ThemeEditorWindow::setPosition(const ImVec2& pos) { /* TODO: Implement if needed */ }
+void ThemeEditorWindow::setSize(const ImVec2& size) { /* TODO: Implement if needed */ }
+void ThemeEditorWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void ThemeEditorWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void ThemeEditorWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int ThemeEditorWindow::getFlags() const { return m_state.flags; }
+std::string ThemeEditorWindow::getTitle() const { return m_title; }
+
 void ThemeEditorWindow::setThemePath(std::string* lastThemePath) {
     m_lastThemePath = lastThemePath;
 }

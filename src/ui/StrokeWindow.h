@@ -1,12 +1,13 @@
 #pragma once
 
+#include "Window.h"
 #include <imgui.h>
 #include <blend2d.h>
 #include <functional>
 #include <vector>
 #include <string>
 
-class StrokeWindow {
+class StrokeWindow : public blot::Window {
 public:
     // Callback types for stroke changes
     using StrokeWidthCallback = std::function<void(double)>;
@@ -17,11 +18,30 @@ public:
     using StrokeDashOffsetCallback = std::function<void(double)>;
     using StrokeTransformOrderCallback = std::function<void(BLStrokeTransformOrder)>;
 
-    StrokeWindow();
+    StrokeWindow(const std::string& title = "Stroke Window", blot::Window::Flags flags = blot::Window::Flags::None);
     ~StrokeWindow() = default;
 
     // Main render function
-    void render();
+    void render() override;
+
+    // Window interface overrides
+    void show() override;
+    void hide() override;
+    void close() override;
+    void toggle() override;
+    bool isOpen() const override;
+    bool isVisible() const override;
+    bool isFocused() const override;
+    bool isHovered() const override;
+    bool isDragging() const override;
+    bool isResizing() const override;
+    void setPosition(const ImVec2&) override;
+    void setSize(const ImVec2&) override;
+    void setMinSize(const ImVec2&) override;
+    void setMaxSize(const ImVec2&) override;
+    void setFlags(blot::Window::Flags) override;
+    int getFlags() const override;
+    std::string getTitle() const override;
 
     // Getters for current stroke settings
     double getStrokeWidth() const { return m_strokeWidth; }

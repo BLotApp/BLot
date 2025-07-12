@@ -3,11 +3,31 @@
 #include <algorithm>
 #include <cctype>
 
-StrokeWindow::StrokeWindow() {
+StrokeWindow::StrokeWindow(const std::string& title, blot::Window::Flags flags)
+    : blot::Window(title, flags) {
     // Initialize with default values
     resetToDefaults();
     updateDashArrayInput();
 }
+
+// Window interface implementations
+void StrokeWindow::show() { m_state.isOpen = true; }
+void StrokeWindow::hide() { m_state.isOpen = false; }
+void StrokeWindow::close() { m_state.isOpen = false; }
+void StrokeWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool StrokeWindow::isOpen() const { return m_state.isOpen; }
+bool StrokeWindow::isVisible() const { return m_state.isOpen; }
+bool StrokeWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool StrokeWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool StrokeWindow::isDragging() const { return false; }
+bool StrokeWindow::isResizing() const { return false; }
+void StrokeWindow::setPosition(const ImVec2& pos) { m_state.position = pos; }
+void StrokeWindow::setSize(const ImVec2& size) { m_state.size = size; }
+void StrokeWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void StrokeWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void StrokeWindow::setFlags(blot::Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int StrokeWindow::getFlags() const { return m_state.flags; }
+std::string StrokeWindow::getTitle() const { return m_title; }
 
 void StrokeWindow::render() {
     if (!ImGui::Begin("Stroke Settings")) {

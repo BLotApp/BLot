@@ -15,6 +15,25 @@ TerminalWindow::TerminalWindow(const std::string& title, Flags flags)
     addLog("Terminal initialized. Type 'help' for available commands.");
 }
 
+// Window interface implementations
+void TerminalWindow::show() { m_state.isOpen = true; }
+void TerminalWindow::hide() { m_state.isOpen = false; }
+void TerminalWindow::close() { m_state.isOpen = false; }
+void TerminalWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool TerminalWindow::isOpen() const { return m_state.isOpen; }
+bool TerminalWindow::isVisible() const { return m_state.isOpen; }
+bool TerminalWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool TerminalWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool TerminalWindow::isDragging() const { return false; }
+bool TerminalWindow::isResizing() const { return false; }
+void TerminalWindow::setPosition(const ImVec2& pos) { m_state.position = pos; }
+void TerminalWindow::setSize(const ImVec2& size) { m_state.size = size; }
+void TerminalWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void TerminalWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void TerminalWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int TerminalWindow::getFlags() const { return m_state.flags; }
+std::string TerminalWindow::getTitle() const { return m_title; }
+
 void TerminalWindow::render() {
     if (ImGui::Begin(m_title.c_str(), &m_state.isOpen, m_state.flags)) {
         renderLogHistory();

@@ -1,21 +1,24 @@
 #include "UIManager.h"
 #include "DebugPanel.h"
-#include "CoordinateSystemPanel.h"
+#include "InfoWindow.h"
 #include "ThemePanel.h"
 #include "TerminalWindow.h"
 #include "LogWindow.h"
 #include "TextureViewerWindow.h"
 #include "ToolbarWindow.h"
-#include "CoordinateSystemPanel.h"
 #include "PropertiesWindow.h"
 #include "CodeEditorWindow.h"
 #include "AddonManagerWindow.h"
 #include "NodeEditorWindow.h"
 #include "ThemeEditorWindow.h"
 #include "StrokeWindow.h"
+#include "MainMenuBar.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <windows.h>
+#include "../assets/fonts/fontRobotoRegular.h"
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 
 namespace blot {
 
@@ -25,7 +28,7 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     
     // Create UI panels
     m_debugPanel = std::make_unique<DebugPanel>();
-    m_coordinateSystemPanel = std::make_unique<CoordinateSystemPanel>();
+    m_infoWindow = std::make_unique<InfoWindow>();
     m_themePanel = std::make_unique<ThemePanel>();
     
     // Create new windows
@@ -132,8 +135,8 @@ void UIManager::renderAllWindows() {
         m_debugPanel->render();
     }
     
-    if (m_coordinateSystemPanel) {
-        m_coordinateSystemPanel->render();
+    if (m_infoWindow) {
+        m_infoWindow->render();
     }
     
     if (m_themePanel) {
@@ -162,9 +165,9 @@ void UIManager::setupWindows() {
                                                       Window::Flags::NoTitleBar | Window::Flags::AlwaysAutoResize);
     m_windowManager->createWindow("Toolbar", toolbarWindow);
     
-    auto coordinateSystemPanel = std::make_shared<CoordinateSystemPanel>("Coordinate System###MainCoordinateSystem", 
+    auto infoWindow = std::make_shared<InfoWindow>("Info###MainInfo", 
                                                           Window::Flags::AlwaysAutoResize);
-    m_windowManager->createWindow("CoordinateSystem", coordinateSystemPanel);
+    m_windowManager->createWindow("Info", infoWindow);
     
     auto propertiesWindow = std::make_shared<PropertiesWindow>("Properties###MainProperties", 
                                                             Window::Flags::None);

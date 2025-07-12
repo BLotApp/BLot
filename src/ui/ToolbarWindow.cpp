@@ -13,6 +13,25 @@ ToolbarWindow::ToolbarWindow(const std::string& title, Flags flags)
     m_state.position = ImVec2(10, 10);
 }
 
+// Window interface implementations
+void ToolbarWindow::show() { m_state.isOpen = true; }
+void ToolbarWindow::hide() { m_state.isOpen = false; }
+void ToolbarWindow::close() { m_state.isOpen = false; }
+void ToolbarWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool ToolbarWindow::isOpen() const { return m_state.isOpen; }
+bool ToolbarWindow::isVisible() const { return m_state.isOpen; }
+bool ToolbarWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool ToolbarWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool ToolbarWindow::isDragging() const { return false; }
+bool ToolbarWindow::isResizing() const { return false; }
+void ToolbarWindow::setPosition(const ImVec2& pos) { m_state.position = pos; }
+void ToolbarWindow::setSize(const ImVec2& size) { m_state.size = size; }
+void ToolbarWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void ToolbarWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void ToolbarWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int ToolbarWindow::getFlags() const { return m_state.flags; }
+std::string ToolbarWindow::getTitle() const { return m_title; }
+
 void ToolbarWindow::setCurrentTool(int toolType) {
     m_currentTool = toolType;
 }

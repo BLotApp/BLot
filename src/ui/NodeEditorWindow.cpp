@@ -10,6 +10,25 @@ namespace blot {
 NodeEditorWindow::NodeEditorWindow(const std::string& title, Flags flags)
     : Window(title, flags) {}
 
+// Window interface implementations
+void NodeEditorWindow::show() { m_state.isOpen = true; }
+void NodeEditorWindow::hide() { m_state.isOpen = false; }
+void NodeEditorWindow::close() { m_state.isOpen = false; }
+void NodeEditorWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool NodeEditorWindow::isOpen() const { return m_state.isOpen; }
+bool NodeEditorWindow::isVisible() const { return m_state.isOpen; }
+bool NodeEditorWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool NodeEditorWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool NodeEditorWindow::isDragging() const { return false; }
+bool NodeEditorWindow::isResizing() const { return false; }
+void NodeEditorWindow::setPosition(const ImVec2& pos) { /* TODO: Implement if needed */ }
+void NodeEditorWindow::setSize(const ImVec2& size) { /* TODO: Implement if needed */ }
+void NodeEditorWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void NodeEditorWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void NodeEditorWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int NodeEditorWindow::getFlags() const { return m_state.flags; }
+std::string NodeEditorWindow::getTitle() const { return m_title; }
+
 void NodeEditorWindow::setNodes(std::vector<Node>* nodes) {
     m_nodes = nodes;
 }

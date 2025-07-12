@@ -16,6 +16,7 @@
 #include "rendering/Graphics.h"
 #include "ui/TextRenderer.h"
 #include "ui/ImGuiRenderer.h"
+#include "ui/UIManager.h"
 #include "codeeditor/CodeEditor.h"
 #include "scripting/ScriptEngine.h"
 #include "addons/AddonManager.h"
@@ -77,11 +78,11 @@ static std::string markdownEditorBuffer;
 static std::string loadedMarkdownPath;
 static std::string loadedMarkdown;
 
-bool showFileBrowser = false;
-int m_selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
-float m_dashPattern[4] = {0};
-int m_dashCount = 0;
-float m_dashOffset = 0.0f;
+static bool showFileBrowser = false;
+static int selectedShape = 0; // 0=Rectangle, 1=Ellipse, 2=Line, 3=Polygon, 4=Star
+static float dashPattern[4] = {0};
+static int dashCount = 0;
+static float dashOffset = 0.0f;
 
 // Add polygon/star sides control
 static int m_polygonSides = 5;
@@ -524,12 +525,6 @@ void BlotApp::renderUI() {
         
         // Handle input through the window manager
         m_uiManager->getWindowManager()->handleInput();
-        
-        // Render all windows through the window manager
-        m_uiManager->getWindowManager()->renderAllWindows();
-        
-        // Handle input through the window manager
-        m_uiManager->getWindowManager()->handleInput();
     }
     
     // Coordinate system debug info
@@ -933,8 +928,8 @@ void BlotApp::renderUI() {
     // Render all windows through the window manager
     m_uiManager->getWindowManager()->renderAllWindows();
     
-
-    
+    // Handle input through the window manager
+    m_uiManager->getWindowManager()->handleInput();
 
     if (showImGuiMarkdownDemo) {
         ImGui::Begin("ImGui Markdown Demo", &showImGuiMarkdownDemo);
@@ -991,6 +986,7 @@ void BlotApp::renderUI() {
 
     // Swatches window/component - DISABLED (not properly integrated)
     // TODO: Implement swatches functionality
+}
 
 void BlotApp::renderCanvas() {
     // Render only the active canvas if it exists
@@ -1024,7 +1020,7 @@ void BlotApp::handleInput() {
     }
 
     // Removed ImGui window/mouse code from here. If you need mouse position relative to a window, do it in the UI rendering code.
-    if (m_toolbarWindow->getCurrentTool() == BlotApp::ToolType::Ellipse) {
+    if (m_toolbarWindow->getCurrentTool() == 1) { // Circle tool
         // This logic should also be moved to the UI code if it depends on ImGui window state.
         // For now, leave as is if it does not use ImGui functions.
         // If it does, move it to renderUI or renderCanvas.
@@ -1033,7 +1029,7 @@ void BlotApp::handleInput() {
 
 void BlotApp::update() {
     // Update application logic
-            CanvasUpdateSystem(m_ecs, m_resourceManager.get(), m_deltaTime);
+    CanvasUpdateSystem(m_ecs, m_resourceManager->getCanvases(), m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);
@@ -1264,8 +1260,6 @@ void BlotApp::configureMainMenuBarCallbacks() {
     
     // Update canvas list
     updateMainMenuBarCanvasList();
-
-    mainMenuBar->setNodeEditorCallback([this]() { m_windowManager->toggleWindow("NodeEditor"); });
 }
 
 void BlotApp::updateMainMenuBarCanvasList() {

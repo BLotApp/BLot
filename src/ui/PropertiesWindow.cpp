@@ -11,6 +11,25 @@ PropertiesWindow::PropertiesWindow(const std::string& title, Flags flags)
     : Window(title, flags) {
 }
 
+// Window interface implementations
+void PropertiesWindow::show() { m_state.isOpen = true; }
+void PropertiesWindow::hide() { m_state.isOpen = false; }
+void PropertiesWindow::close() { m_state.isOpen = false; }
+void PropertiesWindow::toggle() { m_state.isOpen = !m_state.isOpen; }
+bool PropertiesWindow::isOpen() const { return m_state.isOpen; }
+bool PropertiesWindow::isVisible() const { return m_state.isOpen; }
+bool PropertiesWindow::isFocused() const { return ImGui::IsWindowFocused(); }
+bool PropertiesWindow::isHovered() const { return ImGui::IsWindowHovered(); }
+bool PropertiesWindow::isDragging() const { return false; }
+bool PropertiesWindow::isResizing() const { return false; }
+void PropertiesWindow::setPosition(const ImVec2& pos) { /* TODO: Implement if needed */ }
+void PropertiesWindow::setSize(const ImVec2& size) { /* TODO: Implement if needed */ }
+void PropertiesWindow::setMinSize(const ImVec2& minSize) { /* TODO: Implement if needed */ }
+void PropertiesWindow::setMaxSize(const ImVec2& maxSize) { /* TODO: Implement if needed */ }
+void PropertiesWindow::setFlags(Window::Flags flags) { m_state.flags = static_cast<int>(flags); }
+int PropertiesWindow::getFlags() const { return m_state.flags; }
+std::string PropertiesWindow::getTitle() const { return m_title; }
+
 void PropertiesWindow::setECSManager(std::shared_ptr<ECSManager> ecs) {
     m_ecs = ecs;
 }

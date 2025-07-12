@@ -22,6 +22,7 @@ public:
     std::unique_ptr<Canvas>* getCanvas(entt::entity entity);
     void addCanvas(entt::entity entity, std::unique_ptr<Canvas> canvas);
     void removeCanvas(entt::entity entity);
+    std::unordered_map<entt::entity, std::unique_ptr<Canvas>>& getCanvases() { return m_canvases; }
     
     // Graphics management
     std::shared_ptr<Graphics> getGraphics(entt::entity entity);
