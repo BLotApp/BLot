@@ -14,10 +14,12 @@
 #include "ThemeEditorWindow.h"
 #include "StrokeWindow.h"
 #include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 namespace blot {
 
-UIManager::UIManager() {
+UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     // Create window manager
     m_windowManager = std::make_unique<WindowManager>();
     
@@ -32,6 +34,54 @@ UIManager::UIManager() {
     
     setupWindows();
     configureWindowSettings();
+}
+
+void UIManager::initImGui() {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+    // Set up ImGui style (Light theme)
+    ImGui::StyleColorsLight();
+    ImGuiStyle& style = ImGui::GetStyle();
+    // Optionally scale UI by monitor DPI (like ofxBapp)
+    float uiScale = 1.0f;
+#ifdef _WIN32
+    // Windows: use GetDpiForSystem or GetDpiForMonitor if available
+    HDC screen = GetDC(0);
+    int dpi = GetDeviceCaps(screen, LOGPIXELSX);
+    ReleaseDC(0, screen);
+    uiScale = dpi / 96.0f;
+#endif
+    style.ScaleAllSizes(uiScale);
+
+    // Load Roboto font from memory
+    ImFontConfig font_cfg;
+    font_cfg.FontDataOwnedByAtlas = false;
+    io.Fonts->AddFontFromMemoryTTF(fontRobotoRegular, sizeof(fontRobotoRegular), 16.0f * uiScale, &font_cfg);
+    // Optionally set as default font
+    io.FontDefault = io.Fonts->Fonts.back();
+
+    // Load FontAwesome Solid font and merge
+    float baseFontSize = 16.0f * uiScale;
+    float iconFontSize = baseFontSize * 2.0f / 3.0f;
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+    ImFontConfig icons_config;
+    icons_config.MergeMode = true;
+    icons_config.PixelSnapH = true;
+    icons_config.GlyphMinAdvanceX = iconFontSize;
+    io.Fonts->AddFontFromFileTTF("assets/fonts/fa-solid-900.ttf", iconFontSize, &icons_config, icons_ranges);
+
+    // Initialize ImGui with GLFW and OpenGL
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    // Initialize enhanced text renderer
+    m_textRenderer = std::make_unique<TextRenderer>();
+    m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_textRenderer.get());
 }
 
 void UIManager::render() {
