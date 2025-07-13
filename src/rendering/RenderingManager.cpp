@@ -1,13 +1,13 @@
-#include "rendering/ResourceManager.h"
+#include "rendering/RenderingManager.h"
 
-ResourceManager::ResourceManager() {
+RenderingManager::RenderingManager() {
 }
 
-ResourceManager::~ResourceManager() {
+RenderingManager::~RenderingManager() {
     cleanup();
 }
 
-std::shared_ptr<Blend2DRenderer> ResourceManager::getRenderer(entt::entity entity) {
+std::shared_ptr<Blend2DRenderer> RenderingManager::getRenderer(entt::entity entity) {
     auto it = m_renderers.find(entity);
     if (it != m_renderers.end()) {
         return it->second;
@@ -15,7 +15,7 @@ std::shared_ptr<Blend2DRenderer> ResourceManager::getRenderer(entt::entity entit
     return nullptr;
 }
 
-std::shared_ptr<Blend2DRenderer> ResourceManager::createRenderer(entt::entity entity, int width, int height) {
+std::shared_ptr<Blend2DRenderer> RenderingManager::createRenderer(entt::entity entity, int width, int height) {
     auto renderer = std::make_shared<Blend2DRenderer>();
     if (renderer->initialize(width, height)) {
         m_renderers[entity] = renderer;
@@ -24,21 +24,21 @@ std::shared_ptr<Blend2DRenderer> ResourceManager::createRenderer(entt::entity en
     return nullptr;
 }
 
-void ResourceManager::destroyRenderer(entt::entity entity) {
+void RenderingManager::destroyRenderer(entt::entity entity) {
     auto it = m_renderers.find(entity);
     if (it != m_renderers.end()) {
         m_renderers.erase(it);
     }
 }
 
-void ResourceManager::cleanup() {
+void RenderingManager::cleanup() {
     m_renderers.clear();
     m_canvases.clear();
     m_graphics.clear();
 }
 
 // Canvas management
-std::unique_ptr<Canvas>* ResourceManager::getCanvas(entt::entity entity) {
+std::unique_ptr<Canvas>* RenderingManager::getCanvas(entt::entity entity) {
     auto it = m_canvases.find(entity);
     if (it != m_canvases.end()) {
         return &it->second;
@@ -46,11 +46,11 @@ std::unique_ptr<Canvas>* ResourceManager::getCanvas(entt::entity entity) {
     return nullptr;
 }
 
-void ResourceManager::addCanvas(entt::entity entity, std::unique_ptr<Canvas> canvas) {
+void RenderingManager::addCanvas(entt::entity entity, std::unique_ptr<Canvas> canvas) {
     m_canvases[entity] = std::move(canvas);
 }
 
-void ResourceManager::removeCanvas(entt::entity entity) {
+void RenderingManager::removeCanvas(entt::entity entity) {
     auto it = m_canvases.find(entity);
     if (it != m_canvases.end()) {
         m_canvases.erase(it);
@@ -58,7 +58,7 @@ void ResourceManager::removeCanvas(entt::entity entity) {
 }
 
 // Graphics management
-std::shared_ptr<Graphics> ResourceManager::getGraphics(entt::entity entity) {
+std::shared_ptr<Graphics> RenderingManager::getGraphics(entt::entity entity) {
     auto it = m_graphics.find(entity);
     if (it != m_graphics.end()) {
         return it->second;
@@ -66,11 +66,11 @@ std::shared_ptr<Graphics> ResourceManager::getGraphics(entt::entity entity) {
     return nullptr;
 }
 
-void ResourceManager::addGraphics(entt::entity entity, std::shared_ptr<Graphics> graphics) {
+void RenderingManager::addGraphics(entt::entity entity, std::shared_ptr<Graphics> graphics) {
     m_graphics[entity] = graphics;
 }
 
-void ResourceManager::removeGraphics(entt::entity entity) {
+void RenderingManager::removeGraphics(entt::entity entity) {
     auto it = m_graphics.find(entity);
     if (it != m_graphics.end()) {
         m_graphics.erase(it);

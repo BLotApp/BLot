@@ -164,7 +164,7 @@ void BlotApp::initGraphics() {
     m_ecsManager = std::make_unique<ECSManager>();
     
     // Initialize resource manager
-    m_resourceManager = std::make_unique<ResourceManager>();
+    m_renderingManager = std::make_unique<RenderingManager>();
     
     // Create a default canvas as an ECS entity and resources
     m_activeCanvasId = m_ecsManager->createEntity();
@@ -177,7 +177,7 @@ void BlotApp::initGraphics() {
     (void)texComp; // Suppress unused variable warning
     
     // Create renderer through resource manager (returns shared_ptr)
-    auto renderer = m_resourceManager->createRenderer(m_activeCanvasId, m_windowWidth, m_windowHeight);
+    auto renderer = m_renderingManager->createRenderer(m_activeCanvasId, m_windowWidth, m_windowHeight);
     if (!renderer) {
         throw std::runtime_error("Failed to create renderer for canvas");
     }
@@ -186,8 +186,8 @@ void BlotApp::initGraphics() {
     graphics->setRenderer(renderer.get());
     auto canvas = std::make_unique<Canvas>(m_windowWidth, m_windowHeight, graphics);
     canvas->setECSManager(m_ecsManager.get()); // Connect Canvas to ECS
-    m_resourceManager->addGraphics(m_activeCanvasId, graphics);
-    m_resourceManager->addCanvas(m_activeCanvasId, std::move(canvas));
+    m_renderingManager->addGraphics(m_activeCanvasId, graphics);
+    m_renderingManager->addCanvas(m_activeCanvasId, std::move(canvas));
     
 
     
@@ -258,7 +258,7 @@ void BlotApp::run() {
 
 void BlotApp::update() {
     // Update application logic
-    m_ecsManager->runCanvasSystems(m_resourceManager.get(), m_deltaTime);
+    m_ecsManager->runCanvasSystems(m_renderingManager.get(), m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);

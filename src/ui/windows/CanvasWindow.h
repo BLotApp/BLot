@@ -3,7 +3,7 @@
 #include "Window.h"
 #include "canvas/Canvas.h"
 #include "ecs/ECSManager.h"
-#include "rendering/ResourceManager.h"
+#include "rendering/RenderingManager.h"
 #include <entt/entt.hpp>
 #include <memory>
 
@@ -15,7 +15,7 @@ public:
     virtual ~CanvasWindow() = default;
 
     // Canvas-specific methods
-    void setResourceManager(ResourceManager* resourceManager);
+    void setRenderingManager(RenderingManager* renderingManager);
     void setECSManager(ECSManager* ecs);
     void setActiveCanvasId(entt::entity canvasId);
     void setCurrentTool(int toolType);
@@ -35,7 +35,7 @@ public:
 
 private:
     // Canvas state
-    ResourceManager* m_resourceManager = nullptr;
+    RenderingManager* m_renderingManager = nullptr;
     ECSManager* m_ecs = nullptr;
     entt::entity m_activeCanvasId = entt::null;
     

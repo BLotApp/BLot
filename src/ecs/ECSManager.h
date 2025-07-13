@@ -15,7 +15,7 @@
 class Canvas;
 class Graphics;
 class ScriptEngine;
-class ResourceManager;
+class RenderingManager;
 class Blend2DRenderer;
 
 // Component definitions
@@ -151,8 +151,8 @@ public:
     void setGraphics(std::shared_ptr<Graphics> graphics);
     void setScriptEngine(std::shared_ptr<ScriptEngine> scriptEngine);
     
-    void runCanvasSystems(ResourceManager* resourceManager, float deltaTime);
-    void runCanvasRenderSystem(ResourceManager* resourceManager, entt::entity activeCanvasId);
+    void runCanvasSystems(RenderingManager* renderingManager, float deltaTime);
+    void runCanvasRenderSystem(RenderingManager* renderingManager, entt::entity activeCanvasId);
     void runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer);
     
 private:

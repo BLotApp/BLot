@@ -8,10 +8,10 @@
 #include "canvas/Canvas.h"
 #include "rendering/Graphics.h"
 
-class ResourceManager {
+class RenderingManager {
 public:
-    ResourceManager();
-    ~ResourceManager();
+    RenderingManager();
+    ~RenderingManager();
     
     // Renderer management
     std::shared_ptr<Blend2DRenderer> getRenderer(entt::entity entity);

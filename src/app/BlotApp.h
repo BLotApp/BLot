@@ -10,7 +10,7 @@
 #include "ecs/ECSManager.h"
 #include <unordered_map>
 #include "rendering/Blend2DRenderer.h"
-#include "rendering/ResourceManager.h"
+#include "rendering/RenderingManager.h"
 
 #include "ui/CoordinateSystem.h"
 #include "ui/UIManager.h"
@@ -76,7 +76,7 @@ private:
     // App Management
     std::unique_ptr<ECSManager> m_ecsManager;
     std::unique_ptr<AddonManager> m_addonManager;
-    std::unique_ptr<ResourceManager> m_resourceManager;
+    std::unique_ptr<RenderingManager> m_renderingManager;
     std::unique_ptr<blot::UIManager> m_uiManager;
 
     // App Systems

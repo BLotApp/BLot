@@ -304,12 +304,12 @@ void ECSManager::updateParameterSystem() {
     }
 } 
 
-void ECSManager::runCanvasSystems(ResourceManager* resourceManager, float deltaTime) {
-    blot::systems::CanvasUpdateSystem(*this, resourceManager, deltaTime);
+void ECSManager::runCanvasSystems(RenderingManager* renderingManager, float deltaTime) {
+    blot::systems::CanvasUpdateSystem(*this, renderingManager, deltaTime);
 }
 
-void ECSManager::runCanvasRenderSystem(ResourceManager* resourceManager, entt::entity activeCanvasId) {
-    blot::systems::CanvasRenderSystem(*this, resourceManager, activeCanvasId);
+void ECSManager::runCanvasRenderSystem(RenderingManager* renderingManager, entt::entity activeCanvasId) {
+    blot::systems::CanvasRenderSystem(*this, renderingManager, activeCanvasId);
 }
 
 void ECSManager::runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer) {

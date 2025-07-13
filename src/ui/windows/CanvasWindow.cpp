@@ -16,8 +16,8 @@ CanvasWindow::CanvasWindow(const std::string& title, Flags flags)
     // Note: Window size and position are handled by ImGui automatically
 }
 
-void CanvasWindow::setResourceManager(ResourceManager* resourceManager) {
-    m_resourceManager = resourceManager;
+void CanvasWindow::setRenderingManager(RenderingManager* renderingManager) {
+    m_renderingManager = renderingManager;
 }
 
 void CanvasWindow::setECSManager(ECSManager* ecs) {
@@ -105,11 +105,11 @@ void CanvasWindow::render() {
 }
 
 void CanvasWindow::drawCanvasTexture() {
-    if (!m_resourceManager || m_activeCanvasId == entt::null) {
+    if (!m_renderingManager || m_activeCanvasId == entt::null) {
         return;
     }
     
-    auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+    auto canvasPtr = m_renderingManager->getCanvas(m_activeCanvasId);
     if (canvasPtr && *canvasPtr) {
         unsigned int texId = (*canvasPtr)->getColorTexture();
         printf("[ImGui] Displaying texture: ID=%u, size=%.1fx%.1f\n", texId, m_canvasSize.x, m_canvasSize.y);
@@ -207,12 +207,12 @@ ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const 
     printf("[CanvasWindow] convertToBlend2DCoordinates: input=(%.1f,%.1f)\n", canvasPos.x, canvasPos.y);
     
     // Get actual canvas dimensions from the canvas resource
-    if (!m_resourceManager || m_activeCanvasId == entt::null) {
-        printf("[CanvasWindow] ERROR: No resource manager or active canvas\n");
+    if (!m_renderingManager || m_activeCanvasId == entt::null) {
+        printf("[CanvasWindow] ERROR: No rendering manager or active canvas\n");
         return canvasPos; // Return unchanged if no canvas available
     }
     
-    auto canvasPtr = m_resourceManager->getCanvas(m_activeCanvasId);
+    auto canvasPtr = m_renderingManager->getCanvas(m_activeCanvasId);
     if (!canvasPtr || !*canvasPtr) {
         printf("[CanvasWindow] ERROR: Active canvas not found in resources\n");
         return canvasPos; // Return unchanged if canvas not found
