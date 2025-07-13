@@ -31,14 +31,15 @@ namespace blot {
 class UIManager {
 public:
     UIManager(GLFWwindow* window);
-    ~UIManager() = default;
+    ~UIManager();
 
     // Main UI operations
     void update();
     void handleInput();
     
-    // ImGui initialization
+    // ImGui initialization and shutdown
     void initImGui();
+    void shutdownImGui();
     
     // Window management
     void setupDockspace();

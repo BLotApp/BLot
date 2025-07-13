@@ -1,4 +1,6 @@
 #define NOMINMAX
+
+// GLAD must be included before GLFW
 #if defined(_WIN32) || (defined(__linux__) && !defined(__arm__) && !defined(__aarch64__))
     #include <glad/gl.h>
     #define GLAD_LOAD_FN gladLoaderLoadGL
@@ -9,8 +11,23 @@
     #error "Unknown platform for GLAD loader"
 #endif
 
+// Standard library includes
 #include <iostream>
 #include <chrono>
+#include <unordered_map>
+#include <fstream>
+#include <string>
+
+// Third-party includes
+#include <nlohmann/json.hpp>
+#include <imgui.h>
+#include <GLFW/glfw3.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+// Project includes
 #include "app/BlotApp.h"
 #include "canvas/Canvas.h"
 #include "rendering/Graphics.h"
@@ -20,42 +37,7 @@
 #include "scripting/ScriptEngine.h"
 #include "addons/AddonManager.h"
 #include "ui/windows/NodeEditorWindow.h"
-#include <imgui.h>
-#include <GLFW/glfw3.h>
-
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
-#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include <imgui_node_editor.h>
-namespace ed = ax::NodeEditor;
-
-#include <unordered_map>
-#include <nlohmann/json.hpp>
-#include <fstream>
-#include <string>
-
-// Font is included in UIManager.cpp
-#include "rendering/Blend2DRenderer.h"
-#include "../third_party/portable-file-dialogs/portable-file-dialogs.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include "ecs/ECSManager.h"
-#include "ecs/components/TextureComponent.h"
-#include "ecs/systems/CanvasUpdateSystem.h"
-#include "ecs/systems/ShapeRenderingSystem.h"
-
-#include "implot.h"
-#include "implot3d.h"
-
-#include "imgui_markdown.h"
-#include "imfilebrowser.h"
-
-#include <vector>
-
 #include "ui/CodeEditor.h"
 
 BlotApp::BlotApp() 
@@ -101,10 +83,6 @@ BlotApp::~BlotApp() {
     
     // Save application settings
     m_settings.saveSettings();
-    
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
     
     if (m_window) {
         glfwDestroyWindow(m_window);
@@ -153,18 +131,12 @@ void BlotApp::initWindow() {
     }
     
     // Initialize GLAD (GL or GLES2) after context is current
-    if (m_debugMode) {
-        std::cout << "Initializing GLAD..." << std::endl;
-    }
     if (!GLAD_LOAD_FN()) {
         glfwDestroyWindow(m_window);
         glfwTerminate();
         throw std::runtime_error("Failed to initialize GLAD");
     }
     
-    if (m_debugMode) {
-        std::cout << "GLAD initialized successfully" << std::endl;
-    }
     glfwSwapInterval(1); // Enable vsync
     
     // Set up callbacks
@@ -174,24 +146,11 @@ void BlotApp::initWindow() {
         app->m_windowWidth = width;
         app->m_windowHeight = height;
         glViewport(0, 0, width, height);
-        std::cout << "Window resized to " << width << "x" << height << std::endl;
     });
     
     // Show the window
     glfwShowWindow(m_window);
-    if (m_debugMode) {
-        std::cout << "Window should now be visible" << std::endl;
-    }
-    
-    // Check if window is visible
-    if (glfwGetWindowAttrib(m_window, GLFW_VISIBLE)) {
-        if (m_debugMode) {
-            std::cout << "Window is marked as visible" << std::endl;
-        }
-    } else {
-        std::cout << "Warning: Window is not marked as visible!" << std::endl;
-    }
-    
+
     // Check for any GLFW errors
     const char* error;
     if (glfwGetError(&error) && error) {
@@ -203,8 +162,6 @@ void BlotApp::initGraphics() {
     m_graphics = std::make_shared<Graphics>();
     m_scriptEngine = std::make_unique<ScriptEngine>();
     m_ecsManager = std::make_unique<ECSManager>();
-    
-    // Set up default creative coding environment
     
     // Initialize resource manager
     m_resourceManager = std::make_unique<ResourceManager>();
@@ -232,8 +189,7 @@ void BlotApp::initGraphics() {
     m_resourceManager->addGraphics(m_activeCanvasId, graphics);
     m_resourceManager->addCanvas(m_activeCanvasId, std::move(canvas));
     
-    // Initialize shape rendering system with the shared_ptr renderer
-    m_shapeRenderer = std::make_unique<ShapeRenderingSystem>(renderer);
+
     
     // Final setup phase
     setup();
@@ -292,24 +248,8 @@ void BlotApp::run() {
             }
         }
         
-        // Start ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        
+        // Update UI through UIManager
         m_uiManager->update();
-        
-        ImGui::Render();
-        
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
-        // Update and render additional viewports
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            GLFWwindow* backup_current_context = glfwGetCurrentContext();
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backup_current_context);
-        }
         
         glfwSwapBuffers(m_window);
     }
@@ -318,7 +258,7 @@ void BlotApp::run() {
 
 void BlotApp::update() {
     // Update application logic
-    CanvasUpdateSystem(*m_ecsManager, m_resourceManager.get(), m_deltaTime);
+    m_ecsManager->runCanvasSystems(m_resourceManager.get(), m_deltaTime);
     m_scriptEngine->update(m_deltaTime);
     if (m_addonManager) {
         m_addonManager->updateAll(m_deltaTime);
@@ -330,26 +270,5 @@ void BlotApp::update() {
     // Update window manager
     if (m_uiManager) {
         m_uiManager->getWindowManager()->update();
-    }
-}
-
-// ECS-style system: update all canvases
-void CanvasUpdateSystem(ECSManager& ecs, ResourceManager* resourceManager, float deltaTime) {
-    auto view = ecs.view<TextureComponent>();
-    for (auto entity : view) {
-        auto canvasPtr = resourceManager->getCanvas(entity);
-        if (canvasPtr && *canvasPtr) {
-            (*canvasPtr)->update(deltaTime);
-        }
-    }
-}
-
-// ECS-style system: render all canvases (optionally, only active)
-void CanvasRenderSystem(ECSManager& ecs, ResourceManager* resourceManager, entt::entity activeCanvasId) {
-    if (activeCanvasId != entt::null && ecs.hasComponent<TextureComponent>(activeCanvasId)) {
-        auto canvasPtr = resourceManager->getCanvas(activeCanvasId);
-        if (canvasPtr && *canvasPtr) {
-            (*canvasPtr)->render();
-        }
     }
 } 

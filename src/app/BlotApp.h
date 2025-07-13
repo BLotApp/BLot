@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include "rendering/Blend2DRenderer.h"
 #include "rendering/ResourceManager.h"
-#include "ecs/systems/ShapeRenderingSystem.h"
+
 #include "ui/CoordinateSystem.h"
 #include "ui/UIManager.h"
 #include "ui/windows/TextureViewerWindow.h"
@@ -84,7 +84,7 @@ private:
 
     entt::entity m_activeCanvasId = entt::null; // Now refers to ECS entity
     std::shared_ptr<Graphics> m_graphics;
-    std::unique_ptr<ShapeRenderingSystem> m_shapeRenderer;
+
     std::unique_ptr<CodeEditor> m_codeEditor;
     std::unique_ptr<ScriptEngine> m_scriptEngine;
 

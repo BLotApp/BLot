@@ -5,14 +5,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-ShapeRenderingSystem::ShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer)
-    : m_renderer(renderer) {
-}
+namespace blot {
+namespace systems {
 
-ShapeRenderingSystem::~ShapeRenderingSystem() {
-}
-
-void ShapeRenderingSystem::renderShapes(ECSManager& ecs) {
+void ShapeRenderingSystem(ECSManager& ecs, std::shared_ptr<Blend2DRenderer> renderer) {
     auto view = ecs.view<Transform, Shape, Style>();
     
     for (auto entity : view) {
@@ -22,26 +18,26 @@ void ShapeRenderingSystem::renderShapes(ECSManager& ecs) {
         
         switch (shape.type) {
             case blot::components::Shape::Type::Rectangle:
-                renderRectangle(transform, shape, style);
+                renderRectangle(transform, shape, style, renderer);
                 break;
             case blot::components::Shape::Type::Ellipse:
-                renderEllipse(transform, shape, style);
+                renderEllipse(transform, shape, style, renderer);
                 break;
             case blot::components::Shape::Type::Line:
-                renderLine(transform, shape, style);
+                renderLine(transform, shape, style, renderer);
                 break;
             case blot::components::Shape::Type::Polygon:
-                renderPolygon(transform, shape, style);
+                renderPolygon(transform, shape, style, renderer);
                 break;
             case blot::components::Shape::Type::Star:
-                renderStar(transform, shape, style);
+                renderStar(transform, shape, style, renderer);
                 break;
         }
     }
 }
 
-void ShapeRenderingSystem::renderRectangle(const Transform& transform, const Shape& shape, const Style& style) {
-    if (!m_renderer) return;
+void renderRectangle(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
     float x = transform.x + shape.x1;
     float y = transform.y + shape.y1;
@@ -55,18 +51,18 @@ void ShapeRenderingSystem::renderRectangle(const Transform& transform, const Sha
     height *= transform.scaleY;
     
     if (style.hasFill) {
-        setFillStyle(style);
-        m_renderer->drawRect(x, y, width, height);
+        setFillStyle(style, renderer);
+        renderer->drawRect(x, y, width, height);
     }
     
     if (style.hasStroke) {
-        setStrokeStyle(style);
-        m_renderer->drawRect(x, y, width, height);
+        setStrokeStyle(style, renderer);
+        renderer->drawRect(x, y, width, height);
     }
 }
 
-void ShapeRenderingSystem::renderEllipse(const Transform& transform, const Shape& shape, const Style& style) {
-    if (!m_renderer) return;
+void renderEllipse(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
     float x = transform.x + shape.x1;
     float y = transform.y + shape.y1;
@@ -85,18 +81,18 @@ void ShapeRenderingSystem::renderEllipse(const Transform& transform, const Shape
     float radiusY = height * 0.5f;
     
     if (style.hasFill) {
-        setFillStyle(style);
-        m_renderer->drawEllipse(centerX, centerY, radiusX, radiusY);
+        setFillStyle(style, renderer);
+        renderer->drawEllipse(centerX, centerY, radiusX, radiusY);
     }
     
     if (style.hasStroke) {
-        setStrokeStyle(style);
-        m_renderer->drawEllipse(centerX, centerY, radiusX, radiusY);
+        setStrokeStyle(style, renderer);
+        renderer->drawEllipse(centerX, centerY, radiusX, radiusY);
     }
 }
 
-void ShapeRenderingSystem::renderLine(const Transform& transform, const Shape& shape, const Style& style) {
-    if (!m_renderer || !style.hasStroke) return;
+void renderLine(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer || !style.hasStroke) return;
     
     float x1 = transform.x + shape.x1;
     float y1 = transform.y + shape.y1;
@@ -109,12 +105,12 @@ void ShapeRenderingSystem::renderLine(const Transform& transform, const Shape& s
     x2 *= transform.scaleX;
     y2 *= transform.scaleY;
     
-    setStrokeStyle(style);
-    m_renderer->drawLine(x1, y1, x2, y2);
+    setStrokeStyle(style, renderer);
+    renderer->drawLine(x1, y1, x2, y2);
 }
 
-void ShapeRenderingSystem::renderPolygon(const Transform& transform, const Shape& shape, const Style& style) {
-    if (!m_renderer) return;
+void renderPolygon(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
     float centerX = transform.x + shape.x1;
     float centerY = transform.y + shape.y1;
@@ -140,18 +136,18 @@ void ShapeRenderingSystem::renderPolygon(const Transform& transform, const Shape
         glmPoints.push_back(glm::vec2(points[i], points[i + 1]));
     }
     if (style.hasFill) {
-        setFillStyle(style);
-        m_renderer->drawPolygon(glmPoints);
+        setFillStyle(style, renderer);
+        renderer->drawPolygon(glmPoints);
     }
     
     if (style.hasStroke) {
-        setStrokeStyle(style);
-        m_renderer->drawPolygon(glmPoints);
+        setStrokeStyle(style, renderer);
+        renderer->drawPolygon(glmPoints);
     }
 }
 
-void ShapeRenderingSystem::renderStar(const Transform& transform, const Shape& shape, const Style& style) {
-    if (!m_renderer) return;
+void renderStar(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
     float centerX = transform.x + shape.x1;
     float centerY = transform.y + shape.y1;
@@ -180,17 +176,17 @@ void ShapeRenderingSystem::renderStar(const Transform& transform, const Shape& s
         glmPoints.push_back(glm::vec2(points[i], points[i + 1]));
     }
     if (style.hasFill) {
-        setFillStyle(style);
-        m_renderer->drawPolygon(glmPoints);
+        setFillStyle(style, renderer);
+        renderer->drawPolygon(glmPoints);
     }
     
     if (style.hasStroke) {
-        setStrokeStyle(style);
-        m_renderer->drawPolygon(glmPoints);
+        setStrokeStyle(style, renderer);
+        renderer->drawPolygon(glmPoints);
     }
 }
 
-void ShapeRenderingSystem::renderSelectionOverlay(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize) {
+void renderSelectionOverlay(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<Blend2DRenderer> renderer) {
     auto view = ecs.view<Transform, Shape, Selection>();
     
     for (auto entity : view) {
@@ -198,66 +194,93 @@ void ShapeRenderingSystem::renderSelectionOverlay(ECSManager& ecs, const ImVec2&
         auto& shape = view.get<Shape>(entity);
         auto& selection = view.get<Selection>(entity);
         
-        if (!selection.isSelected) continue;
+        // Draw selection rectangle
+        float x = transform.x + shape.x1;
+        float y = transform.y + shape.y1;
+        float width = shape.x2 - shape.x1;
+        float height = shape.y2 - shape.y1;
+        
+        // Apply transform
+        x *= transform.scaleX;
+        y *= transform.scaleY;
+        width *= transform.scaleX;
+        height *= transform.scaleY;
+        
+        // Convert to screen coordinates
+        float screenX = canvasPos.x + x;
+        float screenY = canvasPos.y + y;
         
         // Draw selection rectangle
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImVec2 pos(canvasPos.x + transform.x, canvasPos.y + transform.y);
-        ImVec2 size(shape.x2 - shape.x1, shape.y2 - shape.y1);
-        
-        drawList->AddRect(
-            pos,
-            ImVec2(pos.x + size.x, pos.y + size.y),
-            IM_COL32(0, 255, 0, 255),
-            0.0f, 0, 2.0f
-        );
+        if (renderer) {
+            renderer->setStrokeColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red
+            renderer->setStrokeWidth(2.0f);
+            renderer->drawRect(screenX - 2, screenY - 2, width + 4, height + 4);
+        }
     }
 }
 
-void ShapeRenderingSystem::renderDrawingPreview(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize) {
-    auto view = ecs.view<Transform, Shape, Drawing>();
+void renderDrawingPreview(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<Blend2DRenderer> renderer) {
+    auto view = ecs.view<Transform, Shape, Style>();
     
     for (auto entity : view) {
         auto& transform = view.get<Transform>(entity);
         auto& shape = view.get<Shape>(entity);
-        auto& drawing = view.get<Drawing>(entity);
+        auto& style = view.get<Style>(entity);
         
-        if (!drawing.isActive) continue;
+        // Convert to screen coordinates
+        float x = canvasPos.x + transform.x + shape.x1;
+        float y = canvasPos.y + transform.y + shape.y1;
         
-        // Draw preview
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImVec2 start(canvasPos.x + drawing.startPos.x, canvasPos.y + drawing.startPos.y);
-        ImVec2 current(canvasPos.x + drawing.currentPos.x, canvasPos.y + drawing.currentPos.y);
+        // Apply transform
+        x *= transform.scaleX;
+        y *= transform.scaleY;
         
-        drawList->AddRect(
-            start,
-            current,
-            IM_COL32(255, 255, 0, 128),
-            0.0f, 0, 1.0f
-        );
+        // Draw preview (simplified)
+        if (renderer && style.hasStroke) {
+            setStrokeStyle(style, renderer);
+            switch (shape.type) {
+                case blot::components::Shape::Type::Rectangle:
+                    renderer->drawRect(x, y, (shape.x2 - shape.x1) * transform.scaleX, (shape.y2 - shape.y1) * transform.scaleY);
+                    break;
+                case blot::components::Shape::Type::Ellipse:
+                    renderer->drawEllipse(x + (shape.x2 - shape.x1) * 0.5f * transform.scaleX, 
+                                        y + (shape.y2 - shape.y1) * 0.5f * transform.scaleY,
+                                        (shape.x2 - shape.x1) * 0.5f * transform.scaleX,
+                                        (shape.y2 - shape.y1) * 0.5f * transform.scaleY);
+                    break;
+                case blot::components::Shape::Type::Line:
+                    renderer->drawLine(x, y, x + (shape.x2 - shape.x1) * transform.scaleX, y + (shape.y2 - shape.y1) * transform.scaleY);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
 
-void ShapeRenderingSystem::setFillStyle(const Style& style) {
-    if (!m_renderer) return;
+void setFillStyle(const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
-    glm::vec4 color(style.fillR, style.fillG, style.fillB, style.fillA);
-    m_renderer->setFillColor(color);
+    glm::vec4 fillColor(style.fillR, style.fillG, style.fillB, style.fillA);
+    renderer->setFillColor(fillColor);
 }
 
-void ShapeRenderingSystem::setStrokeStyle(const Style& style) {
-    if (!m_renderer) return;
+void setStrokeStyle(const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+    if (!renderer) return;
     
-    glm::vec4 color(style.strokeR, style.strokeG, style.strokeB, style.strokeA);
-    m_renderer->setStrokeColor(color);
-    m_renderer->setStrokeWidth(style.strokeWidth);
+    glm::vec4 strokeColor(style.strokeR, style.strokeG, style.strokeB, style.strokeA);
+    renderer->setStrokeColor(strokeColor);
+    renderer->setStrokeWidth(style.strokeWidth);
 }
 
-void ShapeRenderingSystem::convertColor(float r, float g, float b, float a, uint32_t& color) {
+void convertColor(float r, float g, float b, float a, uint32_t& color) {
     uint8_t red = static_cast<uint8_t>(r * 255.0f);
     uint8_t green = static_cast<uint8_t>(g * 255.0f);
     uint8_t blue = static_cast<uint8_t>(b * 255.0f);
     uint8_t alpha = static_cast<uint8_t>(a * 255.0f);
     
     color = (alpha << 24) | (blue << 16) | (green << 8) | red;
-} 
+}
+
+} // namespace systems
+} // namespace blot 

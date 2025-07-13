@@ -4,6 +4,8 @@
 #include <iostream>
 #include <algorithm>
 #include <entt/entt.hpp>
+#include "ecs/systems/CanvasSystems.h"
+#include "ecs/systems/ShapeRenderingSystem.h"
 
 ECSManager::ECSManager() {
 }
@@ -300,4 +302,16 @@ void ECSManager::updateParameterSystem() {
             }
         }
     }
+} 
+
+void ECSManager::runCanvasSystems(ResourceManager* resourceManager, float deltaTime) {
+    blot::systems::CanvasUpdateSystem(*this, resourceManager, deltaTime);
+}
+
+void ECSManager::runCanvasRenderSystem(ResourceManager* resourceManager, entt::entity activeCanvasId) {
+    blot::systems::CanvasRenderSystem(*this, resourceManager, activeCanvasId);
+}
+
+void ECSManager::runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer) {
+    blot::systems::ShapeRenderingSystem(*this, renderer);
 } 

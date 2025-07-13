@@ -8,11 +8,15 @@
 #include "imgui.h"
 #include "components/ShapeComponent.h"
 #include "components/StyleComponent.h"
+#include "components/TextureComponent.h"
+#include "ecs/systems/CanvasSystems.h"
 
 // Forward declarations
 class Canvas;
 class Graphics;
 class ScriptEngine;
+class ResourceManager;
+class Blend2DRenderer;
 
 // Component definitions
 struct Transform {
@@ -146,6 +150,10 @@ public:
     void setCanvas(std::shared_ptr<Canvas> canvas);
     void setGraphics(std::shared_ptr<Graphics> graphics);
     void setScriptEngine(std::shared_ptr<ScriptEngine> scriptEngine);
+    
+    void runCanvasSystems(ResourceManager* resourceManager, float deltaTime);
+    void runCanvasRenderSystem(ResourceManager* resourceManager, entt::entity activeCanvasId);
+    void runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer);
     
 private:
     entt::registry m_registry;

@@ -135,6 +135,7 @@ set(SOURCES
     src/ui/CodeEditor.cpp
     src/ui/CodeEditor.h
     src/ecs/ECSManager.cpp
+    src/ecs/systems/CanvasSystems.cpp
     src/scripting/ScriptEngine.cpp
     src/ecs/systems/ShapeRenderingSystem.cpp
     src/ecs/systems/ShapeRenderingSystem.h

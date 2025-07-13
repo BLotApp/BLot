@@ -50,6 +50,10 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     configureWindowSettings();
 }
 
+UIManager::~UIManager() {
+    shutdownImGui();
+}
+
 void UIManager::initImGui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -98,7 +102,19 @@ void UIManager::initImGui() {
     m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_textRenderer.get());
 }
 
+void UIManager::shutdownImGui() {
+    // Shutdown ImGui implementation
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
 void UIManager::update() {
+    // Start ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    
     // Load workspace on first frame only
     static bool workspaceLoaded = false;
     if (!workspaceLoaded) {
@@ -139,6 +155,18 @@ void UIManager::update() {
         }
     } else {
         f12Pressed = false;
+    }
+    
+    // Render ImGui frame
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
+    // Update and render additional viewports
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
     }
 }
 
