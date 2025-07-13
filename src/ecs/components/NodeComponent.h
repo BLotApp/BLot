@@ -106,6 +106,11 @@ private:
                 };
                 break;
             default:
+                // Add some default pins for unknown types
+                pins = {
+                    {"input", "float", true, false, 0.0f, "Input"},
+                    {"output", "float", false, true, 0.0f, "Output"}
+                };
                 break;
         }
     }

@@ -13,22 +13,51 @@ namespace ed = ax::NodeEditor;
 namespace blot {
 
 NodeEditorWindow::NodeEditorWindow(const std::string& title, Flags flags)
-    : Window(title, flags) {}
+    : Window(title, flags), m_editorContext(nullptr) {
+    initializeNodeEditor();
+}
+
+NodeEditorWindow::~NodeEditorWindow() {
+    cleanupNodeEditor();
+}
+
+void NodeEditorWindow::initializeNodeEditor() {
+    if (!m_editorContext) {
+        ed::Config config;
+        config.SettingsFile = "NodeEditor.json";
+        m_editorContext = ed::CreateEditor(&config);
+    }
+}
+
+void NodeEditorWindow::cleanupNodeEditor() {
+    if (m_editorContext) {
+        ed::DestroyEditor(m_editorContext);
+        m_editorContext = nullptr;
+    }
+}
 
 void NodeEditorWindow::setECSManager(std::shared_ptr<ECSManager> ecs) {
     m_ecs = ecs;
 }
 
 void NodeEditorWindow::render() {
-    if (!m_ecs) return;
+    if (!m_ecs || !m_editorContext) return;
+    
     if (isOpen()) {
         if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
+            // Set the current editor context
+            ed::SetCurrentEditor(m_editorContext);
+            
             ed::Begin("NodeEditor");
             renderNodeCreationButtons();
             renderNodes();
             renderConnections();
             handleConnections();
+            handleNodeDeletion();
             ed::End();
+            
+            // Reset current editor context
+            ed::SetCurrentEditor(nullptr);
         }
         ImGui::End();
     }
@@ -96,10 +125,15 @@ void NodeEditorWindow::renderNodeCreationButtons() {
 }
 
 void NodeEditorWindow::renderNodes() {
+    if (!m_ecs) return;
+    
     auto view = m_ecs->view<blot::components::NodeComponent>();
     
     for (auto entity : view) {
         auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+        
+        // Safety check for valid node ID
+        if (nodeComp.nodeId <= 0) continue;
         
         ed::BeginNode(nodeComp.nodeId);
         
@@ -108,6 +142,9 @@ void NodeEditorWindow::renderNodes() {
         
         // Render pins
         for (auto& pin : nodeComp.pins) {
+            // Safety check for valid pin name
+            if (pin.name.empty()) continue;
+            
             ed::PinId pinId = (nodeComp.nodeId << 8) | std::hash<std::string>{}(pin.name);
             m_nodeParamPins[nodeComp.nodeId][pin.name] = pinId;
             
@@ -134,12 +171,20 @@ void NodeEditorWindow::renderNodes() {
 }
 
 void NodeEditorWindow::renderConnections() {
+    if (!m_ecs) return;
+    
     auto view = m_ecs->view<blot::components::NodeComponent>();
     
     for (auto entity : view) {
         auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
         
         for (const auto& conn : nodeComp.connections) {
+            // Safety checks for valid connection data
+            if (conn.fromNodeId <= 0 || conn.toNodeId <= 0 || 
+                conn.fromPin.empty() || conn.toPin.empty()) {
+                continue;
+            }
+            
             ed::LinkId linkId = (conn.fromNodeId << 16) | conn.toNodeId;
             
             auto fromPinIt = m_nodeParamPins.find(conn.fromNodeId);
@@ -158,6 +203,8 @@ void NodeEditorWindow::renderConnections() {
 }
 
 void NodeEditorWindow::handleConnections() {
+    if (!m_ecs) return;
+    
     if (ed::BeginCreate()) {
         ed::PinId startPinId, endPinId;
         if (ed::QueryNewLink(&startPinId, &endPinId)) {
@@ -165,6 +212,13 @@ void NodeEditorWindow::handleConnections() {
                 // Extract node and pin info from pin IDs
                 int fromNode = static_cast<int>(startPinId.Get() >> 8);
                 int toNode = static_cast<int>(endPinId.Get() >> 8);
+                
+                // Safety checks for valid node IDs
+                if (fromNode <= 0 || toNode <= 0) {
+                    ed::RejectNewItem();
+                    ed::EndCreate();
+                    return;
+                }
                 
                 // Find the pins
                 std::string fromPin, toPin;
@@ -198,7 +252,7 @@ void NodeEditorWindow::handleConnections() {
                 }
                 
                 // Only allow output->input connections
-                if (fromIsOutput && toIsInput) {
+                if (fromIsOutput && toIsInput && !fromPin.empty() && !toPin.empty()) {
                     // Add connection to target node
                     for (auto entity : view) {
                         auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
@@ -213,11 +267,41 @@ void NodeEditorWindow::handleConnections() {
                         }
                     }
                     ed::AcceptNewItem();
+                } else {
+                    ed::RejectNewItem();
                 }
             }
         }
     }
     ed::EndCreate();
+}
+
+void NodeEditorWindow::handleNodeDeletion() {
+    if (!m_ecs) return;
+    
+    if (ed::BeginDelete()) {
+        ed::LinkId linkId;
+        while (ed::QueryDeletedLink(&linkId)) {
+            // Handle link deletion if needed
+            ed::AcceptDeletedItem();
+        }
+        
+        ed::NodeId nodeId;
+        while (ed::QueryDeletedNode(&nodeId)) {
+            // Find and remove the node from ECS
+            auto view = m_ecs->view<blot::components::NodeComponent>();
+            for (auto entity : view) {
+                auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+                if (nodeComp.nodeId == static_cast<int>(nodeId.Get())) {
+                    // Remove the entity from ECS
+                    m_ecs->destroyEntity(entity);
+                    break;
+                }
+            }
+            ed::AcceptDeletedItem();
+        }
+    }
+    ed::EndDelete();
 }
 
 } // namespace blot 
