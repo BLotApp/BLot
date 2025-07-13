@@ -87,40 +87,57 @@ set(SOURCES
     src/rendering/Graphics.cpp
     src/rendering/Blend2DRenderer.cpp
     src/rendering/Renderer.cpp
-    src/codeeditor/CodeEditor.cpp
-    src/codeeditor/CodeEditor.h
     src/addons/AddonBase.cpp
     src/addons/AddonManager.cpp
     src/resources/VertexBuffer.cpp
     src/resources/Shader.cpp
+    src/ui/WindowManager.cpp
+    src/ui/WindowManager.h
     src/ui/TextRenderer.cpp
     src/ui/ImGuiRenderer.cpp
     src/ui/CoordinateSystem.cpp
-    src/ui/Window.cpp
-    src/ui/ImGuiWindow.cpp
-    src/ui/ImGuiWindow.h
-    src/ui/CanvasWindow.cpp
-    src/ui/InfoWindow.cpp
-    src/ui/ToolbarWindow.cpp
-    src/ui/StrokeWindow.cpp
-    src/ui/StrokeWindow.h
-    src/ui/TextureViewerWindow.cpp
-    src/ui/TextureViewerWindow.h
-    src/ui/DebugPanel.cpp
-    src/ui/DebugPanel.h
-    src/ui/ThemePanel.cpp
-    src/ui/ThemePanel.h
-    src/ui/TerminalWindow.cpp
-    src/ui/TerminalWindow.h
-    src/ui/LogWindow.cpp
-    src/ui/LogWindow.h
+    src/ui/windows/Window.cpp
+    src/ui/windows/ImGuiWindow.cpp
+    src/ui/windows/ImGuiWindow.h
+    src/ui/windows/CanvasWindow.cpp
+    src/ui/windows/InfoWindow.cpp
+    src/ui/windows/ToolbarWindow.cpp
+    src/ui/windows/StrokeWindow.cpp
+    src/ui/windows/StrokeWindow.h
+    src/ui/windows/TextureViewerWindow.cpp
+    src/ui/windows/TextureViewerWindow.h
+    src/ui/windows/DebugPanel.cpp
+    src/ui/windows/DebugPanel.h
+    src/ui/windows/ThemePanel.cpp
+    src/ui/windows/ThemePanel.h
+    src/ui/windows/TerminalWindow.cpp
+    src/ui/windows/TerminalWindow.h
+    src/ui/windows/LogWindow.cpp
+    src/ui/windows/LogWindow.h
+    src/ui/windows/MainMenuBar.cpp
+    src/ui/windows/MainMenuBar.h
+    src/ui/windows/AddonManagerWindow.cpp
+    src/ui/windows/AddonManagerWindow.h
+    src/ui/windows/NodeEditorWindow.cpp
+    src/ui/windows/NodeEditorWindow.h
+    src/ui/windows/PropertiesWindow.cpp
+    src/ui/windows/PropertiesWindow.h
+    src/ui/windows/CodeEditorWindow.cpp
+    src/ui/windows/CodeEditorWindow.h
+    src/ui/windows/ThemeEditorWindow.cpp
+    src/ui/windows/ThemeEditorWindow.h
+    src/ui/windows/SaveWorkspaceDialog.cpp
+    src/ui/windows/SaveWorkspaceDialog.h
     src/ui/UIManager.cpp
     src/ui/UIManager.h
+    src/ui/WorkspaceManager.cpp
+    src/ui/WorkspaceManager.h
+    src/ui/CodeEditor.cpp
+    src/ui/CodeEditor.h
     src/ecs/ECSManager.cpp
-    src/node/NodeEditor.cpp
     src/scripting/ScriptEngine.cpp
-    src/systems/ShapeRenderingSystem.cpp
-    src/systems/ShapeRenderingSystem.h
+    src/ecs/systems/ShapeRenderingSystem.cpp
+    src/ecs/systems/ShapeRenderingSystem.h
     src/rendering/ResourceManager.cpp
     src/rendering/ResourceManager.h
     # ImPlot sources
@@ -153,8 +170,9 @@ set(SOURCES
     third_party/imgui/backends/imgui_impl_opengl3.h
     third_party/imgui/backends/imgui_impl_opengl3_loader.h
     # (Add more backend files here if you want them visible)
-    src/components/ShapeComponent.h
-    src/components/StyleComponent.h
+    src/ecs/components/ShapeComponent.h
+    src/ecs/components/StyleComponent.h
+    src/ecs/components/NodeComponent.h
 )
 
 # ImGui sources (submodule)

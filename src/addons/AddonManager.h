@@ -24,10 +24,15 @@ public:
     void drawAll();
     void cleanupAll();
     
+    // Default addon initialization
+    void initDefaultAddons();
+    void loadDefaultAddons();
+    
     // Addon discovery and loading
     void scanAddonDirectory(const std::string& directory);
     bool loadAddon(const std::string& path);
     void reloadAddon(const std::string& name);
+    void reloadAllAddons();
     
     // Addon state management
     void enableAddon(const std::string& name);

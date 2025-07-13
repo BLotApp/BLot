@@ -1,6 +1,7 @@
 #include "WindowManager.h"
 #include "imgui.h"
 #include <algorithm>
+#include <iostream> // Added for debug output
 
 namespace blot {
 
@@ -87,6 +88,40 @@ entt::entity WindowManager::getFocusedWindowEntity() {
     return m_focusedWindowEntity;
 }
 
+std::vector<std::string> WindowManager::getAllWindowNames() const {
+    std::vector<std::string> windowNames;
+    auto view = m_registry.view<WindowComponent>();
+    for (auto entity : view) {
+        const auto& windowComp = view.get<WindowComponent>(entity);
+        windowNames.push_back(windowComp.name);
+    }
+    return windowNames;
+}
+
+std::vector<std::pair<std::string, std::string>> WindowManager::getAllWindowsWithDisplayNames() const {
+    std::vector<std::pair<std::string, std::string>> windows;
+    auto view = m_registry.view<WindowComponent, WindowSettingsComponent>();
+    for (auto entity : view) {
+        const auto& windowComp = view.get<WindowComponent>(entity);
+        const auto& settingsComp = view.get<WindowSettingsComponent>(entity);
+        
+        // Use the window name as both the ID and display name
+        // In the future, we could add a display name field to WindowSettingsComponent
+        std::string displayName = windowComp.name;
+        
+        // Make the display name more user-friendly
+        if (displayName == "MainMenuBar") displayName = "Main Menu Bar";
+        else if (displayName == "CodeEditor") displayName = "Code Editor";
+        else if (displayName == "AddonManager") displayName = "Addon Manager";
+        else if (displayName == "NodeEditor") displayName = "Node Editor";
+        else if (displayName == "ThemeEditor") displayName = "Theme Editor";
+        else if (displayName == "Texture") displayName = "Texture Viewer";
+        
+        windows.push_back({windowComp.name, displayName});
+    }
+    return windows;
+}
+
 void WindowManager::showWindow(const std::string& name) {
     auto entity = getWindowEntity(name);
     if (entity != entt::null) {
@@ -171,6 +206,7 @@ void WindowManager::renderAllWindows() {
         auto& styleComp = view.get<WindowStyleComponent>(entity);
         
         if (windowComp.isVisible && windowComp.window) {
+            std::cout << "[Frame] Rendering window: " << windowComp.name << std::endl;
             // Apply transform and style
             windowComp.window->setPosition(transformComp.position);
             windowComp.window->setSize(transformComp.size);
@@ -216,7 +252,7 @@ void WindowManager::updateFocus() {
     auto view = m_registry.view<WindowComponent>();
     for (auto entity : view) {
         auto& windowComp = view.get<WindowComponent>(entity);
-        if (windowComp.window && windowComp.window->isFocused()) {
+        if (windowComp.window && windowComp.isFocused) {
             newFocusedEntity = entity;
             break;
         }
@@ -272,6 +308,7 @@ bool WindowManager::isWindowVisible(const std::string& name) {
 }
 
 void WindowManager::setWindowVisible(const std::string& name, bool visible) {
+    std::cout << "setWindowVisible: " << name << " -> " << (visible ? "visible" : "hidden") << std::endl;
     auto entity = getWindowEntity(name);
     if (entity != entt::null) {
         auto& windowComp = m_registry.get<WindowComponent>(entity);
@@ -327,7 +364,7 @@ void WindowManager::hideAllWindows() {
 void WindowManager::setWindowSettings(const std::string& name, const WindowSettingsComponent& settings) {
     auto entity = getWindowEntity(name);
     if (entity != entt::null) {
-        if (m_registry.has<WindowSettingsComponent>(entity)) {
+        if (m_registry.all_of<WindowSettingsComponent>(entity)) {
             m_registry.replace<WindowSettingsComponent>(entity, settings);
         } else {
             m_registry.emplace<WindowSettingsComponent>(entity, settings);
@@ -337,7 +374,7 @@ void WindowManager::setWindowSettings(const std::string& name, const WindowSetti
 
 WindowSettingsComponent WindowManager::getWindowSettings(const std::string& name) {
     auto entity = getWindowEntity(name);
-    if (entity != entt::null && m_registry.has<WindowSettingsComponent>(entity)) {
+    if (entity != entt::null && m_registry.all_of<WindowSettingsComponent>(entity)) {
         return m_registry.get<WindowSettingsComponent>(entity);
     }
     return WindowSettingsComponent{}; // Return default settings

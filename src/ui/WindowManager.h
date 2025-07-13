@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <entt/entt.hpp>
-#include "Window.h"
+#include "windows/Window.h"
 
 namespace blot {
 
@@ -62,6 +62,21 @@ public:
     std::shared_ptr<Window> getWindow(const std::string& name);
     std::shared_ptr<Window> getFocusedWindow();
     entt::entity getFocusedWindowEntity();
+    std::vector<std::string> getAllWindowNames() const;
+    std::vector<std::pair<std::string, std::string>> getAllWindowsWithDisplayNames() const;
+    
+    // Templated window getters for type-safe access
+    template<typename T>
+    std::shared_ptr<T> getWindowAs(const std::string& name) {
+        auto window = getWindow(name);
+        return std::dynamic_pointer_cast<T>(window);
+    }
+    
+    template<typename T>
+    std::shared_ptr<T> getFocusedWindowAs() {
+        auto window = getFocusedWindow();
+        return std::dynamic_pointer_cast<T>(window);
+    }
     
     // Window operations
     void showWindow(const std::string& name);

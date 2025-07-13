@@ -1,0 +1,63 @@
+#include "AddonManagerWindow.h"
+#include "addons/AddonManager.h"
+#include <imgui.h>
+
+namespace blot {
+
+AddonManagerWindow::AddonManagerWindow(const std::string& title, Flags flags)
+    : Window(title, flags) {}
+
+void AddonManagerWindow::setAddonManager(std::shared_ptr<AddonManager> addonManager) {
+    m_addonManager = addonManager;
+}
+
+void AddonManagerWindow::render() {
+    if (isOpen() && m_addonManager) {
+        if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
+            renderAddonManager();
+        }
+        ImGui::End();
+    }
+}
+
+void AddonManagerWindow::renderAddonManager() {
+    if (!m_addonManager) return;
+    if (ImGui::BeginTabBar("AddonManagerTabs")) {
+        if (ImGui::BeginTabItem("Addons")) {
+            // Render addon list
+            auto addons = m_addonManager->getAllAddons();
+            ImGui::Text("Available Addons (%zu)", addons.size());
+            ImGui::Separator();
+            for (const auto& addon : addons) {
+                if (!addon) continue;
+                ImGui::PushID(addon->getName().c_str());
+                bool enabled = addon->isEnabled();
+                if (ImGui::Checkbox(addon->getName().c_str(), &enabled)) {
+                    if (enabled) m_addonManager->enableAddon(addon->getName());
+                    else m_addonManager->disableAddon(addon->getName());
+                }
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("%s\nVersion: %s\nAuthor: %s",
+                        addon->getDescription().c_str(),
+                        addon->getVersion().c_str(),
+                        addon->getAuthor().c_str());
+                }
+                ImGui::PopID();
+            }
+            ImGui::Separator();
+            if (ImGui::Button("Reload Addons")) {
+                m_addonManager->cleanupAll();
+                m_addonManager->initAll();
+            }
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Details")) {
+            // Optionally render details (could be expanded)
+            ImGui::Text("Select an addon to see details.");
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+}
+
+} // namespace blot 

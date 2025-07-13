@@ -1,0 +1,26 @@
+{
+  "defaultWindows": [
+    "Canvas",
+    "Toolbar",
+    "Stroke",
+    "Properties",
+    "Info"
+  ],
+  "description": "Optimized for illustration and design work - Like Adobe Illustrator",
+  "imguiLayout": "",
+  "name": "Illustrator",
+  "windowPositions": null,
+  "windowSizes": null,
+  "windowVisibility": {
+    "AddonManager": false,
+    "Canvas": true,
+    "CodeEditor": false,
+    "Info": true,
+    "NodeEditor": false,
+    "Properties": true,
+    "Stroke": true,
+    "Texture": false,
+    "ThemeEditor": false,
+    "Toolbar": true
+  }
+}

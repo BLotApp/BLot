@@ -116,6 +116,36 @@ void AddonManager::cleanupAll() {
     m_addonOrder.clear();
 }
 
+void AddonManager::initDefaultAddons() {
+    std::cout << "Initializing default addons..." << std::endl;
+    
+    // Set up addon directory
+    setAddonDirectory("addons");
+    scanAddonDirectory("addons");
+    
+    // Load default addons
+    loadDefaultAddons();
+    
+    // Initialize all addons
+    if (!initAll()) {
+        std::cerr << "Failed to initialize addons" << std::endl;
+    }
+}
+
+void AddonManager::loadDefaultAddons() {
+    // In a real implementation, you would dynamically load addons
+    // For now, we'll just register some example addons
+    std::cout << "Loading default addons..." << std::endl;
+    
+    // Example: Register GUI addon
+    // auto guiAddon = std::make_shared<bxGui>();
+    // registerAddon(guiAddon);
+    
+    // Example: Register OSC addon
+    // auto oscAddon = std::make_shared<bxOsc>();
+    // registerAddon(oscAddon);
+}
+
 void AddonManager::scanAddonDirectory(const std::string& directory) {
     m_addonDirectory = directory;
     
@@ -156,6 +186,23 @@ void AddonManager::reloadAddon(const std::string& name) {
         addon->init();
         addon->setup();
     }
+}
+
+void AddonManager::reloadAllAddons() {
+    std::cout << "Reloading all addons..." << std::endl;
+    
+    // Cleanup all addons
+    cleanupAll();
+    
+    // Re-scan the addon directory
+    scanAddonDirectory(m_addonDirectory);
+    
+    // Re-initialize all addons
+    if (!initAll()) {
+        std::cerr << "Failed to reload addons" << std::endl;
+    }
+    
+    std::cout << "All addons reloaded" << std::endl;
 }
 
 void AddonManager::enableAddon(const std::string& name) {

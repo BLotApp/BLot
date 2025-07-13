@@ -4,9 +4,10 @@
 #include "rendering/Graphics.h"
 #include "rendering/Blend2DRenderer.h"
 #include "ecs/ECSManager.h"
-#include "components/ShapeComponent.h"
-#include "components/StyleComponent.h"
+#include "ecs/components/ShapeComponent.h"
+#include "ecs/components/StyleComponent.h"
 #include <filesystem>
+#include <iostream>
 
 struct Canvas::Impl {
 	GLuint framebuffer = 0;
@@ -468,4 +469,34 @@ void Canvas::initShaders() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	
 	glBindVertexArray(0);
+} 
+
+void Canvas::switchRenderer(RendererType type) {
+    // Create new renderer of the specified type
+    auto newRenderer = createRenderer(type);
+    if (newRenderer) {
+        // Initialize the new renderer with current canvas dimensions
+        if (newRenderer->initialize(m_width, m_height)) {
+            // Set the new renderer in graphics
+            m_graphics->setRenderer(newRenderer.get());
+            std::cout << "Switched canvas renderer to: " << newRenderer->getName() << std::endl;
+        } else {
+            std::cerr << "Failed to initialize renderer: " << newRenderer->getName() << std::endl;
+        }
+    } else {
+        std::cerr << "Failed to create renderer of type: " << static_cast<int>(type) << std::endl;
+    }
+}
+
+void Canvas::setRenderer(std::unique_ptr<IRenderer> renderer) {
+    if (renderer) {
+        // Initialize the renderer with current canvas dimensions
+        if (renderer->initialize(m_width, m_height)) {
+            // Set the new renderer in graphics
+            m_graphics->setRenderer(renderer.get());
+            std::cout << "Set canvas renderer to: " << renderer->getName() << std::endl;
+        } else {
+            std::cerr << "Failed to initialize renderer: " << renderer->getName() << std::endl;
+        }
+    }
 } 

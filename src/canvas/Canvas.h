@@ -5,6 +5,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <variant>
+#include "rendering/Renderer.h"
 
 class Graphics;
 class ECSManager; // Forward declaration
@@ -71,6 +72,10 @@ public:
     // ECS integration
     void setECSManager(ECSManager* ecs) { m_ecs = ecs; }
     ECSManager* m_ecs = nullptr;
+    
+    // Renderer management
+    void switchRenderer(RendererType type);
+    void setRenderer(std::unique_ptr<IRenderer> renderer);
 
 private:
     void initFramebuffer();

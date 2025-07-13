@@ -1,30 +1,40 @@
 #include "UIManager.h"
-#include "DebugPanel.h"
-#include "InfoWindow.h"
-#include "ThemePanel.h"
-#include "TerminalWindow.h"
-#include "LogWindow.h"
-#include "TextureViewerWindow.h"
-#include "ToolbarWindow.h"
-#include "PropertiesWindow.h"
-#include "CodeEditorWindow.h"
-#include "AddonManagerWindow.h"
-#include "NodeEditorWindow.h"
-#include "ThemeEditorWindow.h"
-#include "StrokeWindow.h"
-#include "MainMenuBar.h"
+#include "windows/DebugPanel.h"
+#include "windows/InfoWindow.h"
+#include "windows/ThemePanel.h"
+#include "windows/TerminalWindow.h"
+#include "windows/LogWindow.h"
+#include "windows/TextureViewerWindow.h"
+#include "windows/ToolbarWindow.h"
+#include "windows/PropertiesWindow.h"
+#include "windows/CodeEditorWindow.h"
+#include "windows/AddonManagerWindow.h"
+#include "windows/NodeEditorWindow.h"
+#include "windows/ThemeEditorWindow.h"
+#include "windows/StrokeWindow.h"
+#include "windows/MainMenuBar.h"
+#include "windows/SaveWorkspaceDialog.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <windows.h>
 #include "../assets/fonts/fontRobotoRegular.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include <iostream>
 
 namespace blot {
 
 UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     // Create window manager
     m_windowManager = std::make_unique<WindowManager>();
+    
+    // Create workspace manager
+    m_workspaceManager = std::make_unique<WorkspaceManager>();
+    
+    // Connect WindowManager to WorkspaceManager
+    m_workspaceManager->setWindowManager(m_windowManager.get());
     
     // Create UI panels
     m_debugPanel = std::make_unique<DebugPanel>();
@@ -34,6 +44,7 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     // Create new windows
     m_terminalWindow = std::make_unique<TerminalWindow>();
     m_logWindow = std::make_unique<LogWindow>();
+    m_saveWorkspaceDialog = std::make_unique<SaveWorkspaceDialog>("Save Workspace");
     
     setupWindows();
     configureWindowSettings();
@@ -87,9 +98,48 @@ void UIManager::initImGui() {
     m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_textRenderer.get());
 }
 
-void UIManager::render() {
+void UIManager::update() {
+    // Load workspace on first frame only
+    static bool workspaceLoaded = false;
+    if (!workspaceLoaded) {
+        loadWorkspace("current");
+        workspaceLoaded = true;
+    }
+    
+    // Simple dockspace setup
     setupDockspace();
+    
+    // Show debug menu bar
+    if (m_debugMode) {
+        if (ImGui::BeginMainMenuBar()) {
+            if (ImGui::BeginMenu("Debug")) {
+                if (ImGui::MenuItem("Exit Debug Mode")) {
+                    m_debugMode = false;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+    }
+    
+    // Update UI components
+    if (m_windowManager) {
+        m_windowManager->update();
+    }
+    
+    // Render all windows
     renderAllWindows();
+    
+    // Handle debug mode toggle with F12 key (using GLFW directly)
+    static bool f12Pressed = false;
+    if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_F12) == GLFW_PRESS) {
+        if (!f12Pressed) {
+            m_debugMode = !m_debugMode;
+            f12Pressed = true;
+        }
+    } else {
+        f12Pressed = false;
+    }
 }
 
 void UIManager::handleInput() {
@@ -99,15 +149,8 @@ void UIManager::handleInput() {
     }
 }
 
-void UIManager::update() {
-    // Update UI components
-    if (m_windowManager) {
-        m_windowManager->update();
-    }
-}
-
 void UIManager::setupDockspace() {
-    // Fullscreen dockspace setup (not nested in another window)
+    // Simplified dockspace setup for debugging
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -117,10 +160,16 @@ void UIManager::setupDockspace() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    
+    // Debug: Add some text to the dockspace to see if it's rendering
     ImGui::Begin("DockSpace", nullptr, window_flags);
     ImGui::PopStyleVar(2);
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+    
+    // Debug: Add text to dockspace
+    ImGui::Text("Dockspace is working!");
+    
     ImGui::End();
 }
 
@@ -160,48 +209,30 @@ void UIManager::setupWindows() {
                                                           Window::Flags::NoScrollbar | Window::Flags::NoCollapse);
     m_windowManager->createWindow("Texture", textureViewerWindow);
     
-    // Create and register UI component windows
-    auto toolbarWindow = std::make_shared<ToolbarWindow>("Toolbar###MainToolbar", 
-                                                      Window::Flags::NoTitleBar | Window::Flags::AlwaysAutoResize);
-    m_windowManager->createWindow("Toolbar", toolbarWindow);
+    // Toolbar window is created in BlotApp.cpp to avoid duplicates
     
-    auto infoWindow = std::make_shared<InfoWindow>("Info###MainInfo", 
-                                                          Window::Flags::AlwaysAutoResize);
-    m_windowManager->createWindow("Info", infoWindow);
+    // Info window is created in BlotApp.cpp to avoid duplicates
     
-    auto propertiesWindow = std::make_shared<PropertiesWindow>("Properties###MainProperties", 
-                                                            Window::Flags::None);
-    m_windowManager->createWindow("Properties", propertiesWindow);
+    // Properties window is created in BlotApp.cpp to avoid duplicates
     
-    // Create and register code editor window
-    auto codeEditorWindow = std::make_shared<CodeEditorWindow>("Code Editor###MainCodeEditor", 
-                                                           Window::Flags::None);
-    m_windowManager->createWindow("CodeEditor", codeEditorWindow);
+    // Code editor window is created in BlotApp.cpp to avoid duplicates
     
-    // Create and register main menu bar
-    auto mainMenuBar = std::make_shared<MainMenuBar>("MainMenuBar###MainMenuBar", 
-                                                   Window::Flags::None);
-    m_windowManager->createWindow("MainMenuBar", mainMenuBar);
+    // Main menu bar is created in BlotApp.cpp to avoid duplicates
     
-    // Create and register addon manager window
-    auto addonManagerWindow = std::make_shared<AddonManagerWindow>("Addon Manager###AddonManager", 
-                                                               Window::Flags::None);
-    m_windowManager->createWindow("AddonManager", addonManagerWindow);
+    // Addon manager window is created in BlotApp.cpp to avoid duplicates
     
-    // Create and register node editor window
-    auto nodeEditorWindow = std::make_shared<NodeEditorWindow>("Node Editor###NodeEditor", 
-                                                           Window::Flags::None);
-    m_windowManager->createWindow("NodeEditor", nodeEditorWindow);
+    // Node editor window is created in BlotApp.cpp to avoid duplicates
     
     // Create and register theme editor window
     auto themeEditorWindow = std::make_shared<ThemeEditorWindow>("Theme Editor###ThemeEditor", 
                                                              Window::Flags::None);
     m_windowManager->createWindow("ThemeEditor", themeEditorWindow);
     
-    // Create and register stroke window
-    auto strokeWindow = std::make_shared<StrokeWindow>("Stroke Settings###StrokeWindow", 
-                                                    Window::Flags::None);
-    m_windowManager->createWindow("StrokeWindow", strokeWindow);
+    // Register save workspace dialog (not shown by default)
+    auto saveWorkspaceDialog = std::shared_ptr<SaveWorkspaceDialog>(m_saveWorkspaceDialog.get(), [](SaveWorkspaceDialog*){});
+    m_windowManager->createWindow("SaveWorkspaceDialog", saveWorkspaceDialog);
+    
+    // Stroke window is created in BlotApp.cpp to avoid duplicates
 }
 
 void UIManager::configureWindowSettings() {
@@ -262,11 +293,169 @@ void UIManager::configureWindowSettings() {
     themeEditorSettings.showInMenu = true;
     m_windowManager->setWindowSettings("ThemeEditor", themeEditorSettings);
     
-    WindowSettingsComponent strokeWindowSettings;
-    strokeWindowSettings.category = "Tools";
-    strokeWindowSettings.showByDefault = false;
-    strokeWindowSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("StrokeWindow", strokeWindowSettings);
+    WindowSettingsComponent saveWorkspaceDialogSettings;
+    saveWorkspaceDialogSettings.category = "Dialogs";
+    saveWorkspaceDialogSettings.showByDefault = false;
+    saveWorkspaceDialogSettings.showInMenu = false; // Don't show in menu since it's a dialog
+    m_windowManager->setWindowSettings("SaveWorkspaceDialog", saveWorkspaceDialogSettings);
+    
+    // Stroke window settings are configured in BlotApp.cpp
+}
+
+void UIManager::setImGuiTheme(ImGuiTheme theme) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    switch (theme) {
+        case ImGuiTheme::Dark:
+            ImGui::StyleColorsDark();
+            break;
+        case ImGuiTheme::Light:
+            ImGui::StyleColorsLight();
+            break;
+        case ImGuiTheme::Classic:
+            ImGui::StyleColorsClassic();
+            break;
+        case ImGuiTheme::Corporate: {
+            ImGui::StyleColorsDark();
+            style.Colors[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.14f, 0.15f, 1.00f);
+            style.Colors[ImGuiCol_Header] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+            style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
+            style.Colors[ImGuiCol_Button] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+            style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.28f, 0.34f, 0.39f, 1.00f);
+            style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
+            style.Colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.25f, 0.29f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.18f, 0.22f, 0.25f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.09f, 0.12f, 0.14f, 1.00f);
+            break;
+        }
+        case ImGuiTheme::Dracula: {
+            ImGui::StyleColorsDark();
+            style.Colors[ImGuiCol_WindowBg] = ImVec4(0.07f, 0.07f, 0.10f, 1.00f);
+            style.Colors[ImGuiCol_Header] = ImVec4(0.40f, 0.23f, 0.72f, 1.00f);
+            style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.50f, 0.28f, 0.92f, 1.00f);
+            style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.30f, 0.18f, 0.52f, 1.00f);
+            style.Colors[ImGuiCol_Button] = ImVec4(0.40f, 0.23f, 0.72f, 1.00f);
+            style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.50f, 0.28f, 0.92f, 1.00f);
+            style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.30f, 0.18f, 0.52f, 1.00f);
+            style.Colors[ImGuiCol_FrameBg] = ImVec4(0.20f, 0.15f, 0.30f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.30f, 0.18f, 0.52f, 1.00f);
+            style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.40f, 0.23f, 0.72f, 1.00f);
+            break;
+        }
+    }
+    m_currentTheme = theme;
+}
+
+void UIManager::loadTheme(const std::string& path) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    std::ifstream in(path);
+    if (!in) return;
+    nlohmann::json j;
+    in >> j;
+    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+        auto it = j.find(ImGui::GetStyleColorName(i));
+        if (it != j.end() && it->is_array() && it->size() == 4) {
+            style.Colors[i] = ImVec4((*it)[0].get<float>(), (*it)[1].get<float>(), (*it)[2].get<float>(), (*it)[3].get<float>());
+        }
+    }
+}
+
+void UIManager::saveCurrentTheme(const std::string& path) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    nlohmann::json j;
+    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+        j[ImGui::GetStyleColorName(i)] = {
+            style.Colors[i].x, style.Colors[i].y, style.Colors[i].z, style.Colors[i].w
+        };
+    }
+    std::ofstream out(path);
+    out << j.dump(2);
+}
+
+void UIManager::setWindowVisibility(const std::string& windowName, bool visible) {
+    if (m_workspaceManager) {
+        m_workspaceManager->setWindowVisibility(windowName, visible);
+    }
+    
+    if (m_windowManager) {
+        auto window = m_windowManager->getWindow(windowName);
+        if (window) {
+            if (visible) {
+                window->show();
+            } else {
+                window->hide();
+            }
+        }
+    }
+}
+
+bool UIManager::getWindowVisibility(const std::string& windowName) const {
+    if (m_windowManager) {
+        auto window = m_windowManager->getWindow(windowName);
+        if (window) {
+            return window->isOpen();
+        }
+    }
+    return true;
+}
+
+std::vector<std::string> UIManager::getAllWindowNames() const {
+    if (m_windowManager) {
+        return m_windowManager->getAllWindowNames();
+    }
+    return {};
+}
+
+
+
+bool UIManager::loadWorkspace(const std::string& workspaceName) {
+    if (m_workspaceManager) {
+        std::cout << "Loading workspace: " << workspaceName << std::endl;
+        bool success = m_workspaceManager->loadWorkspace(workspaceName);
+        if (success) {
+            // Force ImGui to update its layout
+            ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+            std::cout << "Workspace loaded successfully" << std::endl;
+        } else {
+            std::cout << "Failed to load workspace" << std::endl;
+        }
+        return success;
+    }
+    return false;
+}
+
+bool UIManager::saveWorkspace(const std::string& workspaceName) {
+    if (m_workspaceManager) {
+        return m_workspaceManager->saveWorkspace(workspaceName);
+    }
+    return false;
+}
+
+bool UIManager::saveWorkspaceAs(const std::string& workspaceName) {
+    if (m_workspaceManager) {
+        return m_workspaceManager->saveWorkspaceAs(workspaceName);
+    }
+    return false;
+}
+
+std::string UIManager::getCurrentWorkspace() const {
+    if (m_workspaceManager) {
+        return m_workspaceManager->getCurrentWorkspace();
+    }
+    return "default";
+}
+
+std::vector<std::pair<std::string, std::string>> UIManager::getAvailableWorkspaces() const {
+    if (m_workspaceManager) {
+        return m_workspaceManager->getAvailableWorkspacesWithNames();
+    }
+    return {};
+}
+
+void UIManager::saveCurrentImGuiLayout() {
+    if (m_workspaceManager) {
+        m_workspaceManager->saveCurrentImGuiLayout();
+    }
 }
 
 } // namespace blot 
