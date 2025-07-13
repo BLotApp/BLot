@@ -1,5 +1,15 @@
 #pragma once
 
+#include <memory>
+#include <string>
+#include <vector>
+#include <functional>
+
+// Forward declarations
+struct GLFWwindow;
+#include "windows/SaveWorkspaceDialog.h"
+class BlotApp;
+
 #include "WindowManager.h"
 #include "WorkspaceManager.h"
 #include "windows/DebugPanel.h"
@@ -9,7 +19,6 @@
 #include "windows/LogWindow.h"
 #include "ui/TextRenderer.h"
 #include "ui/ImGuiRenderer.h"
-#include <memory>
 #include <GLFW/glfw3.h>
 
 // Forward declarations
@@ -37,8 +46,12 @@ public:
     
     // Window visibility management
     void setWindowVisibility(const std::string& windowName, bool visible);
+    void setWindowVisibilityAll(bool visible);
     bool getWindowVisibility(const std::string& windowName) const;
     std::vector<std::string> getAllWindowNames() const;
+    
+    // Window callback setup
+    void setupWindowCallbacks(BlotApp* app);
     
     // Workspace management
     bool loadWorkspace(const std::string& workspaceName);
@@ -46,6 +59,7 @@ public:
     bool saveWorkspaceAs(const std::string& workspaceName);
     std::string getCurrentWorkspace() const;
     std::vector<std::pair<std::string, std::string>> getAvailableWorkspaces() const;
+    std::vector<std::string> getAllWorkspaceNames() const;
     void saveCurrentImGuiLayout();
     
     // Getters for external access

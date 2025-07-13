@@ -209,30 +209,52 @@ void UIManager::setupWindows() {
                                                           Window::Flags::NoScrollbar | Window::Flags::NoCollapse);
     m_windowManager->createWindow("Texture", textureViewerWindow);
     
-    // Toolbar window is created in BlotApp.cpp to avoid duplicates
+    // Create toolbar window
+    auto toolbarWindow = std::make_shared<ToolbarWindow>("Toolbar###MainToolbar", Window::Flags::None);
+    m_windowManager->createWindow("Toolbar", toolbarWindow);
     
-    // Info window is created in BlotApp.cpp to avoid duplicates
+    // Create info window
+    auto infoWindow = std::make_shared<InfoWindow>("Info Window###MainInfoWindow", 
+                                                  Window::Flags::AlwaysAutoResize);
+    m_windowManager->createWindow("InfoWindow", infoWindow);
     
-    // Properties window is created in BlotApp.cpp to avoid duplicates
+    // Create properties window
+    auto propertiesWindow = std::make_shared<PropertiesWindow>("Properties###MainProperties", 
+                                                             Window::Flags::None);
+    m_windowManager->createWindow("Properties", propertiesWindow);
     
-    // Code editor window is created in BlotApp.cpp to avoid duplicates
+    // Create code editor window
+    auto codeEditorWindow = std::make_shared<CodeEditorWindow>("Code Editor###MainCodeEditor", 
+                                                              Window::Flags::None);
+    m_windowManager->createWindow("CodeEditor", codeEditorWindow);
     
-    // Main menu bar is created in BlotApp.cpp to avoid duplicates
+    // Create main menu bar
+    auto mainMenuBar = std::make_shared<MainMenuBar>("MainMenuBar###MainMenuBar", 
+                                                     Window::Flags::None);
+    m_windowManager->createWindow("MainMenuBar", mainMenuBar);
     
-    // Addon manager window is created in BlotApp.cpp to avoid duplicates
+    // Create addon manager window
+    auto addonManagerWindow = std::make_shared<AddonManagerWindow>("Addon Manager###AddonManager", 
+                                                                  Window::Flags::None);
+    m_windowManager->createWindow("AddonManager", addonManagerWindow);
     
-    // Node editor window is created in BlotApp.cpp to avoid duplicates
+    // Create node editor window
+    auto nodeEditorWindow = std::make_shared<NodeEditorWindow>("Node Editor###NodeEditor", 
+                                                              Window::Flags::None);
+    m_windowManager->createWindow("NodeEditor", nodeEditorWindow);
+    
+    // Create stroke window
+    auto strokeWindow = std::make_shared<StrokeWindow>("Stroke###StrokeWindow", Window::Flags::None);
+    m_windowManager->createWindow("Stroke", strokeWindow);
     
     // Create and register theme editor window
     auto themeEditorWindow = std::make_shared<ThemeEditorWindow>("Theme Editor###ThemeEditor", 
-                                                             Window::Flags::None);
+                                                               Window::Flags::None);
     m_windowManager->createWindow("ThemeEditor", themeEditorWindow);
     
     // Register save workspace dialog (not shown by default)
     auto saveWorkspaceDialog = std::shared_ptr<SaveWorkspaceDialog>(m_saveWorkspaceDialog.get(), [](SaveWorkspaceDialog*){});
     m_windowManager->createWindow("SaveWorkspaceDialog", saveWorkspaceDialog);
-    
-    // Stroke window is created in BlotApp.cpp to avoid duplicates
 }
 
 void UIManager::configureWindowSettings() {
@@ -389,6 +411,15 @@ void UIManager::setWindowVisibility(const std::string& windowName, bool visible)
     }
 }
 
+void UIManager::setWindowVisibilityAll(bool visible) {
+    if (m_windowManager) {
+        std::vector<std::string> allWindows = m_windowManager->getAllWindowNames();
+        for (const auto& windowName : allWindows) {
+            setWindowVisibility(windowName, visible);
+        }
+    }
+}
+
 bool UIManager::getWindowVisibility(const std::string& windowName) const {
     if (m_windowManager) {
         auto window = m_windowManager->getWindow(windowName);
@@ -411,6 +442,10 @@ std::vector<std::string> UIManager::getAllWindowNames() const {
 bool UIManager::loadWorkspace(const std::string& workspaceName) {
     if (m_workspaceManager) {
         std::cout << "Loading workspace: " << workspaceName << std::endl;
+        
+        // First, hide all windows
+        setWindowVisibilityAll(false);
+        
         bool success = m_workspaceManager->loadWorkspace(workspaceName);
         if (success) {
             // Force ImGui to update its layout
@@ -450,6 +485,150 @@ std::vector<std::pair<std::string, std::string>> UIManager::getAvailableWorkspac
         return m_workspaceManager->getAvailableWorkspacesWithNames();
     }
     return {};
+}
+
+std::vector<std::string> UIManager::getAllWorkspaceNames() const {
+    if (m_workspaceManager) {
+        return m_workspaceManager->getAvailableWorkspaces();
+    }
+    return {};
+}
+
+void UIManager::setupWindowCallbacks(BlotApp* app) {
+    if (!m_windowManager || !app) return;
+    
+    // Get the main menu bar and set up its callbacks
+    auto mainMenuBar = std::dynamic_pointer_cast<MainMenuBar>(m_windowManager->getWindow("MainMenuBar"));
+    if (mainMenuBar) {
+        // Configure main menu bar callbacks
+        mainMenuBar->setQuitCallback([app]() {
+            // This will be handled by the app's main loop
+        });
+        
+        mainMenuBar->setAddonManagerCallback([this]() {
+            auto addonManagerWindow = m_windowManager->getWindow("AddonManager");
+            if (addonManagerWindow) {
+                addonManagerWindow->show();
+            }
+        });
+        
+        mainMenuBar->setReloadAddonsCallback([app]() {
+            // This will be handled by the app
+        });
+        
+        mainMenuBar->setThemeEditorCallback([this]() {
+            auto themeEditorWindow = m_windowManager->getWindow("ThemeEditor");
+            if (themeEditorWindow) {
+                themeEditorWindow->show();
+            }
+        });
+        
+        // Window visibility management callbacks
+        mainMenuBar->setWindowVisibilityCallback([this](const std::string& windowName, bool visible) {
+            setWindowVisibility(windowName, visible);
+        });
+        
+        mainMenuBar->setGetWindowVisibilityCallback([this](const std::string& windowName) {
+            return getWindowVisibility(windowName);
+        });
+        
+        mainMenuBar->setGetAllWindowsCallback([this]() {
+            return getAllWindowNames();
+        });
+        
+        // Workspace management callbacks
+        mainMenuBar->setLoadWorkspaceCallback([this](const std::string& workspaceName) {
+            loadWorkspace(workspaceName);
+        });
+        
+        mainMenuBar->setSaveWorkspaceCallback([this](const std::string& workspaceName) {
+            saveWorkspace(workspaceName);
+        });
+        
+        mainMenuBar->setSaveWorkspaceAsCallback([this](const std::string& workspaceName) {
+            saveWorkspaceAs(workspaceName);
+        });
+        
+        mainMenuBar->setCurrentWorkspaceCallback([this]() {
+            return getCurrentWorkspace();
+        });
+        
+        mainMenuBar->setGetAvailableWorkspacesCallback([this]() {
+            std::vector<std::string> workspaceNames = getAllWorkspaceNames();
+            std::vector<std::pair<std::string, std::string>> workspaces;
+            for (const auto& name : workspaceNames) {
+                workspaces.push_back({name, name}); // Use name as both id and display name
+            }
+            return workspaces;
+        });
+        
+        mainMenuBar->setShowSaveWorkspaceDialogCallback([this]() {
+            auto saveDialog = getSaveWorkspaceDialog();
+            if (saveDialog) {
+                saveDialog->setInitialWorkspaceName(getCurrentWorkspace());
+                saveDialog->setSaveCallback([this](const std::string& workspaceName) {
+                    saveWorkspaceAs(workspaceName);
+                });
+                saveDialog->setCancelCallback([this]() {
+                    // Dialog will close itself
+                });
+                saveDialog->show();
+            }
+        });
+        
+        // Debug mode callbacks
+        mainMenuBar->setDebugModeCallback([this](bool enabled) {
+            setDebugMode(enabled);
+        });
+        
+        mainMenuBar->setGetDebugModeCallback([this]() {
+            return m_debugMode;
+        });
+    }
+    
+    // Get the toolbar and set up its callbacks
+    auto toolbarWindow = std::dynamic_pointer_cast<ToolbarWindow>(m_windowManager->getWindow("Toolbar"));
+    if (toolbarWindow) {
+        toolbarWindow->setOnStrokeWidthChanged([this](float width) {
+            // Get stroke window through WindowManager
+            auto strokeWindow = std::dynamic_pointer_cast<StrokeWindow>(m_windowManager->getWindow("Stroke"));
+            if (strokeWindow) {
+                strokeWindow->setStrokeWidth(static_cast<double>(width));
+            }
+        });
+    }
+    
+    // Get the stroke window and set up its callbacks
+    auto strokeWindow = std::dynamic_pointer_cast<StrokeWindow>(m_windowManager->getWindow("Stroke"));
+    if (strokeWindow) {
+        strokeWindow->setStrokeWidthCallback([app](double width) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setStrokeCapCallback([app](BLStrokeCap cap) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setStrokeJoinCallback([app](BLStrokeJoin join) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setMiterLimitCallback([app](double limit) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setDashArrayCallback([app](const std::vector<double>& dashes) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setDashOffsetCallback([app](double offset) {
+            // This will be handled by the app
+        });
+        
+        strokeWindow->setTransformOrderCallback([app](BLStrokeTransformOrder order) {
+            // This will be handled by the app
+        });
+    }
 }
 
 void UIManager::saveCurrentImGuiLayout() {

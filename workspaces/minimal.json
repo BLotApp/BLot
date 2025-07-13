@@ -1,0 +1,9 @@
+{
+  "defaultWindows": [],
+  "description": "Clean workspace with only the main menu bar visible",
+  "imguiLayout": "",
+  "name": "Minimal",
+  "windowPositions": null,
+  "windowSizes": null,
+  "windowVisibility": {}
+}

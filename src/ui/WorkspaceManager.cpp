@@ -35,9 +35,20 @@ bool WorkspaceManager::loadWorkspace(const std::string& workspaceName) {
     const auto& config = m_workspaces[workspaceName];
     if (m_windowManager) {
         std::cout << "Applying window visibility from workspace..." << std::endl;
+        
+        // First, show all windows
+        std::vector<std::string> allWindows = m_windowManager->getAllWindowNames();
+        for (const auto& windowName : allWindows) {
+            std::cout << "  Setting " << windowName << " to visible (default)" << std::endl;
+            m_windowManager->setWindowVisible(windowName, true);
+        }
+        
+        // Then, hide only the windows that are explicitly mentioned as hidden in the workspace
         for (const auto& [windowName, isVisible] : config.windowVisibility) {
-            std::cout << "  Setting " << windowName << " to " << (isVisible ? "visible" : "hidden") << std::endl;
-            m_windowManager->setWindowVisible(windowName, isVisible);
+            if (!isVisible) {
+                std::cout << "  Setting " << windowName << " to hidden" << std::endl;
+                m_windowManager->setWindowVisible(windowName, false);
+            }
         }
     } else {
         std::cout << "WindowManager not available, skipping window visibility" << std::endl;
@@ -101,8 +112,13 @@ WorkspaceConfig WorkspaceManager::captureCurrentUIState(const std::string& works
         
         for (const auto& windowName : allWindows) {
             bool isVisible = windowManager->isWindowVisible(windowName);
-            config.windowVisibility[windowName] = isVisible;
-            std::cout << "  - " << windowName << ": " << (isVisible ? "visible" : "hidden") << std::endl;
+            // Only capture windows that are hidden (false) - windows not captured will be visible by default
+            if (!isVisible) {
+                config.windowVisibility[windowName] = false;
+                std::cout << "  - " << windowName << ": hidden (captured)" << std::endl;
+            } else {
+                std::cout << "  - " << windowName << ": visible (not captured)" << std::endl;
+            }
         }
         
         // Set default windows to all currently visible windows
@@ -118,12 +134,7 @@ WorkspaceConfig WorkspaceManager::captureCurrentUIState(const std::string& works
             {"Canvas", true},
             {"Toolbar", true},
             {"Info", true},
-            {"Properties", true},
-            {"Stroke", true},
-            {"AddonManager", false},
-            {"NodeEditor", false},
-            {"ThemeEditor", false},
-            {"Texture", false}
+            {"Properties", true}
         };
     }
     
@@ -199,6 +210,7 @@ bool WorkspaceManager::getWindowVisibility(const std::string& windowName) const 
     if (it == m_workspaces.end()) return true;
     
     auto visibilityIt = it->second.windowVisibility.find(windowName);
+    // If window is not explicitly mentioned in workspace, default to visible (true)
     return visibilityIt != it->second.windowVisibility.end() ? visibilityIt->second : true;
 }
 
@@ -271,48 +283,9 @@ std::string WorkspaceManager::getCurrentImGuiLayout() const {
 }
 
 void WorkspaceManager::createDefaultWorkspaces() {
-    // Creative Coding workspace - Code editor on left, Canvas on right
-    WorkspaceConfig creativeCoding;
-    creativeCoding.name = "Creative Coding";
-    creativeCoding.description = "Optimized for creative coding and sketching - Code editor on left, Canvas on right";
-    creativeCoding.defaultWindows = {"CodeEditor", "Canvas", "Toolbar", "Info", "Properties"};
-    creativeCoding.windowVisibility = {
-        {"CodeEditor", true},
-        {"Canvas", true},
-        {"Toolbar", true},
-        {"Info", true},
-        {"Properties", true},
-        {"Stroke", false},
-        {"AddonManager", false},
-        {"NodeEditor", false},
-        {"ThemeEditor", false},
-        {"Texture", false}
-    };
-    m_workspaces["creative_coding"] = creativeCoding;
-    
-    // Illustrator workspace - Like Adobe Illustrator with toolbar and stroke panels
-    WorkspaceConfig illustrator;
-    illustrator.name = "Illustrator";
-    illustrator.description = "Optimized for illustration and design work - Like Adobe Illustrator";
-    illustrator.defaultWindows = {"Canvas", "Toolbar", "Stroke", "Properties", "Info"};
-    illustrator.windowVisibility = {
-        {"CodeEditor", false},
-        {"Canvas", true},
-        {"Toolbar", true},
-        {"Info", true},
-        {"Properties", true},
-        {"Stroke", true},
-        {"AddonManager", false},
-        {"NodeEditor", false},
-        {"ThemeEditor", false},
-        {"Texture", false}
-    };
-    m_workspaces["illustrator"] = illustrator;
-    
-    // Save default workspace configs
-    for (const auto& [name, config] : m_workspaces) {
-        saveWorkspaceConfig(name);
-    }
+    // Workspaces are now loaded dynamically from JSON files
+    // This method is kept for backward compatibility but doesn't create hardcoded workspaces
+    std::cout << "Workspaces are loaded dynamically from JSON files" << std::endl;
 }
 
 void WorkspaceManager::ensureWorkspaceDirectory() {

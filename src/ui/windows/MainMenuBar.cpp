@@ -101,26 +101,12 @@ void MainMenuBar::render() {
             if (ImGui::BeginMenu("Workspace")) {
                 // Load submenu
                 if (ImGui::BeginMenu("Load")) {
-                    // Built-in workspaces
-                    if (ImGui::MenuItem("Creative Coding") && m_loadWorkspaceCallback) {
-                        m_loadWorkspaceCallback("creative_coding");
-                    }
-                    if (ImGui::MenuItem("Illustrator") && m_loadWorkspaceCallback) {
-                        m_loadWorkspaceCallback("illustrator");
-                    }
-                    
-                    // Show available custom workspaces
+                    // Show all available workspaces dynamically
                     if (m_getAvailableWorkspacesCallback) {
                         auto workspaces = m_getAvailableWorkspacesCallback();
-                        if (!workspaces.empty()) {
-                            ImGui::Separator();
-                            for (const auto& [id, name] : workspaces) {
-                                // Skip built-in workspaces
-                                if (id != "creative_coding" && id != "illustrator") {
-                                    if (ImGui::MenuItem(name.c_str()) && m_loadWorkspaceCallback) {
-                                        m_loadWorkspaceCallback(id);
-                                    }
-                                }
+                        for (const auto& [id, name] : workspaces) {
+                            if (ImGui::MenuItem(name.c_str()) && m_loadWorkspaceCallback) {
+                                m_loadWorkspaceCallback(id);
                             }
                         }
                     }
