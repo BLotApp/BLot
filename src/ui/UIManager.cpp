@@ -46,6 +46,8 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     m_logWindow = std::make_unique<LogWindow>();
     m_saveWorkspaceDialog = std::make_unique<SaveWorkspaceDialog>("Save Workspace");
     
+    m_currentTheme = ImGuiTheme::Light;
+    
     setupWindows();
     configureWindowSettings();
 }
@@ -62,8 +64,8 @@ void UIManager::initImGui() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    // Set up ImGui style (Dark theme)
-    ImGui::StyleColorsDark();
+    // Set up ImGui style (Light theme)
+    ImGui::StyleColorsLight();
     ImGuiStyle& style = ImGui::GetStyle();
     // Optionally scale UI by monitor DPI (like ofxBapp)
     float uiScale = 1.0f;

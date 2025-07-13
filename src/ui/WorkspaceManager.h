@@ -73,6 +73,12 @@ private:
     bool loadWorkspaceConfig(const std::string& workspaceName);
     bool saveWorkspaceConfig(const std::string& workspaceName);
     WorkspaceConfig createWorkspaceFromCurrentState(const std::string& workspaceName);
+    
+    // Helper function for loading optional JSON objects
+    template<typename T>
+    T loadOptionalJsonObject(const nlohmann::json& j, const std::string& key, const T& defaultValue = T{}) {
+        return j.value(key, defaultValue);
+    }
 };
 
 } // namespace blot 

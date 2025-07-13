@@ -8,6 +8,8 @@
 #include "ecs/systems/ShapeRenderingSystem.h"
 
 ECSManager::ECSManager() {
+    // Initialize event system
+    m_eventSystem = std::make_unique<systems::EventSystem>(m_registry);
 }
 
 ECSManager::~ECSManager() {
@@ -52,6 +54,11 @@ entt::entity ECSManager::findEntity(const std::string& name) {
 }
 
 void ECSManager::updateSystems(float deltaTime) {
+    // Update event system
+    if (m_eventSystem) {
+        m_eventSystem->update();
+    }
+    
     updateAnimationSystem(deltaTime);
     updateScriptSystem(deltaTime);
     updateParameterSystem();

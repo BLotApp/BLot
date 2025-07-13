@@ -10,6 +10,7 @@
 #include "components/StyleComponent.h"
 #include "components/TextureComponent.h"
 #include "ecs/systems/CanvasSystems.h"
+#include "ecs/systems/EventSystem.h"
 
 // Forward declarations
 class Canvas;
@@ -155,6 +156,10 @@ public:
     void runCanvasRenderSystem(RenderingManager* renderingManager, entt::entity activeCanvasId);
     void runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer);
     
+    // Event system access
+    systems::EventSystem& getEventSystem() { return *m_eventSystem; }
+    const systems::EventSystem& getEventSystem() const { return *m_eventSystem; }
+    
 private:
     entt::registry m_registry;
     std::unordered_map<std::string, entt::entity> m_namedEntities;
@@ -164,6 +169,9 @@ private:
     std::shared_ptr<Canvas> m_canvas;
     std::shared_ptr<Graphics> m_graphics;
     std::shared_ptr<ScriptEngine> m_scriptEngine;
+    
+    // Event system
+    std::unique_ptr<systems::EventSystem> m_eventSystem;
     
     // Systems
     void updateAnimationSystem(float deltaTime);

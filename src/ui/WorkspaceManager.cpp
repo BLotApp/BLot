@@ -329,6 +329,24 @@ bool WorkspaceManager::loadWorkspaceConfig(const std::string& workspaceName) {
             }
         }
         
+        // Load window positions using value() with default empty object
+        config.windowPositions.clear();
+        auto positions = j.value("windowPositions", nlohmann::json::object());
+        for (const auto& [window, pos] : positions.items()) {
+            if (pos.is_array() && pos.size() == 2) {
+                config.windowPositions[window] = {pos[0].get<float>(), pos[1].get<float>()};
+            }
+        }
+        
+        // Load window sizes using value() with default empty object
+        config.windowSizes.clear();
+        auto sizes = j.value("windowSizes", nlohmann::json::object());
+        for (const auto& [window, size] : sizes.items()) {
+            if (size.is_array() && size.size() == 2) {
+                config.windowSizes[window] = {size[0].get<float>(), size[1].get<float>()};
+            }
+        }
+        
         // Load ImGui layout
         config.imguiLayout = j.value("imguiLayout", "");
         

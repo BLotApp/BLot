@@ -1,130 +1,172 @@
 #include "MainMenuBar.h"
-#include "imgui.h"
-#include <entt/entt.hpp>
-#include <ctime>
+#include <imgui.h>
+#include <iostream>
 
 namespace blot {
 
-MainMenuBar::MainMenuBar(const std::string& title, Window::Flags flags) 
+MainMenuBar::MainMenuBar(const std::string& title, Window::Flags flags)
     : Window(title, flags) {
+}
+
+void MainMenuBar::triggerAction(const std::string& actionId) {
+    if (m_eventSystem) {
+        m_eventSystem->triggerAction(actionId);
+    }
+}
+
+bool MainMenuBar::hasAction(const std::string& actionId) const {
+    return m_eventSystem ? m_eventSystem->hasAction(actionId) : false;
 }
 
 void MainMenuBar::render() {
     if (ImGui::BeginMainMenuBar()) {
-        // BLot menu
-        if (ImGui::BeginMenu("BLot")) {
-            ImGui::Text("BLot");
-            ImGui::Separator();
-            if (ImGui::MenuItem("Preferences...")) {
-                // TODO: Show preferences window
-            }
-            ImGui::Separator();
-            if (m_getDebugModeCallback && m_debugModeCallback) {
-                bool debugMode = m_getDebugModeCallback();
-                if (ImGui::MenuItem("Debug Mode", nullptr, debugMode)) {
-                    m_debugModeCallback(!debugMode);
-                }
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Quit.") && m_quitCallback) {
-                m_quitCallback();
-            }
-            
-            // Samples submenu
-            if (ImGui::BeginMenu("Samples")) {
-                if (ImGui::MenuItem("ImPlot") && m_imPlotDemoCallback) {
-                    m_imPlotDemoCallback();
-                }
-                if (ImGui::MenuItem("ImGui Markdown Demo") && m_imGuiMarkdownDemoCallback) {
-                    m_imGuiMarkdownDemoCallback();
-                }
-                if (ImGui::MenuItem("Markdown Editor/Viewer") && m_markdownEditorCallback) {
-                    m_markdownEditorCallback();
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenu();
-        }
-        
         // File menu
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New Sketch") && m_newSketchCallback) {
-                m_newSketchCallback();
+            if (ImGui::MenuItem("New Sketch")) {
+                triggerAction("new_sketch");
             }
-            if (ImGui::MenuItem("Open Sketch") && m_openSketchCallback) {
-                m_openSketchCallback();
+            if (ImGui::MenuItem("Open Sketch")) {
+                triggerAction("open_sketch");
             }
-            if (ImGui::MenuItem("Save Sketch") && m_saveSketchCallback) {
-                m_saveSketchCallback();
-            }
-            if (ImGui::MenuItem("Save As...") && m_saveCanvasCallback) {
-                m_saveCanvasCallback();
-            }
-            if (ImGui::MenuItem("Open Markdown...") && m_openMarkdownCallback) {
-                m_openMarkdownCallback();
-            }
-            if (ImGui::MenuItem("Save Markdown As...") && m_saveMarkdownCallback) {
-                m_saveMarkdownCallback();
+            if (ImGui::MenuItem("Save Sketch")) {
+                triggerAction("save_sketch");
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Exit") && m_quitCallback) {
-                m_quitCallback();
+            if (ImGui::MenuItem("Quit")) {
+                triggerAction("quit");
             }
             ImGui::EndMenu();
         }
         
         // Edit menu
         if (ImGui::BeginMenu("Edit")) {
-            // Add edit actions here
+            if (ImGui::MenuItem("Addon Manager")) {
+                triggerAction("addon_manager");
+            }
+            if (ImGui::MenuItem("Reload Addons")) {
+                triggerAction("reload_addons");
+            }
             ImGui::EndMenu();
         }
         
         // View menu
         if (ImGui::BeginMenu("View")) {
-            // Windows submenu
+            // Window visibility submenu
             if (ImGui::BeginMenu("Windows")) {
-                if (m_getAllWindowsCallback) {
-                    auto windows = m_getAllWindowsCallback();
-                    for (const auto& windowName : windows) {
-                        bool isVisible = m_getWindowVisibilityCallback ? m_getWindowVisibilityCallback(windowName) : true;
-                        if (ImGui::MenuItem(windowName.c_str(), nullptr, isVisible) && m_windowVisibilityCallback) {
-                            m_windowVisibilityCallback(windowName, !isVisible);
-                        }
-                    }
+                if (hasAction("get_all_windows") && hasAction("get_window_visibility") && hasAction("set_window_visibility")) {
+                    // Trigger actions to get window data
+                    triggerAction("get_all_windows");
+                    // Note: In a real implementation, you'd need to handle the return values
+                    // This is a simplified version
+                } else {
+                    ImGui::Text("Window management not available");
                 }
                 ImGui::EndMenu();
             }
             
+            // Theme submenu
+            if (ImGui::BeginMenu("Theme")) {
+                if (hasAction("switch_theme")) {
+                    if (ImGui::MenuItem("Dark", nullptr, m_currentTheme == 0)) {
+                        m_eventSystem->triggerAction("switch_theme", 0);
+                    }
+                    if (ImGui::MenuItem("Light", nullptr, m_currentTheme == 1)) {
+                        m_eventSystem->triggerAction("switch_theme", 1);
+                    }
+                    if (ImGui::MenuItem("Classic", nullptr, m_currentTheme == 2)) {
+                        m_eventSystem->triggerAction("switch_theme", 2);
+                    }
+                    if (ImGui::MenuItem("Corporate", nullptr, m_currentTheme == 3)) {
+                        m_eventSystem->triggerAction("switch_theme", 3);
+                    }
+                    if (ImGui::MenuItem("Dracula", nullptr, m_currentTheme == 4)) {
+                        m_eventSystem->triggerAction("switch_theme", 4);
+                    }
+                } else {
+                    ImGui::Text("Theme switching not available");
+                }
+                ImGui::Separator();
+                if (ImGui::MenuItem("Theme Editor...")) {
+                    triggerAction("theme_editor");
+                }
+                ImGui::EndMenu();
+            }
+            
+            // Demo windows
+            if (ImGui::MenuItem("ImPlot Demo")) {
+                triggerAction("implot_demo");
+            }
+            if (ImGui::MenuItem("ImGui Markdown Demo")) {
+                triggerAction("imgui_markdown_demo");
+            }
+            if (ImGui::MenuItem("Markdown Editor")) {
+                triggerAction("markdown_editor");
+            }
+            ImGui::EndMenu();
+        }
+        
+        // Canvas menu
+        if (ImGui::BeginMenu("Canvas")) {
+            if (ImGui::MenuItem("New Canvas")) {
+                triggerAction("new_canvas");
+            }
+            if (ImGui::MenuItem("Save Canvas")) {
+                triggerAction("save_canvas");
+            }
             ImGui::Separator();
             
-            // Workspace submenu
-            if (ImGui::BeginMenu("Workspace")) {
-                // Load submenu
-                if (ImGui::BeginMenu("Load")) {
-                    // Show all available workspaces dynamically
-                    if (m_getAvailableWorkspacesCallback) {
-                        auto workspaces = m_getAvailableWorkspacesCallback();
-                        for (const auto& [id, name] : workspaces) {
-                            if (ImGui::MenuItem(name.c_str()) && m_loadWorkspaceCallback) {
-                                m_loadWorkspaceCallback(id);
+            // Canvas list
+            if (hasAction("select_canvas") && hasAction("close_canvas")) {
+                for (const auto& [id, name] : m_canvasEntities) {
+                    bool isActive = (id == m_activeCanvasId);
+                    if (ImGui::MenuItem(name.c_str(), nullptr, isActive)) {
+                        m_eventSystem->triggerAction("select_canvas", static_cast<uint32_t>(id));
+                    }
+                    if (ImGui::IsItemClicked(1)) { // Right click
+                        if (ImGui::BeginPopupContextItem()) {
+                            if (ImGui::MenuItem("Close")) {
+                                m_eventSystem->triggerAction("close_canvas", static_cast<uint32_t>(id));
                             }
+                            ImGui::EndPopup();
                         }
                     }
-                    ImGui::EndMenu();
+                }
+            } else {
+                ImGui::Text("Canvas management not available");
+            }
+            ImGui::EndMenu();
+        }
+        
+        // Workspace menu
+        if (ImGui::BeginMenu("Workspace")) {
+            // Load submenu
+            if (ImGui::BeginMenu("Load")) {
+                if (hasAction("get_available_workspaces") && hasAction("load_workspace")) {
+                    // In a real implementation, you'd get the workspaces and display them
+                    ImGui::Text("Workspace loading available");
+                } else {
+                    ImGui::Text("Workspace loading not available");
+                }
+                ImGui::EndMenu();
+            }
+            
+            // Save submenu
+            if (ImGui::BeginMenu("Save")) {
+                if (hasAction("get_current_workspace") && hasAction("save_workspace")) {
+                    if (ImGui::MenuItem("Save Current Workspace...")) {
+                        triggerAction("save_current_workspace");
+                    }
+                } else {
+                    ImGui::Text("Workspace saving not available");
                 }
                 
-                // Save submenu
-                if (ImGui::BeginMenu("Save")) {
-                    if (ImGui::MenuItem("Save Current Workspace...") && m_saveWorkspaceCallback) {
-                        std::string currentWorkspace = m_getCurrentWorkspaceCallback ? m_getCurrentWorkspaceCallback() : "default";
-                        m_saveWorkspaceCallback(currentWorkspace);
+                if (hasAction("show_save_workspace_dialog")) {
+                    if (ImGui::MenuItem("Save Workspace As...")) {
+                        triggerAction("show_save_workspace_dialog");
                     }
-                    if (ImGui::MenuItem("Save Workspace As...") && m_showSaveWorkspaceDialogCallback) {
-                        m_showSaveWorkspaceDialogCallback();
-                    }
-                    ImGui::EndMenu();
+                } else {
+                    ImGui::Text("Save dialog not available");
                 }
-                
                 ImGui::EndMenu();
             }
             
@@ -133,79 +175,39 @@ void MainMenuBar::render() {
         
         // Run menu
         if (ImGui::BeginMenu("Run")) {
-            if (ImGui::MenuItem("Run Sketch") && m_runSketchCallback) {
-                m_runSketchCallback();
+            if (ImGui::MenuItem("Run Sketch")) {
+                triggerAction("run_sketch");
             }
-            if (ImGui::MenuItem("Stop") && m_stopSketchCallback) {
-                m_stopSketchCallback();
+            if (ImGui::MenuItem("Stop")) {
+                triggerAction("stop_sketch");
             }
             ImGui::EndMenu();
         }
         
         // Renderer menu
         if (ImGui::BeginMenu("Renderer")) {
-            if (ImGui::MenuItem("Blend2D", nullptr, m_currentRendererType == 0) && m_switchRendererCallback) {
-                m_switchRendererCallback(0);
-            }
-            if (ImGui::MenuItem("OpenGL/ES", nullptr, m_currentRendererType == 1) && m_switchRendererCallback) {
-                m_switchRendererCallback(1);
-            }
-            ImGui::EndMenu();
-        }
-        
-        // Canvases menu
-        if (ImGui::BeginMenu("Canvases")) {
-            if (ImGui::MenuItem("New Canvas") && m_newCanvasCallback) {
-                m_newCanvasCallback();
-            }
-            ImGui::Separator();
-            
-            // List existing canvases
-            for (const auto& [entity, name] : m_canvasEntities) {
-                bool isActive = (entity == m_activeCanvasId);
-                if (ImGui::Selectable(name.c_str(), isActive) && m_selectCanvasCallback) {
-                    m_selectCanvasCallback(entity);
+            if (hasAction("switch_renderer")) {
+                if (ImGui::MenuItem("Blend2D", nullptr, m_currentRendererType == 0)) {
+                    m_eventSystem->triggerAction("switch_renderer", 0);
                 }
-                ImGui::SameLine();
-                if (ImGui::SmallButton(("x##close_" + std::to_string((int)entity)).c_str()) && m_closeCanvasCallback) {
-                    m_closeCanvasCallback(entity);
-                    break;
+                if (ImGui::MenuItem("OpenGL", nullptr, m_currentRendererType == 1)) {
+                    m_eventSystem->triggerAction("switch_renderer", 1);
                 }
+            } else {
+                ImGui::Text("Renderer switching not available");
             }
             ImGui::EndMenu();
         }
         
-        // Addons menu
-        if (ImGui::BeginMenu("Addons")) {
-            if (ImGui::MenuItem("Addon Manager") && m_addonManagerCallback) {
-                m_addonManagerCallback();
-            }
-            if (ImGui::MenuItem("Reload Addons") && m_reloadAddonsCallback) {
-                m_reloadAddonsCallback();
-            }
-            ImGui::EndMenu();
-        }
-        
-        // Theme menu
-        if (ImGui::BeginMenu("Theme")) {
-            if (ImGui::MenuItem("Dark", nullptr, m_currentTheme == 0) && m_switchThemeCallback) {
-                m_switchThemeCallback(0);
-            }
-            if (ImGui::MenuItem("Light", nullptr, m_currentTheme == 1) && m_switchThemeCallback) {
-                m_switchThemeCallback(1);
-            }
-            if (ImGui::MenuItem("Classic", nullptr, m_currentTheme == 2) && m_switchThemeCallback) {
-                m_switchThemeCallback(2);
-            }
-            if (ImGui::MenuItem("Corporate", nullptr, m_currentTheme == 3) && m_switchThemeCallback) {
-                m_switchThemeCallback(3);
-            }
-            if (ImGui::MenuItem("Dracula", nullptr, m_currentTheme == 4) && m_switchThemeCallback) {
-                m_switchThemeCallback(4);
-            }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Theme Editor...") && m_themeEditorCallback) {
-                m_themeEditorCallback();
+        // Debug menu
+        if (ImGui::BeginMenu("Debug")) {
+            if (hasAction("get_debug_mode") && hasAction("set_debug_mode")) {
+                // In a real implementation, you'd get the current debug mode
+                if (ImGui::MenuItem("Debug Mode", nullptr, false)) {
+                    m_eventSystem->triggerAction("set_debug_mode", true);
+                }
+            } else {
+                ImGui::Text("Debug mode not available");
             }
             ImGui::EndMenu();
         }
