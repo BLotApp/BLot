@@ -206,7 +206,6 @@ void WindowManager::renderAllWindows() {
         auto& styleComp = view.get<WindowStyleComponent>(entity);
         
         if (windowComp.isVisible && windowComp.window) {
-            std::cout << "[Frame] Rendering window: " << windowComp.name << std::endl;
             // Apply transform and style
             windowComp.window->setPosition(transformComp.position);
             windowComp.window->setSize(transformComp.size);

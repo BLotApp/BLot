@@ -17,6 +17,11 @@
 ## C++ Style Rules
 - Always use explicit casts for type conversions, especially for narrowing conversions and enum usage.
 
+## UI and Icons
+- **Do not use emoticons** (😀, 🌙, ☀️, 🎨, etc.) in UI text or code comments
+- Use FontAwesome icons from IconFontCppHeaders instead (e.g., `ICON_FA_MOON`, `ICON_FA_SUN`, `ICON_FA_PAINT_BRUSH`)
+- FontAwesome icons provide consistent, professional appearance and better accessibility
+
 ---
 
 *This style guide is enforced for all contributions to the BLot codebase.* 

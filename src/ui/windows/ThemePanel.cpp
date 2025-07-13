@@ -2,6 +2,7 @@
 #include "ToolbarWindow.h"
 #include <imgui.h>
 #include <cstdlib>
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 
 namespace blot {
 
@@ -23,7 +24,7 @@ void ThemePanel::render() {
 }
 
 void ThemePanel::renderRandomThemeButton() {
-    if (ImGui::Button("🎨 Random Theme")) {
+    if (ImGui::Button(ICON_FA_PALETTE " Random Theme")) {
         // Generate random colors for fun!
         auto& style = ImGui::GetStyle();
         auto& colors = style.Colors;
@@ -93,17 +94,21 @@ void ThemePanel::renderRandomThemeButton() {
         colors[ImGuiCol_NavWindowingDimBg] = randomColor();
         colors[ImGuiCol_ModalWindowDimBg] = randomColor();
         
-        printf("[ThemePanel] 🌈 Applied random theme! Colors are now completely chaotic!\n");
+        printf("[ThemePanel] Applied random theme! Colors are now completely chaotic!\n");
     }
 }
 
 void ThemePanel::renderColorPresets() {
-    if (!m_toolbarWindow) return;
+    if (!m_toolbarWindow) {
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), ICON_FA_EXCLAMATION_TRIANGLE " Toolbar not connected");
+        ImGui::Text("Color presets require toolbar connection");
+        return;
+    }
     
     ImGui::SameLine();
     
     // Quick color presets
-    if (ImGui::Button("🎨 Random Fill")) {
+    if (ImGui::Button(ICON_FA_PALETTE " Random Fill")) {
         ImVec4 randomFill = ImVec4(
             static_cast<float>(rand()) / RAND_MAX,
             static_cast<float>(rand()) / RAND_MAX,
@@ -111,42 +116,84 @@ void ThemePanel::renderColorPresets() {
             1.0f
         );
         m_toolbarWindow->setFillColor(randomFill);
-        printf("[ThemePanel] 🎨 Random fill color: (%.2f, %.2f, %.2f)\n", randomFill.x, randomFill.y, randomFill.z);
+        printf("[ThemePanel] Random fill color: (%.2f, %.2f, %.2f)\n", randomFill.x, randomFill.y, randomFill.z);
     }
     
     ImGui::SameLine();
     
-    if (ImGui::Button("⚫ No Fill")) {
+    if (ImGui::Button(ICON_FA_CIRCLE " No Fill")) {
         m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        printf("[ThemePanel] ⚫ Disabled fill\n");
+        printf("[ThemePanel] Disabled fill\n");
     }
     
     ImGui::SameLine();
     
-    if (ImGui::Button("🔴 Red Fill")) {
+    if (ImGui::Button(ICON_FA_SQUARE " Red Fill")) {
         m_toolbarWindow->setFillColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-        printf("[ThemePanel] 🔴 Set fill to red\n");
+        printf("[ThemePanel] Set fill to red\n");
     }
     
     ImGui::SameLine();
     
-    if (ImGui::Button("🟢 Green Fill")) {
+    if (ImGui::Button(ICON_FA_SQUARE " Green Fill")) {
         m_toolbarWindow->setFillColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-        printf("[ThemePanel] 🟢 Set fill to green\n");
+        printf("[ThemePanel] Set fill to green\n");
     }
     
     ImGui::SameLine();
     
-    if (ImGui::Button("🔵 Blue Fill")) {
+    if (ImGui::Button(ICON_FA_SQUARE " Blue Fill")) {
         m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-        printf("[ThemePanel] 🔵 Set fill to blue\n");
+        printf("[ThemePanel] Set fill to blue\n");
     }
 }
 
 void ThemePanel::renderThemeControls() {
     ImGui::Separator();
     ImGui::Text("Theme Controls:");
-    // TODO: Add more theme controls as needed
+    
+    // Quick theme presets
+    if (ImGui::Button(ICON_FA_MOON " Dark Theme")) {
+        ImGui::StyleColorsDark();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_SUN " Light Theme")) {
+        ImGui::StyleColorsLight();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(ICON_FA_PAINT_BRUSH " Classic Theme")) {
+        ImGui::StyleColorsClassic();
+    }
+    
+    ImGui::Separator();
+    ImGui::Text("Color Customization:");
+    
+    // Direct color editing
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4* colors = style.Colors;
+    
+    if (ImGui::CollapsingHeader("Text Colors")) {
+        ImGui::ColorEdit4("Text", (float*)&colors[ImGuiCol_Text]);
+        ImGui::ColorEdit4("Text Disabled", (float*)&colors[ImGuiCol_TextDisabled]);
+    }
+    
+    if (ImGui::CollapsingHeader("Background Colors")) {
+        ImGui::ColorEdit4("Window Background", (float*)&colors[ImGuiCol_WindowBg]);
+        ImGui::ColorEdit4("Child Background", (float*)&colors[ImGuiCol_ChildBg]);
+        ImGui::ColorEdit4("Popup Background", (float*)&colors[ImGuiCol_PopupBg]);
+    }
+    
+    if (ImGui::CollapsingHeader("Button Colors")) {
+        ImGui::ColorEdit4("Button", (float*)&colors[ImGuiCol_Button]);
+        ImGui::ColorEdit4("Button Hovered", (float*)&colors[ImGuiCol_ButtonHovered]);
+        ImGui::ColorEdit4("Button Active", (float*)&colors[ImGuiCol_ButtonActive]);
+    }
+    
+    if (ImGui::CollapsingHeader("Frame Colors")) {
+        ImGui::ColorEdit4("Frame Background", (float*)&colors[ImGuiCol_FrameBg]);
+        ImGui::ColorEdit4("Frame Hovered", (float*)&colors[ImGuiCol_FrameBgHovered]);
+        ImGui::ColorEdit4("Frame Active", (float*)&colors[ImGuiCol_FrameBgActive]);
+    }
 }
 
 } // namespace blot 

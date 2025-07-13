@@ -62,8 +62,8 @@ void UIManager::initImGui() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    // Set up ImGui style (Light theme)
-    ImGui::StyleColorsLight();
+    // Set up ImGui style (Dark theme)
+    ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     // Optionally scale UI by monitor DPI (like ofxBapp)
     float uiScale = 1.0f;
@@ -241,6 +241,11 @@ void UIManager::setupWindows() {
     auto toolbarWindow = std::make_shared<ToolbarWindow>("Toolbar###MainToolbar", Window::Flags::None);
     m_windowManager->createWindow("Toolbar", toolbarWindow);
     
+    // Connect theme panel to toolbar window
+    if (m_themePanel) {
+        m_themePanel->setToolbarWindow(toolbarWindow);
+    }
+    
     // Create info window
     auto infoWindow = std::make_shared<InfoWindow>("Info Window###MainInfoWindow", 
                                                   Window::Flags::AlwaysAutoResize);
@@ -278,6 +283,7 @@ void UIManager::setupWindows() {
     // Create and register theme editor window
     auto themeEditorWindow = std::make_shared<ThemeEditorWindow>("Theme Editor###ThemeEditor", 
                                                                Window::Flags::None);
+    themeEditorWindow->setUIManager(this);
     m_windowManager->createWindow("ThemeEditor", themeEditorWindow);
     
     // Register save workspace dialog (not shown by default)
@@ -603,6 +609,14 @@ void UIManager::setupWindowCallbacks(BlotApp* app) {
                 saveDialog->show();
             }
         });
+        
+        // Theme switching callbacks
+        mainMenuBar->setSwitchThemeCallback([this](int theme) {
+            setImGuiTheme(static_cast<ImGuiTheme>(theme));
+            m_currentTheme = static_cast<ImGuiTheme>(theme);
+        });
+        
+        mainMenuBar->setCurrentTheme(static_cast<int>(m_currentTheme));
         
         // Debug mode callbacks
         mainMenuBar->setDebugModeCallback([this](bool enabled) {

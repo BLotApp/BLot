@@ -195,7 +195,7 @@ void ToolbarWindow::renderStrokeColorButtons() {
     ImGui::Separator();
     ImGui::Text("Stroke Colors:");
     
-    if (ImGui::Button("⚫ No Stroke")) {
+    if (ImGui::Button(ICON_FA_TIMES " No Stroke")) {
         m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
         if (m_onStrokeColorChanged) {
             m_onStrokeColorChanged(m_strokeColor);
@@ -203,7 +203,7 @@ void ToolbarWindow::renderStrokeColorButtons() {
     }
     ImGui::SameLine();
     
-    if (ImGui::Button("⚪ White Stroke")) {
+    if (ImGui::Button(ICON_FA_CIRCLE " White Stroke")) {
         m_strokeColor = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
         if (m_onStrokeColorChanged) {
             m_onStrokeColorChanged(m_strokeColor);
@@ -211,7 +211,7 @@ void ToolbarWindow::renderStrokeColorButtons() {
     }
     ImGui::SameLine();
     
-    if (ImGui::Button("🔴 Red Stroke")) {
+    if (ImGui::Button(ICON_FA_CIRCLE " Red Stroke")) {
         m_strokeColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
         if (m_onStrokeColorChanged) {
             m_onStrokeColorChanged(m_strokeColor);
@@ -219,7 +219,7 @@ void ToolbarWindow::renderStrokeColorButtons() {
     }
     ImGui::SameLine();
     
-    if (ImGui::Button("🟢 Green Stroke")) {
+    if (ImGui::Button(ICON_FA_CIRCLE " Green Stroke")) {
         m_strokeColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
         if (m_onStrokeColorChanged) {
             m_onStrokeColorChanged(m_strokeColor);
@@ -227,7 +227,7 @@ void ToolbarWindow::renderStrokeColorButtons() {
     }
     ImGui::SameLine();
     
-    if (ImGui::Button("🔵 Blue Stroke")) {
+    if (ImGui::Button(ICON_FA_CIRCLE " Blue Stroke")) {
         m_strokeColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
         if (m_onStrokeColorChanged) {
             m_onStrokeColorChanged(m_strokeColor);
