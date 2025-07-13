@@ -157,8 +157,8 @@ public:
     void runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer);
     
     // Event system access
-    systems::EventSystem& getEventSystem() { return *m_eventSystem; }
-    const systems::EventSystem& getEventSystem() const { return *m_eventSystem; }
+    blot::systems::EventSystem& getEventSystem() { return *m_eventSystem; }
+    const blot::systems::EventSystem& getEventSystem() const { return *m_eventSystem; }
     
 private:
     entt::registry m_registry;
@@ -171,7 +171,7 @@ private:
     std::shared_ptr<ScriptEngine> m_scriptEngine;
     
     // Event system
-    std::unique_ptr<systems::EventSystem> m_eventSystem;
+    std::unique_ptr<blot::systems::EventSystem> m_eventSystem;
     
     // Systems
     void updateAnimationSystem(float deltaTime);

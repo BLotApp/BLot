@@ -2,6 +2,8 @@
 
 #include "Window.h"
 #include "../../ecs/systems/EventSystem.h"
+#include "../../canvas/Canvas.h"
+#include "../../canvas/CanvasManager.h"
 #include <functional>
 #include <vector>
 #include <string>
@@ -12,6 +14,10 @@ class ECSManager;
 
 namespace blot {
 
+// Forward declarations
+class CodeEditorWindow;
+class UIManager;
+
 class MainMenuBar : public Window {
 public:
     MainMenuBar(const std::string& title, Window::Flags flags = Window::Flags::None);
@@ -20,9 +26,19 @@ public:
     // Set the event system
     void setEventSystem(systems::EventSystem* eventSystem) { m_eventSystem = eventSystem; }
     
+    // Set CodeEditorWindow reference for theme state
+    void setCodeEditorWindow(std::shared_ptr<blot::CodeEditorWindow> window) { m_codeEditorWindow = window; }
+    
+    // Set Canvas reference for renderer state
+    void setCanvas(std::shared_ptr<::Canvas> canvas) { m_canvas = canvas; }
+    
+    // Set CanvasManager reference for canvas operations
+    void setCanvasManager(std::shared_ptr<blot::CanvasManager> canvasManager) { m_canvasManager = canvasManager; }
+    
+    // Set UIManager reference for ImGui theme
+    void setUIManager(UIManager* uiManager) { m_uiManager = uiManager; }
+    
     // State setters (for menu state)
-    void setCurrentTheme(int theme) { m_currentTheme = theme; }
-    void setCurrentRendererType(int type) { m_currentRendererType = type; }
     void setActiveCanvasId(uint32_t id) { m_activeCanvasId = id; }
     void setCanvasEntities(const std::vector<std::pair<uint32_t, std::string>>& entities) { m_canvasEntities = entities; }
 
@@ -33,9 +49,19 @@ private:
     // Event system reference
     systems::EventSystem* m_eventSystem = nullptr;
     
+    // CodeEditorWindow reference for theme state
+    std::shared_ptr<blot::CodeEditorWindow> m_codeEditorWindow;
+    
+    // Canvas reference for renderer state
+    std::shared_ptr<::Canvas> m_canvas;
+    
+    // CanvasManager reference for canvas operations
+    std::shared_ptr<blot::CanvasManager> m_canvasManager;
+    
+    // UIManager reference for ImGui theme
+    UIManager* m_uiManager = nullptr;
+    
     // State variables
-    int m_currentRendererType = 0;
-    int m_currentTheme = 0;
     uint32_t m_activeCanvasId = 0;
     std::vector<std::pair<uint32_t, std::string>> m_canvasEntities;
     

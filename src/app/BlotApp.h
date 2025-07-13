@@ -27,6 +27,10 @@
 
 #include "AppSettings.h"
 
+#include "canvas/Canvas.h"
+#include "canvas/CanvasManager.h"
+#include "rendering/Graphics.h"
+
 // Forward declarations
 class Graphics;
 class TextRenderer;
@@ -50,12 +54,23 @@ public:
     GLFWwindow* getWindow() const { return m_window; }
     bool isRunning() const { return m_running; }
     
+    // Getters for external access
+    ECSManager* getECSManager() { return m_ecsManager.get(); }
+    ScriptEngine* getScriptEngine() { return m_scriptEngine.get(); }
+    AddonManager* getAddonManager() { return m_addonManager.get(); }
+    RenderingManager* getRenderingManager() { return m_renderingManager.get(); }
+    std::shared_ptr<blot::CanvasManager> getCanvasManager() { return m_canvasManager; }
+    blot::UIManager* getUIManager() { return m_uiManager.get(); }
+    
 private:
     void initWindow();
     void initGraphics();
     void initAddons();
     void setup();
     void update();
+    void connectEventSystemToUI();
+    void connectAddonManagerToEventSystem(blot::systems::EventSystem& eventSystem);
+    void registerUIActions(blot::systems::EventSystem& eventSystem);
 
     // App Window
     GLFWwindow* m_window;
@@ -75,8 +90,10 @@ private:
     
     // App Management
     std::unique_ptr<ECSManager> m_ecsManager;
+    std::unique_ptr<ScriptEngine> m_scriptEngine;
     std::unique_ptr<AddonManager> m_addonManager;
     std::unique_ptr<RenderingManager> m_renderingManager;
+    std::shared_ptr<blot::CanvasManager> m_canvasManager;
     std::unique_ptr<blot::UIManager> m_uiManager;
 
     // App Systems
@@ -86,7 +103,6 @@ private:
     std::shared_ptr<Graphics> m_graphics;
 
     std::unique_ptr<CodeEditor> m_codeEditor;
-    std::unique_ptr<ScriptEngine> m_scriptEngine;
 
     // Node editor state (for NodeEditorWindow)
     std::vector<Node> m_nodes;

@@ -1,6 +1,9 @@
 #include "MainMenuBar.h"
+#include "CodeEditorWindow.h"
+#include "../../ui/UIManager.h"
 #include <imgui.h>
 #include <iostream>
+#include "canvas/Canvas.h"
 
 namespace blot {
 
@@ -67,19 +70,25 @@ void MainMenuBar::render() {
             // Theme submenu
             if (ImGui::BeginMenu("Theme")) {
                 if (hasAction("switch_theme")) {
-                    if (ImGui::MenuItem("Dark", nullptr, m_currentTheme == 0)) {
+                    // Get current theme from UIManager (global ImGui theme)
+                    int currentTheme = 0; // Default to Dark
+                    if (m_uiManager) {
+                        currentTheme = static_cast<int>(m_uiManager->getImGuiTheme());
+                    }
+                    
+                    if (ImGui::MenuItem("Dark", nullptr, currentTheme == 0)) {
                         m_eventSystem->triggerAction("switch_theme", 0);
                     }
-                    if (ImGui::MenuItem("Light", nullptr, m_currentTheme == 1)) {
+                    if (ImGui::MenuItem("Light", nullptr, currentTheme == 1)) {
                         m_eventSystem->triggerAction("switch_theme", 1);
                     }
-                    if (ImGui::MenuItem("Classic", nullptr, m_currentTheme == 2)) {
+                    if (ImGui::MenuItem("Classic", nullptr, currentTheme == 2)) {
                         m_eventSystem->triggerAction("switch_theme", 2);
                     }
-                    if (ImGui::MenuItem("Corporate", nullptr, m_currentTheme == 3)) {
+                    if (ImGui::MenuItem("Corporate", nullptr, currentTheme == 3)) {
                         m_eventSystem->triggerAction("switch_theme", 3);
                     }
-                    if (ImGui::MenuItem("Dracula", nullptr, m_currentTheme == 4)) {
+                    if (ImGui::MenuItem("Dracula", nullptr, currentTheme == 4)) {
                         m_eventSystem->triggerAction("switch_theme", 4);
                     }
                 } else {
@@ -115,17 +124,22 @@ void MainMenuBar::render() {
             }
             ImGui::Separator();
             
-            // Canvas list
-            if (hasAction("select_canvas") && hasAction("close_canvas")) {
-                for (const auto& [id, name] : m_canvasEntities) {
-                    bool isActive = (id == m_activeCanvasId);
+            // Canvas list using CanvasManager
+            if (m_canvasManager) {
+                auto canvasInfo = m_canvasManager->getAllCanvasInfo();
+                size_t activeIndex = m_canvasManager->getActiveCanvasIndex();
+                
+                for (const auto& canvasPair : canvasInfo) {
+                    size_t index = canvasPair.first;
+                    const std::string& name = canvasPair.second;
+                    bool isActive = (index == activeIndex);
                     if (ImGui::MenuItem(name.c_str(), nullptr, isActive)) {
-                        m_eventSystem->triggerAction("select_canvas", static_cast<uint32_t>(id));
+                        m_eventSystem->triggerAction("switch_canvas", static_cast<uint32_t>(index));
                     }
                     if (ImGui::IsItemClicked(1)) { // Right click
                         if (ImGui::BeginPopupContextItem()) {
-                            if (ImGui::MenuItem("Close")) {
-                                m_eventSystem->triggerAction("close_canvas", static_cast<uint32_t>(id));
+                            if (ImGui::MenuItem("Close") && m_canvasManager->getCanvasCount() > 1) {
+                                m_eventSystem->triggerAction("close_active_canvas");
                             }
                             ImGui::EndPopup();
                         }
@@ -187,11 +201,15 @@ void MainMenuBar::render() {
         // Renderer menu
         if (ImGui::BeginMenu("Renderer")) {
             if (hasAction("switch_renderer")) {
-                if (ImGui::MenuItem("Blend2D", nullptr, m_currentRendererType == 0)) {
-                    m_eventSystem->triggerAction("switch_renderer", 0);
+                RendererType currentType = RendererType::Blend2D;
+                if (m_canvas) {
+                    currentType = m_canvas->getRendererType();
                 }
-                if (ImGui::MenuItem("OpenGL", nullptr, m_currentRendererType == 1)) {
-                    m_eventSystem->triggerAction("switch_renderer", 1);
+                if (ImGui::MenuItem("Blend2D", nullptr, currentType == RendererType::Blend2D)) {
+                    m_eventSystem->triggerAction("switch_renderer", static_cast<int>(RendererType::Blend2D));
+                }
+                if (ImGui::MenuItem("OpenGL", nullptr, currentType == RendererType::OpenGL)) {
+                    m_eventSystem->triggerAction("switch_renderer", static_cast<int>(RendererType::OpenGL));
                 }
             } else {
                 ImGui::Text("Renderer switching not available");

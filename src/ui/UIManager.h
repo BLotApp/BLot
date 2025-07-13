@@ -94,10 +94,14 @@ public:
     // Save workspace dialog access
     SaveWorkspaceDialog* getSaveWorkspaceDialog() { return m_saveWorkspaceDialog.get(); }
 
+    // Global ImGui theme for the entire UI
     enum class ImGuiTheme { Dark, Light, Classic, Corporate, Dracula };
-    ImGuiTheme m_currentTheme = ImGuiTheme::Dark;
-    std::string m_lastThemePath = "theme.json";
+    ImGuiTheme m_currentTheme = ImGuiTheme::Light;
     void setImGuiTheme(ImGuiTheme theme);
+    ImGuiTheme getImGuiTheme() const { return m_currentTheme; }
+    
+    // Theme file management
+    std::string m_lastThemePath = "themes/default.json";
     void saveCurrentTheme(const std::string& path);
     void loadTheme(const std::string& path);
 

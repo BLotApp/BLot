@@ -9,7 +9,7 @@
 
 ECSManager::ECSManager() {
     // Initialize event system
-    m_eventSystem = std::make_unique<systems::EventSystem>(m_registry);
+    m_eventSystem = std::make_unique<blot::systems::EventSystem>(m_registry);
 }
 
 ECSManager::~ECSManager() {

@@ -14,6 +14,7 @@
 #include "windows/StrokeWindow.h"
 #include "windows/MainMenuBar.h"
 #include "windows/SaveWorkspaceDialog.h"
+#include "windows/CanvasWindow.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -23,6 +24,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 namespace blot {
 
@@ -248,6 +250,11 @@ void UIManager::setupWindows() {
         m_themePanel->setToolbarWindow(toolbarWindow);
     }
     
+    // Create canvas window
+    auto canvasWindow = std::make_shared<CanvasWindow>("Canvas###MainCanvas", 
+                                                      Window::Flags::NoScrollbar | Window::Flags::NoCollapse);
+    m_windowManager->createWindow("Canvas", canvasWindow);
+    
     // Create info window
     auto infoWindow = std::make_shared<InfoWindow>("Info Window###MainInfoWindow", 
                                                   Window::Flags::AlwaysAutoResize);
@@ -404,30 +411,84 @@ void UIManager::setImGuiTheme(ImGuiTheme theme) {
     m_currentTheme = theme;
 }
 
-void UIManager::loadTheme(const std::string& path) {
-    ImGuiStyle& style = ImGui::GetStyle();
-    std::ifstream in(path);
-    if (!in) return;
-    nlohmann::json j;
-    in >> j;
-    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
-        auto it = j.find(ImGui::GetStyleColorName(i));
-        if (it != j.end() && it->is_array() && it->size() == 4) {
-            style.Colors[i] = ImVec4((*it)[0].get<float>(), (*it)[1].get<float>(), (*it)[2].get<float>(), (*it)[3].get<float>());
+void UIManager::saveCurrentTheme(const std::string& path) {
+    try {
+        // Create themes directory if it doesn't exist
+        std::filesystem::create_directories("themes");
+        
+        // Save current ImGui style to JSON
+        nlohmann::json themeJson;
+        ImGuiStyle& style = ImGui::GetStyle();
+        
+        // Save colors
+        nlohmann::json colors;
+        for (int i = 0; i < ImGuiCol_COUNT; i++) {
+            ImVec4& color = style.Colors[i];
+            colors[std::to_string(i)] = {
+                color.x, color.y, color.z, color.w
+            };
         }
+        themeJson["colors"] = colors;
+        
+        // Save style variables
+        themeJson["style"]["Alpha"] = style.Alpha;
+        themeJson["style"]["WindowRounding"] = style.WindowRounding;
+        themeJson["style"]["FrameRounding"] = style.FrameRounding;
+        themeJson["style"]["GrabRounding"] = style.GrabRounding;
+        
+        // Write to file
+        std::ofstream file(path);
+        file << themeJson.dump(4);
+        file.close();
+        
+        m_lastThemePath = path;
+        std::cout << "Theme saved to: " << path << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to save theme: " << e.what() << std::endl;
     }
 }
 
-void UIManager::saveCurrentTheme(const std::string& path) {
-    ImGuiStyle& style = ImGui::GetStyle();
-    nlohmann::json j;
-    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
-        j[ImGui::GetStyleColorName(i)] = {
-            style.Colors[i].x, style.Colors[i].y, style.Colors[i].z, style.Colors[i].w
-        };
+void UIManager::loadTheme(const std::string& path) {
+    try {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open theme file: " << path << std::endl;
+            return;
+        }
+        
+        nlohmann::json themeJson;
+        file >> themeJson;
+        file.close();
+        
+        ImGuiStyle& style = ImGui::GetStyle();
+        
+        // Load colors
+        if (themeJson.contains("colors")) {
+            auto& colors = themeJson["colors"];
+            for (int i = 0; i < ImGuiCol_COUNT; i++) {
+                if (colors.contains(std::to_string(i))) {
+                    auto& color = colors[std::to_string(i)];
+                    style.Colors[i] = ImVec4(
+                        color[0], color[1], color[2], color[3]
+                    );
+                }
+            }
+        }
+        
+        // Load style variables
+        if (themeJson.contains("style")) {
+            auto& styleJson = themeJson["style"];
+            if (styleJson.contains("Alpha")) style.Alpha = styleJson["Alpha"];
+            if (styleJson.contains("WindowRounding")) style.WindowRounding = styleJson["WindowRounding"];
+            if (styleJson.contains("FrameRounding")) style.FrameRounding = styleJson["FrameRounding"];
+            if (styleJson.contains("GrabRounding")) style.GrabRounding = styleJson["GrabRounding"];
+        }
+        
+        m_lastThemePath = path;
+        std::cout << "Theme loaded from: " << path << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load theme: " << e.what() << std::endl;
     }
-    std::ofstream out(path);
-    out << j.dump(2);
 }
 
 void UIManager::setWindowVisibility(const std::string& windowName, bool visible) {
@@ -533,101 +594,11 @@ std::vector<std::string> UIManager::getAllWorkspaceNames() const {
 void UIManager::setupWindowCallbacks(BlotApp* app) {
     if (!m_windowManager || !app) return;
     
-    // Get the main menu bar and set up its callbacks
+    // Get the main menu bar and set up its event system
     auto mainMenuBar = std::dynamic_pointer_cast<MainMenuBar>(m_windowManager->getWindow("MainMenuBar"));
     if (mainMenuBar) {
-        // Configure main menu bar callbacks
-        mainMenuBar->setQuitCallback([app]() {
-            // This will be handled by the app's main loop
-        });
-        
-        mainMenuBar->setAddonManagerCallback([this]() {
-            auto addonManagerWindow = m_windowManager->getWindow("AddonManager");
-            if (addonManagerWindow) {
-                addonManagerWindow->show();
-            }
-        });
-        
-        mainMenuBar->setReloadAddonsCallback([app]() {
-            // This will be handled by the app
-        });
-        
-        mainMenuBar->setThemeEditorCallback([this]() {
-            auto themeEditorWindow = m_windowManager->getWindow("ThemeEditor");
-            if (themeEditorWindow) {
-                themeEditorWindow->show();
-            }
-        });
-        
-        // Window visibility management callbacks
-        mainMenuBar->setWindowVisibilityCallback([this](const std::string& windowName, bool visible) {
-            setWindowVisibility(windowName, visible);
-        });
-        
-        mainMenuBar->setGetWindowVisibilityCallback([this](const std::string& windowName) {
-            return getWindowVisibility(windowName);
-        });
-        
-        mainMenuBar->setGetAllWindowsCallback([this]() {
-            return getAllWindowNames();
-        });
-        
-        // Workspace management callbacks
-        mainMenuBar->setLoadWorkspaceCallback([this](const std::string& workspaceName) {
-            loadWorkspace(workspaceName);
-        });
-        
-        mainMenuBar->setSaveWorkspaceCallback([this](const std::string& workspaceName) {
-            saveWorkspace(workspaceName);
-        });
-        
-        mainMenuBar->setSaveWorkspaceAsCallback([this](const std::string& workspaceName) {
-            saveWorkspaceAs(workspaceName);
-        });
-        
-        mainMenuBar->setCurrentWorkspaceCallback([this]() {
-            return getCurrentWorkspace();
-        });
-        
-        mainMenuBar->setGetAvailableWorkspacesCallback([this]() {
-            std::vector<std::string> workspaceNames = getAllWorkspaceNames();
-            std::vector<std::pair<std::string, std::string>> workspaces;
-            for (const auto& name : workspaceNames) {
-                workspaces.push_back({name, name}); // Use name as both id and display name
-            }
-            return workspaces;
-        });
-        
-        mainMenuBar->setShowSaveWorkspaceDialogCallback([this]() {
-            auto saveDialog = getSaveWorkspaceDialog();
-            if (saveDialog) {
-                saveDialog->setInitialWorkspaceName(getCurrentWorkspace());
-                saveDialog->setSaveCallback([this](const std::string& workspaceName) {
-                    saveWorkspaceAs(workspaceName);
-                });
-                saveDialog->setCancelCallback([this]() {
-                    // Dialog will close itself
-                });
-                saveDialog->show();
-            }
-        });
-        
-        // Theme switching callbacks
-        mainMenuBar->setSwitchThemeCallback([this](int theme) {
-            setImGuiTheme(static_cast<ImGuiTheme>(theme));
-            m_currentTheme = static_cast<ImGuiTheme>(theme);
-        });
-        
-        mainMenuBar->setCurrentTheme(static_cast<int>(m_currentTheme));
-        
-        // Debug mode callbacks
-        mainMenuBar->setDebugModeCallback([this](bool enabled) {
-            setDebugMode(enabled);
-        });
-        
-        mainMenuBar->setGetDebugModeCallback([this]() {
-            return m_debugMode;
-        });
+        // The MainMenuBar now uses the event system instead of individual callbacks
+        // All actions are registered through the event system in BlotApp::registerUIActions
     }
     
     // Get the toolbar and set up its callbacks

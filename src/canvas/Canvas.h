@@ -76,6 +76,11 @@ public:
     // Renderer management
     void switchRenderer(RendererType type);
     void setRenderer(std::unique_ptr<IRenderer> renderer);
+    RendererType getRendererType() const;
+    
+    // Name management
+    void setName(const std::string& name) { m_name = name; }
+    std::string getName() const { return m_name; }
 
 private:
     void initFramebuffer();
@@ -108,4 +113,7 @@ private:
     float m_time;
     float m_frameRate;
     int m_frameCount;
+    
+    // Name of the canvas
+    std::string m_name;
 }; 

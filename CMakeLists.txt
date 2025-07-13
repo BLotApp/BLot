@@ -84,6 +84,7 @@ set(SOURCES
     src/app/BlotApp.cpp
     src/app/AppSettings.cpp
     src/canvas/Canvas.cpp
+    src/canvas/CanvasManager.cpp
     src/rendering/Graphics.cpp
     src/rendering/Blend2DRenderer.cpp
     src/rendering/Renderer.cpp
@@ -275,7 +276,7 @@ target_link_libraries(blend2d_test PRIVATE blend2d::blend2d)
 
 # Organize source files into folders for Visual Studio
 source_group("App" FILES src/app/main.cpp src/app/BlotApp.cpp)
-source_group("Canvas" FILES src/canvas/Canvas.cpp)
+source_group("Canvas" FILES src/canvas/Canvas.cpp src/canvas/CanvasManager.cpp src/canvas/CanvasManager.h)
 source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Blend2DRenderer.cpp src/rendering/Renderer.cpp)
 source_group("CodeEditor" FILES src/ui/CodeEditor.cpp src/ui/CodeEditor.h)
 source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)

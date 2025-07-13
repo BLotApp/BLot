@@ -42,6 +42,30 @@ Canvas::Canvas(int width, int height, std::shared_ptr<Graphics> graphics)
     clear(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
+Canvas::Canvas(int width, int height)
+    : m_width(width)
+    , m_height(height)
+    , m_impl(std::make_unique<Impl>())
+    , m_graphics(std::make_shared<Graphics>())
+    , m_hasFill(true)
+    , m_hasStroke(true)
+    , m_fillColor(1.0f, 1.0f, 1.0f, 1.0f)
+    , m_strokeColor(0.0f, 0.0f, 0.0f, 1.0f)
+    , m_strokeWeight(1.0f)
+    , m_textSize(12.0f)
+    , m_textAlign(0)
+    , m_time(0.0f)
+    , m_frameRate(60.0f)
+    , m_frameCount(0)
+{
+    m_currentMatrix = glm::mat4(1.0f);
+    m_graphics->setCanvasSize(m_width, m_height);
+    initFramebuffer();
+    initShaders();
+    // Set default background to white
+    clear(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
 Canvas::~Canvas() {
 	if (m_impl->framebuffer) {
 		glDeleteFramebuffers(1, &m_impl->framebuffer);
@@ -499,4 +523,11 @@ void Canvas::setRenderer(std::unique_ptr<IRenderer> renderer) {
             std::cerr << "Failed to initialize renderer: " << renderer->getName() << std::endl;
         }
     }
+} 
+
+RendererType Canvas::getRendererType() const {
+    if (m_graphics && m_graphics->getRenderer()) {
+        return m_graphics->getRenderer()->getType();
+    }
+    return RendererType::Blend2D; // Default or fallback
 } 
