@@ -169,7 +169,7 @@ void BlotApp::initGraphics() {
     m_renderingManager = std::make_unique<RenderingManager>();
     
     // Initialize canvas manager
-    m_canvasManager = std::make_shared<blot::CanvasManager>();
+    m_canvasManager = std::make_unique<blot::CanvasManager>();
     
     // Create a default canvas
     auto defaultCanvas = m_canvasManager->createCanvas(m_windowWidth, m_windowHeight, "Default Canvas");
@@ -248,7 +248,7 @@ void BlotApp::connectEventSystemToUI() {
             if (activeCanvas) {
                 mainMenuBar->setCanvas(activeCanvas);
             }
-            mainMenuBar->setCanvasManager(m_canvasManager);
+            mainMenuBar->setCanvasManager(m_canvasManager.get());
         }
     }
     

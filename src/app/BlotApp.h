@@ -59,7 +59,7 @@ public:
     ScriptEngine* getScriptEngine() { return m_scriptEngine.get(); }
     AddonManager* getAddonManager() { return m_addonManager.get(); }
     RenderingManager* getRenderingManager() { return m_renderingManager.get(); }
-    std::shared_ptr<blot::CanvasManager> getCanvasManager() { return m_canvasManager; }
+    blot::CanvasManager* getCanvasManager() { return m_canvasManager.get(); }
     blot::UIManager* getUIManager() { return m_uiManager.get(); }
     
 private:
@@ -93,7 +93,7 @@ private:
     std::unique_ptr<ScriptEngine> m_scriptEngine;
     std::unique_ptr<AddonManager> m_addonManager;
     std::unique_ptr<RenderingManager> m_renderingManager;
-    std::shared_ptr<blot::CanvasManager> m_canvasManager;
+    std::unique_ptr<blot::CanvasManager> m_canvasManager;
     std::unique_ptr<blot::UIManager> m_uiManager;
 
     // App Systems

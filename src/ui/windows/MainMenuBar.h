@@ -33,7 +33,7 @@ public:
     void setCanvas(std::shared_ptr<::Canvas> canvas) { m_canvas = canvas; }
     
     // Set CanvasManager reference for canvas operations
-    void setCanvasManager(std::shared_ptr<blot::CanvasManager> canvasManager) { m_canvasManager = canvasManager; }
+    void setCanvasManager(blot::CanvasManager* canvasManager) { m_canvasManager = canvasManager; }
     
     // Set UIManager reference for ImGui theme
     void setUIManager(UIManager* uiManager) { m_uiManager = uiManager; }
@@ -56,7 +56,7 @@ private:
     std::shared_ptr<::Canvas> m_canvas;
     
     // CanvasManager reference for canvas operations
-    std::shared_ptr<blot::CanvasManager> m_canvasManager;
+    blot::CanvasManager* m_canvasManager = nullptr;
     
     // UIManager reference for ImGui theme
     UIManager* m_uiManager = nullptr;
