@@ -118,6 +118,7 @@ private:
 
     // Hide all windows except menubar flag
     bool m_bHideWindows = false;
+    bool m_bHideMainMenuBar = false;
 
     // Shortcut manager
     ShortcutManager m_shortcutManager;

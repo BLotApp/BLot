@@ -208,14 +208,17 @@ void UIManager::setupDockspace() {
 }
 
 void UIManager::renderAllWindows() {
-    // Always render the main menu bar
-    if (m_mainMenuBar) {
+
+    if (m_mainMenuBar && !m_bHideMainMenuBar) {
         m_mainMenuBar->render();
     }
-    // Render all other windows (managed by WindowManager)
+
+    // Render all windows
     if (m_windowManager) {
-        for (const auto& name : m_windowManager->getAllWindowNames()) {
-            m_windowManager->setWindowVisible(name, !m_bHideWindows);
+        if (m_bHideWindows) {
+            for (const auto& name : m_windowManager->getAllWindowNames()) {
+                m_windowManager->setWindowVisible(name, false);
+            }
         }
         m_windowManager->renderAllWindows();
     }
