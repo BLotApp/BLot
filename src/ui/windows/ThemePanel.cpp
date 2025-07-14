@@ -10,17 +10,10 @@ ThemePanel::ThemePanel(const std::string& title, Flags flags)
     : Window(title, flags) {
 }
 
-void ThemePanel::render() {
-    if (m_isOpen) {
-        bool open = m_isOpen;
-        if (ImGui::Begin(m_title.c_str(), &open, m_flags)) {
-            renderRandomThemeButton();
-            renderColorPresets();
-            renderThemeControls();
-        }
-        ImGui::End();
-        m_isOpen = open;
-    }
+void ThemePanel::renderContents() {
+    renderRandomThemeButton();
+    renderColorPresets();
+    renderThemeControls();
 }
 
 void ThemePanel::renderRandomThemeButton() {

@@ -13,7 +13,7 @@ public:
     virtual ~AddonManagerWindow() = default;
 
     void setAddonManager(std::shared_ptr<AddonManager> addonManager);
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     std::shared_ptr<AddonManager> m_addonManager;

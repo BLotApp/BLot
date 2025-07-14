@@ -46,15 +46,10 @@ void CodeEditorWindow::setOnCodeChanged(std::function<void(const std::string&)> 
     m_onCodeChanged = callback;
 }
 
-void CodeEditorWindow::render() {
-    if (isOpen()) {
-        if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
-            renderToolbar();
-            renderEditor();
-            renderStatusBar();
-        }
-        ImGui::End();
-    }
+void CodeEditorWindow::renderContents() {
+    renderToolbar();
+    renderEditor();
+    renderStatusBar();
 }
 
 void CodeEditorWindow::renderToolbar() {

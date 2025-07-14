@@ -17,9 +17,8 @@ public:
     void setToolbarWindow(std::shared_ptr<ToolbarWindow> toolbarWindow) { 
         m_toolbarWindow = toolbarWindow; 
     }
-    
-    // Rendering
-    virtual void render() override;
+
+    void renderContents() override;
 
 private:
     std::shared_ptr<ToolbarWindow> m_toolbarWindow;

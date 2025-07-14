@@ -9,6 +9,7 @@
 struct GLFWwindow;
 #include "windows/SaveWorkspaceDialog.h"
 class BlotApp;
+#include "windows/MainMenuBar.h"
 
 #include "WindowManager.h"
 #include "WorkspaceManager.h"
@@ -131,6 +132,7 @@ private:
     // Setup methods
     void setupWindows();
     void configureWindowSettings();
+    std::unique_ptr<MainMenuBar> m_mainMenuBar;
 };
 
 } // namespace blot 

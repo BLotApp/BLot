@@ -55,12 +55,9 @@ std::string TextureViewerWindow::getTitle() const {
     return m_title;
 }
 
-void TextureViewerWindow::render() {
-    if (ImGui::Begin(m_title.c_str(), &m_isOpen, m_flags)) {
-        drawTexture();
-        handleMouseInput();
-    }
-    ImGui::End();
+void TextureViewerWindow::renderContents() {
+    drawTexture();
+    handleMouseInput();
 }
 
 void TextureViewerWindow::drawTexture() {

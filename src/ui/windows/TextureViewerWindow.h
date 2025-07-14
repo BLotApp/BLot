@@ -19,7 +19,7 @@ public:
     ImVec2 getTextureSize() const;
     std::string getName() const;
     std::string getTitle() const;
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     void drawTexture();

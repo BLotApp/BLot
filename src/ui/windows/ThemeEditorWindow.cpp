@@ -14,12 +14,9 @@ void ThemeEditorWindow::setUIManager(UIManager* uiManager) {
     m_uiManager = uiManager;
 }
 
-void ThemeEditorWindow::render() {
-    if (!isOpen() || !m_uiManager) return;
-    
-    ImGui::Begin(getTitle().c_str(), &m_isOpen, static_cast<ImGuiWindowFlags>(getFlags()));
+void ThemeEditorWindow::renderContents() {
+    if (!m_uiManager) return;
     renderThemeEditor();
-    ImGui::End();
 }
 
 void ThemeEditorWindow::renderThemeEditor() {

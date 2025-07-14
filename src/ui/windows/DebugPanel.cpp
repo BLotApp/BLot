@@ -11,18 +11,11 @@ DebugPanel::DebugPanel(const std::string& title, Flags flags)
     : Window(title, flags) {
 }
 
-void DebugPanel::render() {
-    if (m_isOpen) {
-        bool open = m_isOpen;
-        if (ImGui::Begin(m_title.c_str(), &open, m_flags)) {
-            renderDebugInfo();
-            renderClearShapesButton();
-            renderEntityInfo();
-            renderPerformanceInfo();
-        }
-        ImGui::End();
-        m_isOpen = open;
-    }
+void DebugPanel::renderContents() {
+    renderDebugInfo();
+    renderClearShapesButton();
+    renderEntityInfo();
+    renderPerformanceInfo();
 }
 
 void DebugPanel::renderDebugInfo() {

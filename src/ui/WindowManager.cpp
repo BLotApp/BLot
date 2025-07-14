@@ -103,20 +103,8 @@ std::vector<std::pair<std::string, std::string>> WindowManager::getAllWindowsWit
     auto view = m_registry.view<WindowComponent, WindowSettingsComponent>();
     for (auto entity : view) {
         const auto& windowComp = view.get<WindowComponent>(entity);
-        const auto& settingsComp = view.get<WindowSettingsComponent>(entity);
-        
-        // Use the window name as both the ID and display name
-        // In the future, we could add a display name field to WindowSettingsComponent
-        std::string displayName = windowComp.name;
-        
-        // Make the display name more user-friendly
-        if (displayName == "MainMenuBar") displayName = "Main Menu Bar";
-        else if (displayName == "CodeEditor") displayName = "Code Editor";
-        else if (displayName == "AddonManager") displayName = "Addon Manager";
-        else if (displayName == "NodeEditor") displayName = "Node Editor";
-        else if (displayName == "ThemeEditor") displayName = "Theme Editor";
-        else if (displayName == "Texture") displayName = "Texture Viewer";
-        
+        // Use the window's title for display, fallback to name if window is null
+        std::string displayName = windowComp.window ? windowComp.window->getTitle() : windowComp.name;
         windows.push_back({windowComp.name, displayName});
     }
     return windows;
@@ -307,7 +295,6 @@ bool WindowManager::isWindowVisible(const std::string& name) {
 }
 
 void WindowManager::setWindowVisible(const std::string& name, bool visible) {
-    std::cout << "setWindowVisible: " << name << " -> " << (visible ? "visible" : "hidden") << std::endl;
     auto entity = getWindowEntity(name);
     if (entity != entt::null) {
         auto& windowComp = m_registry.get<WindowComponent>(entity);

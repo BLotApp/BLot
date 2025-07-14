@@ -30,8 +30,7 @@ public:
     ImVec2 getCanvasMousePos() const;
     bool isMouseInsideCanvas() const;
 
-    // Rendering
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     // Canvas state

@@ -54,17 +54,10 @@ void InfoWindow::setShowMouseCoordinates(bool show) {
     m_showMouseCoordinates = show;
 }
 
-void InfoWindow::render() {
-    if (m_isOpen) {
-        bool open = m_isOpen;
-        if (ImGui::Begin(m_title.c_str(), &open, m_flags)) {
-            renderMouseInfo();
-            renderToolInfo();
-            renderCoordinateInfo();
-        }
-        ImGui::End();
-        m_isOpen = open;
-    }
+void InfoWindow::renderContents() {
+    renderMouseInfo();
+    renderToolInfo();
+    renderCoordinateInfo();
 }
 
 void InfoWindow::renderMouseInfo() {

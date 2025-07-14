@@ -40,27 +40,19 @@ void NodeEditorWindow::setECSManager(std::shared_ptr<ECSManager> ecs) {
     m_ecs = ecs;
 }
 
-void NodeEditorWindow::render() {
+void NodeEditorWindow::renderContents() {
     if (!m_ecs || !m_editorContext) return;
-    
-    if (isOpen()) {
-        if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
-            // Set the current editor context
-            ed::SetCurrentEditor(m_editorContext);
-            
-            ed::Begin("NodeEditor");
-            renderNodeCreationButtons();
-            renderNodes();
-            renderConnections();
-            handleConnections();
-            handleNodeDeletion();
-            ed::End();
-            
-            // Reset current editor context
-            ed::SetCurrentEditor(nullptr);
-        }
-        ImGui::End();
-    }
+    // Set the current editor context
+    ed::SetCurrentEditor(m_editorContext);
+    ed::Begin("NodeEditor");
+    renderNodeCreationButtons();
+    renderNodes();
+    renderConnections();
+    handleConnections();
+    handleNodeDeletion();
+    ed::End();
+    // Reset current editor context
+    ed::SetCurrentEditor(nullptr);
 }
 
 void NodeEditorWindow::renderNodeCreationButtons() {

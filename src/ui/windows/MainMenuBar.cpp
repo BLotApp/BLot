@@ -7,8 +7,8 @@
 
 namespace blot {
 
-MainMenuBar::MainMenuBar(const std::string& title, Window::Flags flags)
-    : Window(title, flags) {
+MainMenuBar::MainMenuBar(const std::string& title)
+    : m_title(title) {
 }
 
 void MainMenuBar::triggerAction(const std::string& actionId) {

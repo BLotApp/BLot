@@ -28,8 +28,7 @@ public:
     void setCurrentTheme(int theme) { m_currentTheme = theme; }
     int getCurrentTheme() const { return m_currentTheme; }
 
-protected:
-    void render() override;
+    void renderContents() override;
 
 private:
     std::unique_ptr<TextEditor> m_editor;

@@ -49,9 +49,6 @@ public:
     ImVec4 getFillColor() const { return m_fillColor; }
     ImVec4 getStrokeColor() const { return m_strokeColor; }
 
-    // Rendering
-    virtual void render() override;
-
 private:
     // Tool state
     int m_currentTool = 0;
@@ -92,6 +89,7 @@ private:
     void toolButton(const char* icon, int toolType);
     void saveSwatchesToFile(const std::string& path);
     void loadSwatchesFromFile(const std::string& path);
+    void renderContents() override;
 };
 
 } // namespace blot 

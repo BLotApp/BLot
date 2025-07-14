@@ -15,9 +15,8 @@ public:
     // Debug functionality
     void setECSManager(ECSManager* ecs) { m_ecs = ecs; }
     void setDeltaTime(float deltaTime) { m_deltaTime = deltaTime; }
-    
-    // Rendering
-    virtual void render() override;
+
+    void renderContents() override;
 
 private:
     ECSManager* m_ecs = nullptr;

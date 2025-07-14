@@ -85,10 +85,18 @@ public:
         }
     }
 
-    // Rendering - only render() needs to be virtual since each window renders differently
-    virtual void render() = 0;  // Pure virtual as it's the main rendering function
+    // Non-virtual render: handles ImGui::Begin/End and open/close logic automatically
+    void render() {
+        if (!m_isOpen) return;
+        if (ImGui::Begin(m_title.c_str(), &m_isOpen, m_flags)) {
+            renderContents();
+        }
+        ImGui::End();
+    }
 
 protected:
+    // Derived classes implement only the window's UI here
+    virtual void renderContents() = 0;
     std::string m_title;
     bool m_isOpen = true;
     int m_flags = 0;

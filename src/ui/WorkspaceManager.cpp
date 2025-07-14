@@ -10,7 +10,7 @@ namespace blot {
 
 WorkspaceManager::WorkspaceManager() {
     m_workspaceDir = "workspaces";
-    m_mainIniPath = "imgui.ini"; // Use the main ImGui .ini file
+    m_mainIniPath = "imgui.ini";
     ensureWorkspaceDirectory();
     createDefaultWorkspaces();
     loadExistingWorkspaces();

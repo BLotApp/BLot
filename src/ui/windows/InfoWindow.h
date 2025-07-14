@@ -23,9 +23,7 @@ public:
     void setCurrentTool(int toolType);
     void setCoordinateSystem(int system);
     void setShowMouseCoordinates(bool show);
-
-    // Rendering
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     // Mouse state

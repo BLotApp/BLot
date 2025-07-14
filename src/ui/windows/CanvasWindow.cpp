@@ -87,21 +87,17 @@ bool CanvasWindow::isMouseInsideCanvas() const {
     return m_mouseInsideCanvas;
 }
 
-void CanvasWindow::render() {
-    // Begin the window
-    if (ImGui::Begin(m_title.c_str(), &m_isOpen, m_flags)) {
-        // Get the canvas area
-        m_canvasPos = ImGui::GetCursorScreenPos();
-        m_canvasSize = ImGui::GetContentRegionAvail();
-        m_canvasEnd = ImVec2(m_canvasPos.x + m_canvasSize.x, m_canvasPos.y + m_canvasSize.y);
-        
-        // Draw the canvas texture
-        drawCanvasTexture();
-        
-        // Handle mouse input
-        handleMouseInput();
-    }
-    ImGui::End();
+void CanvasWindow::renderContents() {
+    // Get the canvas area
+    m_canvasPos = ImGui::GetCursorScreenPos();
+    m_canvasSize = ImGui::GetContentRegionAvail();
+    m_canvasEnd = ImVec2(m_canvasPos.x + m_canvasSize.x, m_canvasPos.y + m_canvasSize.y);
+    
+    // Draw the canvas texture
+    drawCanvasTexture();
+    
+    // Handle mouse input
+    handleMouseInput();
 }
 
 void CanvasWindow::drawCanvasTexture() {

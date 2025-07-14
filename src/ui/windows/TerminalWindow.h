@@ -17,9 +17,7 @@ public:
     void addLog(const std::string& message);
     void clearLog();
     void executeCommand(const std::string& command);
-    
-    // Rendering
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     std::vector<std::string> m_logHistory;

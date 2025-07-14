@@ -18,9 +18,9 @@ namespace blot {
 class CodeEditorWindow;
 class UIManager;
 
-class MainMenuBar : public Window {
+class MainMenuBar {
 public:
-    MainMenuBar(const std::string& title, Window::Flags flags = Window::Flags::None);
+    MainMenuBar(const std::string& title);
     ~MainMenuBar() = default;
 
     // Set the event system
@@ -42,10 +42,10 @@ public:
     void setActiveCanvasId(uint32_t id) { m_activeCanvasId = id; }
     void setCanvasEntities(const std::vector<std::pair<uint32_t, std::string>>& entities) { m_canvasEntities = entities; }
 
-protected:
-    void render() override;
+    void render();
 
 private:
+    std::string m_title;
     // Event system reference
     systems::EventSystem* m_eventSystem = nullptr;
     

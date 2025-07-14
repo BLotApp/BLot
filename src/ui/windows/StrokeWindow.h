@@ -21,9 +21,6 @@ public:
     StrokeWindow(const std::string& title = "Stroke Window", blot::Window::Flags flags = blot::Window::Flags::None);
     ~StrokeWindow() = default;
 
-    // Main render function
-    void render() override;
-
     // Getters for current stroke settings
     double getStrokeWidth() const { return m_strokeWidth; }
     BLStrokeCap getStrokeCap() const { return m_strokeCap; }
@@ -54,6 +51,7 @@ public:
     // Utility functions
     void resetToDefaults();
     BLStrokeOptions getBlend2DStrokeOptions() const;
+    void renderContents() override;
 
 private:
     // Stroke properties

@@ -18,8 +18,7 @@ public:
     // Set initial workspace name
     void setInitialWorkspaceName(const std::string& name) { m_workspaceName = name; }
 
-protected:
-    void render() override;
+    void renderContents() override;
 
 private:
     std::function<void(const std::string&)> m_saveCallback;

@@ -12,26 +12,16 @@ StrokeWindow::StrokeWindow(const std::string& title, blot::Window::Flags flags)
 
 
 
-void StrokeWindow::render() {
-    if (!isOpen()) return;
-    
-    ImGui::Begin(getTitle().c_str(), &m_isOpen, static_cast<ImGuiWindowFlags>(getFlags()));
-
+void StrokeWindow::renderContents() {
     ImGui::BeginGroup();
-    
     // Basic settings section
     renderBasicSettings();
-    
     ImGui::Separator();
-    
     // Advanced settings toggle
     if (ImGui::CollapsingHeader("Advanced Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
         renderAdvancedSettings();
     }
-    
     ImGui::EndGroup();
-    
-    ImGui::End();
 }
 
 void StrokeWindow::renderBasicSettings() {

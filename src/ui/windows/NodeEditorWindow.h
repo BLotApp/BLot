@@ -20,7 +20,7 @@ public:
     virtual ~NodeEditorWindow();
 
     void setECSManager(std::shared_ptr<ECSManager> ecs);
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     std::shared_ptr<ECSManager> m_ecs;

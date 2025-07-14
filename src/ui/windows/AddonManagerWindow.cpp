@@ -11,13 +11,9 @@ void AddonManagerWindow::setAddonManager(std::shared_ptr<AddonManager> addonMana
     m_addonManager = addonManager;
 }
 
-void AddonManagerWindow::render() {
-    if (isOpen() && m_addonManager) {
-        if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
-            renderAddonManager();
-        }
-        ImGui::End();
-    }
+void AddonManagerWindow::renderContents() {
+    if (!m_addonManager) return;
+    renderAddonManager();
 }
 
 void AddonManagerWindow::renderAddonManager() {

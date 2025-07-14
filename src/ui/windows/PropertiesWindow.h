@@ -24,9 +24,6 @@ public:
     void setOnEntitySelected(std::function<void(uint32_t)> callback);
     void setOnPropertyChanged(std::function<void(uint32_t, const std::string&, const std::string&)> callback);
 
-    // Rendering
-    virtual void render() override;
-
 private:
     std::shared_ptr<ECSManager> m_ecs;
     uint32_t m_selectedEntity = 0;
@@ -44,6 +41,7 @@ private:
     void renderVector2Editor(const char* label, float& x, float& y);
     void renderFloatEditor(const char* label, float& value, float min = 0.0f, float max = 100.0f);
     void renderIntEditor(const char* label, int& value, int min = 0, int max = 100);
+    void renderContents() override;
 };
 
 } // namespace blot 

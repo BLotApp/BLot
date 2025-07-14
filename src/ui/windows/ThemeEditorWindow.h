@@ -17,7 +17,7 @@ public:
     virtual ~ThemeEditorWindow() = default;
 
     void setUIManager(UIManager* uiManager);
-    virtual void render() override;
+    void renderContents() override;
 
 private:
     UIManager* m_uiManager = nullptr;

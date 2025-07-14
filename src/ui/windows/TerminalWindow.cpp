@@ -11,16 +11,9 @@ TerminalWindow::TerminalWindow(const std::string& title, Flags flags)
     addLog("Terminal initialized. Type 'help' for available commands.");
 }
 
-void TerminalWindow::render() {
-    if (m_isOpen) {
-        bool open = m_isOpen;
-        if (ImGui::Begin(m_title.c_str(), &open, m_flags)) {
-            renderLogHistory();
-            renderInput();
-        }
-        ImGui::End();
-        m_isOpen = open;
-    }
+void TerminalWindow::renderContents() {
+    renderLogHistory();
+    renderInput();
 }
 
 void TerminalWindow::renderLogHistory() {

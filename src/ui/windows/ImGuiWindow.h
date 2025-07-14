@@ -10,11 +10,9 @@ public:
     ImGuiWindow(const std::string& title, Flags flags = Flags::None);
     virtual ~ImGuiWindow() = default;
 
-    // Rendering
-    virtual void render() override;
-
     // Custom render callback
     void setRenderCallback(std::function<void()> callback);
+    void renderContents() override;
 
 protected:
     // Custom render callback

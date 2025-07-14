@@ -37,9 +37,6 @@ public:
     void addWarning(const std::string& message);
     void addError(const std::string& message);
     void clearLog();
-    
-    // Rendering
-    virtual void render() override;
 
 private:
     std::vector<LogEntry> m_logEntries;
@@ -56,6 +53,7 @@ private:
     ImVec4 getLogColor(LogLevel level);
     std::string getLogLevelString(LogLevel level);
     std::string getCurrentTimestamp();
+    void renderContents() override;
 };
 
 } // namespace blot 

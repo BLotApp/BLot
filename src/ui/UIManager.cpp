@@ -208,14 +208,14 @@ void UIManager::setupDockspace() {
 }
 
 void UIManager::renderAllWindows() {
+    // Always render the main menu bar
+    if (m_mainMenuBar) {
+        m_mainMenuBar->render();
+    }
+    // Render all other windows (managed by WindowManager)
     if (m_windowManager) {
-        // Hide/show all windows except MainMenuBar based on m_bHideWindows
         for (const auto& name : m_windowManager->getAllWindowNames()) {
-            if (name == "MainMenuBar") {
-                m_windowManager->setWindowVisible(name, true);
-            } else {
-                m_windowManager->setWindowVisible(name, !m_bHideWindows);
-            }
+            m_windowManager->setWindowVisible(name, !m_bHideWindows);
         }
         m_windowManager->renderAllWindows();
     }
@@ -261,10 +261,8 @@ void UIManager::setupWindows() {
                                                               Window::Flags::None);
     m_windowManager->createWindow("CodeEditor", codeEditorWindow);
     
-    // Create main menu bar
-    auto mainMenuBar = std::make_shared<MainMenuBar>("MainMenuBar###MainMenuBar", 
-                                                     Window::Flags::None);
-    m_windowManager->createWindow("MainMenuBar", mainMenuBar);
+    // Create main menu bar (standalone, not managed by WindowManager)
+    m_mainMenuBar = std::make_unique<MainMenuBar>("Main Menu Bar");
     
     // Create addon manager window
     auto addonManagerWindow = std::make_shared<AddonManagerWindow>("Addon Manager###AddonManager", 

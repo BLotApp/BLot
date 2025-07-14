@@ -34,19 +34,13 @@ void PropertiesWindow::setOnPropertyChanged(std::function<void(uint32_t, const s
     m_onPropertyChanged = callback;
 }
 
-void PropertiesWindow::render() {
-    if (isOpen()) {
-        if (ImGui::Begin(getTitle().c_str(), &m_isOpen, getFlags())) {
-            renderEntityList();
-            ImGui::Separator();
-            
-            if (m_selectedEntity != 0 && m_ecs) {
-                renderTransformProperties();
-                renderShapeProperties();
-                renderStyleProperties();
-            }
-        }
-        ImGui::End();
+void PropertiesWindow::renderContents() {
+    renderEntityList();
+    ImGui::Separator();
+    if (m_selectedEntity != 0 && m_ecs) {
+        renderTransformProperties();
+        renderShapeProperties();
+        renderStyleProperties();
     }
 }
 

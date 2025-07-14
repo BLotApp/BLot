@@ -90,23 +90,16 @@ void ToolbarWindow::setOnToolStateChanged(std::function<void(bool, const ImVec2&
     m_onToolStateChanged = callback;
 }
 
-void ToolbarWindow::render() {
-    if (m_isOpen) {
-        bool open = m_isOpen;
-        if (ImGui::Begin(m_title.c_str(), &open, m_flags)) {
-            renderTools();
-            ImGui::SameLine();
-            renderColors();
-            
-            if (m_showSwatches) {
-                renderSwatches();
-            }
-            
-            renderStrokeColorButtons();
-        }
-        ImGui::End();
-        m_isOpen = open;
+void ToolbarWindow::renderContents() {
+    renderTools();
+    ImGui::SameLine();
+    renderColors();
+    
+    if (m_showSwatches) {
+        renderSwatches();
     }
+    
+    renderStrokeColorButtons();
 }
 
 void ToolbarWindow::renderTools() {
