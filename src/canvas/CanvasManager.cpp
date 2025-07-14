@@ -2,6 +2,9 @@
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include "../ecs/ECSManager.h"
+#include "../ecs/components/CanvasComponent.h"
+#include "../ecs/components/TextureComponent.h"
 
 namespace blot {
 
@@ -39,6 +42,28 @@ std::shared_ptr<Canvas> CanvasManager::createCanvas(int width, int height, const
     
     std::cout << "Created canvas: " << canvasName << " (index: " << newIndex << ")" << std::endl;
     return canvas;
+}
+
+entt::entity CanvasManager::createCanvas(ECSManager& ecs, int width, int height, const std::string& name) {
+    entt::entity entity = ecs.createEntity(name);
+
+    // Add CanvasComponent
+    CanvasComponent canvasComp;
+    canvasComp.width = width;
+    canvasComp.height = height;
+    canvasComp.name = name;
+    ecs.addComponent<CanvasComponent>(entity, canvasComp);
+
+    // Add TextureComponent (for framebuffer/texture)
+    TextureComponent texComp;
+    texComp.width = width;
+    texComp.height = height;
+    texComp.renderTarget = true;
+    ecs.addComponent<TextureComponent>(entity, texComp);
+
+    // Add other components as needed...
+
+    return entity;
 }
 
 void CanvasManager::removeCanvas(size_t index) {
@@ -100,7 +125,6 @@ void CanvasManager::setActiveCanvas(size_t index) {
     validateIndex(index);
     
     if (m_activeCanvasIndex != index) {
-        size_t oldIndex = m_activeCanvasIndex;
         m_activeCanvasIndex = index;
         
         std::string canvasName = m_canvases[index]->getName();

@@ -42,6 +42,7 @@ private:
     void renderFloatEditor(const char* label, float& value, float min = 0.0f, float max = 100.0f);
     void renderIntEditor(const char* label, int& value, int min = 0, int max = 100);
     void renderContents() override;
+    void renderAllComponentProperties();
 };
 
 } // namespace blot 

@@ -183,7 +183,6 @@ void UIManager::handleInput() {
 }
 
 void UIManager::setupDockspace() {
-    // Simplified dockspace setup for debugging
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
@@ -193,24 +192,25 @@ void UIManager::setupDockspace() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-    
-    // Debug: Add some text to the dockspace to see if it's rendering
+
     ImGui::Begin("DockSpace", nullptr, window_flags);
+
+    // Render the main menu bar inside the dockspace window
+    if (ImGui::BeginMenuBar()) {
+        if (m_mainMenuBar && !m_bHideMainMenuBar) {
+            m_mainMenuBar->render();
+        }
+        ImGui::EndMenuBar();
+    }
+
     ImGui::PopStyleVar(2);
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-    
-    // Debug: Add text to dockspace
-    ImGui::Text("Dockspace is working!");
-    
+
     ImGui::End();
 }
 
 void UIManager::renderAllWindows() {
-
-    if (m_mainMenuBar && !m_bHideMainMenuBar) {
-        m_mainMenuBar->render();
-    }
 
     // Render all windows
     if (m_windowManager) {

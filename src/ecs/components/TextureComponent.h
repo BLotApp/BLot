@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <glm/glm.hpp>
+#include "../PropertyReflection.h"
 
 struct Guide {
     float position;
@@ -24,4 +25,18 @@ struct TextureComponent {
     bool showRulers = false;
     bool showGuides = false;
     std::vector<Guide> guides;
+
+    std::vector<sProp> GetProperties() {
+        return {
+            {0, "Texture ID", EPT_UINT, &textureId},
+            {1, "Width", EPT_INT, &width},
+            {2, "Height", EPT_INT, &height},
+            {3, "Render Target", EPT_BOOL, &renderTarget},
+            {4, "Zoom", EPT_FLOAT, &zoom},
+            {5, "Offset X", EPT_FLOAT, &offset.x},
+            {6, "Offset Y", EPT_FLOAT, &offset.y},
+            {7, "Show Rulers", EPT_BOOL, &showRulers},
+            {8, "Show Guides", EPT_BOOL, &showGuides}
+        };
+    }
 }; 

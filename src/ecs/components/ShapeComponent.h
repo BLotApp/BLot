@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include "../PropertyReflection.h"
 
 namespace blot {
 namespace components {
@@ -30,6 +31,17 @@ struct Shape {
     float getHeight() const { return y2 - y1; }
     void setPosition(float x, float y) { x1 = x; y1 = y; }
     void setSize(float width, float height) { x2 = x1 + width; y2 = y1 + height; }
+
+    std::vector<sProp> GetProperties() {
+        return {
+            {0, "Start X", EPT_FLOAT, &x1},
+            {1, "Start Y", EPT_FLOAT, &y1},
+            {2, "End X", EPT_FLOAT, &x2},
+            {3, "End Y", EPT_FLOAT, &y2},
+            {4, "Sides", EPT_INT, &sides},
+            {5, "Inner Radius", EPT_FLOAT, &innerRadius}
+        };
+    }
 };
 
 } // namespace components

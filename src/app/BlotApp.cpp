@@ -177,14 +177,7 @@ void BlotApp::initGraphics() {
     auto defaultCanvas = m_canvasManager->createCanvas(m_windowWidth, m_windowHeight, "Default Canvas");
     
     // Create a default canvas as an ECS entity and resources
-    m_activeCanvasId = m_ecsManager->createEntity();
-    TextureComponent texComp;
-    texComp.width = m_windowWidth;
-    texComp.height = m_windowHeight;
-    texComp.renderTarget = true;
-    // texComp.textureId will be set by resource manager
-    m_ecsManager->addComponent<TextureComponent>(m_activeCanvasId, texComp);
-    (void)texComp; // Suppress unused variable warning
+    m_activeCanvasId = m_canvasManager->createCanvas(*m_ecsManager, m_windowWidth, m_windowHeight, "Default Canvas");
     
     // Create renderer through resource manager (returns shared_ptr)
     auto renderer = m_renderingManager->createRenderer(m_activeCanvasId, m_windowWidth, m_windowHeight);
@@ -497,9 +490,11 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     // Canvas management actions using CanvasManager
     eventSystem.registerAction("new_canvas", std::function<void()>([this]() {
         std::cout << "New canvas action triggered" << std::endl;
-        if (m_canvasManager) {
-            auto newCanvas = m_canvasManager->createCanvas(m_windowWidth, m_windowHeight);
-            std::cout << "Created new canvas: " << newCanvas->getName() << std::endl;
+        if (m_canvasManager && m_ecsManager) {
+            // Create new ECS canvas entity only
+            entt::entity newCanvasEntity = m_canvasManager->createCanvas(*m_ecsManager, m_windowWidth, m_windowHeight);
+            m_activeCanvasId = newCanvasEntity;
+            std::cout << "Created new canvas entity: " << (uint32_t)newCanvasEntity << std::endl;
         }
     }));
     

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include "../PropertyReflection.h"
 
 namespace blot {
 namespace components {
@@ -51,6 +52,23 @@ struct Style {
     void setDashPattern(const std::vector<float>& pattern, float offset = 0.0f) {
         dashPattern = pattern;
         dashOffset = offset;
+    }
+
+    std::vector<sProp> GetProperties() {
+        return {
+            {0, "Fill R", EPT_FLOAT, &fillR},
+            {1, "Fill G", EPT_FLOAT, &fillG},
+            {2, "Fill B", EPT_FLOAT, &fillB},
+            {3, "Fill A", EPT_FLOAT, &fillA},
+            {4, "Stroke R", EPT_FLOAT, &strokeR},
+            {5, "Stroke G", EPT_FLOAT, &strokeG},
+            {6, "Stroke B", EPT_FLOAT, &strokeB},
+            {7, "Stroke A", EPT_FLOAT, &strokeA},
+            {8, "Stroke Width", EPT_FLOAT, &strokeWidth},
+            {9, "Has Fill", EPT_BOOL, &hasFill},
+            {10, "Has Stroke", EPT_BOOL, &hasStroke},
+            {11, "Dash Offset", EPT_FLOAT, &dashOffset}
+        };
     }
 };
 

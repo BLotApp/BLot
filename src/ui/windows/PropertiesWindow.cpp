@@ -3,7 +3,13 @@
 #include "ecs/components/TransformComponent.h"
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
+#include "ecs/components/DraggableComponent.h"
+#include "ecs/components/SelectableComponent.h"
+#include "ecs/components/TextureComponent.h"
+#include "ecs/components/CanvasComponent.h"
+#include "ecs/PropertyReflection.h"
 #include <imgui.h>
+#include <array>
 
 namespace blot {
 
@@ -38,108 +44,93 @@ void PropertiesWindow::renderContents() {
     renderEntityList();
     ImGui::Separator();
     if (m_selectedEntity != 0 && m_ecs) {
-        renderTransformProperties();
-        renderShapeProperties();
-        renderStyleProperties();
+        renderAllComponentProperties();
     }
 }
 
 void PropertiesWindow::renderEntityList() {
     if (!m_ecs) return;
-    
     ImGui::Text("Entities:");
     ImGui::BeginChild("EntityList", ImVec2(0, 100), true);
-    
     auto view = m_ecs->view<TransformComponent>();
     for (auto entity : view) {
         char label[64];
         snprintf(label, sizeof(label), "Entity %u", (unsigned int)entity);
-        
         bool isSelected = (entity == static_cast<entt::entity>(m_selectedEntity));
         if (ImGui::Selectable(label, isSelected)) {
             setSelectedEntity(static_cast<uint32_t>(entity));
         }
     }
-    
     ImGui::EndChild();
 }
 
-void PropertiesWindow::renderTransformProperties() {
-    if (!m_ecs || m_selectedEntity == 0) return;
-    
-    if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (m_ecs->hasComponent<TransformComponent>(static_cast<entt::entity>(m_selectedEntity))) {
-            auto& transform = m_ecs->getComponent<TransformComponent>(static_cast<entt::entity>(m_selectedEntity));
-            
-            renderVector2Editor("Position", transform.position.x, transform.position.y);
-            renderVector2Editor("Scale", transform.scale.x, transform.scale.y);
-            renderFloatEditor("Rotation", transform.rotation, 0.0f, 360.0f);
+// --- New generic property rendering ---
+
+template<typename Component>
+void RenderComponentProperties(entt::entity entity, ECSManager* ecs, const char* headerName) {
+    if (ecs->hasComponent<Component>(entity)) {
+        auto& comp = ecs->getComponent<Component>(entity);
+        auto props = TryGetProperties(comp);
+        if (!props.empty()) {
+            if (ImGui::CollapsingHeader(headerName, ImGuiTreeNodeFlags_DefaultOpen)) {
+                for (auto& prop : props) {
+                    switch (prop.type) {
+                        case EPT_BOOL:
+                            ImGui::Checkbox(prop.name.c_str(), static_cast<bool*>(prop.data));
+                            break;
+                        case EPT_INT:
+                            ImGui::DragInt(prop.name.c_str(), static_cast<int*>(prop.data));
+                            break;
+                        case EPT_UINT:
+                            ImGui::DragInt(prop.name.c_str(), static_cast<int*>(prop.data)); // ImGui has no DragUInt
+                            break;
+                        case EPT_FLOAT:
+                            ImGui::DragFloat(prop.name.c_str(), static_cast<float*>(prop.data), 0.1f);
+                            break;
+                        case EPT_DOUBLE: {
+                            // ImGui does not have DragDouble, use DragScalar
+                            auto doublePtr = static_cast<double*>(prop.data);
+                            if (doublePtr) {
+                                ImGui::DragScalar(prop.name.c_str(), ImGuiDataType_Double, doublePtr, 0.1);
+                            }
+                            break;
+                        }
+                        case EPT_STRING: {
+                            auto strPtr = static_cast<std::string*>(prop.data);
+                            if (strPtr) {
+                                ImGuiInputTextStdString(prop.name.c_str(), *strPtr);
+                            }
+                            break;
+                        }
+                        case EPT_IMVEC4: {
+                            // Assume data points to 4 floats (e.g., glm::vec4 or ImVec4)
+                            ImGui::ColorEdit4(prop.name.c_str(), reinterpret_cast<float*>(prop.data));
+                            break;
+                        }
+                        default:
+                            ImGui::Text("%s (unsupported type)", prop.name.c_str());
+                            break;
+                    }
+                }
+            }
         }
     }
 }
 
-void PropertiesWindow::renderShapeProperties() {
-    if (!m_ecs || m_selectedEntity == 0) return;
-    
-    if (ImGui::CollapsingHeader("Shape", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (m_ecs->hasComponent<blot::components::Shape>(static_cast<entt::entity>(m_selectedEntity))) {
-            auto& shape = m_ecs->getComponent<blot::components::Shape>(static_cast<entt::entity>(m_selectedEntity));
-            
-            renderVector2Editor("Start", shape.x1, shape.y1);
-            renderVector2Editor("End", shape.x2, shape.y2);
-            
-            const char* shapeTypes[] = { "Rectangle", "Ellipse", "Line", "Polygon", "Star" };
-            int currentType = static_cast<int>(shape.type);
-            if (ImGui::Combo("Type", &currentType, shapeTypes, IM_ARRAYSIZE(shapeTypes))) {
-                shape.type = static_cast<blot::components::Shape::Type>(currentType);
-            }
-            
-            if (shape.type == blot::components::Shape::Type::Polygon || shape.type == blot::components::Shape::Type::Star) {
-                renderIntEditor("Sides", shape.sides, 3, 20);
-            }
-        }
-    }
+void PropertiesWindow::renderAllComponentProperties() {
+    entt::entity entity = static_cast<entt::entity>(m_selectedEntity);
+    ECSManager* ecs = m_ecs.get();
+    RenderComponentProperties<TransformComponent>(entity, ecs, "Transform");
+    RenderComponentProperties<blot::components::Shape>(entity, ecs, "Shape");
+    RenderComponentProperties<blot::components::Style>(entity, ecs, "Style");
+    RenderComponentProperties<DraggableComponent>(entity, ecs, "Draggable");
+    RenderComponentProperties<SelectableComponent>(entity, ecs, "Selectable");
+    RenderComponentProperties<TextureComponent>(entity, ecs, "Texture");
+    RenderComponentProperties<CanvasComponent>(entity, ecs, "Canvas");
+    // Add more as needed
 }
 
-void PropertiesWindow::renderStyleProperties() {
-    if (!m_ecs || m_selectedEntity == 0) return;
-    
-    if (ImGui::CollapsingHeader("Style", ImGuiTreeNodeFlags_DefaultOpen)) {
-        if (m_ecs->hasComponent<blot::components::Style>(static_cast<entt::entity>(m_selectedEntity))) {
-            auto& style = m_ecs->getComponent<blot::components::Style>(static_cast<entt::entity>(m_selectedEntity));
-            
-            ImVec4 fillColor(style.fillR, style.fillG, style.fillB, style.fillA);
-            if (renderColorPicker("Fill Color", fillColor)) {
-                style.fillR = fillColor.x;
-                style.fillG = fillColor.y;
-                style.fillB = fillColor.z;
-                style.fillA = fillColor.w;
-            }
-            
-            ImVec4 strokeColor(style.strokeR, style.strokeG, style.strokeB, style.strokeA);
-            if (renderColorPicker("Stroke Color", strokeColor)) {
-                style.strokeR = strokeColor.x;
-                style.strokeG = strokeColor.y;
-                style.strokeB = strokeColor.z;
-                style.strokeA = strokeColor.w;
-            }
-            
-            renderFloatEditor("Stroke Width", style.strokeWidth, 0.0f, 20.0f);
-            
-            const char* strokeCaps[] = { "Butt", "Square", "Round" };
-            int currentCap = static_cast<int>(style.strokeCap);
-            if (ImGui::Combo("Stroke Cap", &currentCap, strokeCaps, IM_ARRAYSIZE(strokeCaps))) {
-                style.strokeCap = static_cast<blot::components::Style::StrokeCap>(currentCap);
-            }
-            
-            const char* strokeJoins[] = { "Miter", "Bevel", "Round" };
-            int currentJoin = static_cast<int>(style.strokeJoin);
-            if (ImGui::Combo("Stroke Join", &currentJoin, strokeJoins, IM_ARRAYSIZE(strokeJoins))) {
-                style.strokeJoin = static_cast<blot::components::Style::StrokeJoin>(currentJoin);
-            }
-        }
-    }
-}
+// --- End new generic property rendering ---
 
 bool PropertiesWindow::renderColorPicker(const char* label, ImVec4& color) {
     return ImGui::ColorEdit4(label, (float*)&color, ImGuiColorEditFlags_NoInputs);
@@ -161,6 +152,18 @@ void PropertiesWindow::renderFloatEditor(const char* label, float& value, float 
 
 void PropertiesWindow::renderIntEditor(const char* label, int& value, int min, int max) {
     ImGui::DragInt(label, &value, 1, min, max);
+}
+
+// Helper for ImGui string editing
+inline bool ImGuiInputTextStdString(const char* label, std::string& str, size_t maxLen = 256) {
+    char buf[256];
+    strncpy(buf, str.c_str(), maxLen);
+    buf[maxLen - 1] = '\0';
+    bool changed = ImGui::InputText(label, buf, maxLen);
+    if (changed) {
+        str = buf;
+    }
+    return changed;
 }
 
 } // namespace blot 

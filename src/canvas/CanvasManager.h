@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <entt/entt.hpp> // Added for ECS integration
 
 namespace blot {
 
@@ -48,6 +49,9 @@ public:
     // Utility
     void clear();
     bool isEmpty() const { return m_canvases.empty(); }
+
+    // ECS integration: create a new canvas entity with all required components
+    entt::entity createCanvas(ECSManager& ecs, int width, int height, const std::string& name = "Canvas");
 
 private:
     std::vector<std::shared_ptr<Canvas>> m_canvases;
