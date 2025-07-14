@@ -24,7 +24,7 @@ public:
     ~MainMenuBar() = default;
 
     // Set the event system
-    void setEventSystem(systems::EventSystem* eventSystem) { m_eventSystem = eventSystem; }
+    void setEventSystem(systems::EventSystem* eventSystem);
     
     // Set CodeEditorWindow reference for theme state
     void setCodeEditorWindow(std::shared_ptr<blot::CodeEditorWindow> window) { m_codeEditorWindow = window; }

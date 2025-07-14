@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "app/BlotApp.h"
 
 namespace blot {
 
@@ -39,10 +40,8 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     m_workspaceManager->setWindowManager(m_windowManager.get());
     
     m_currentTheme = ImGuiTheme::Light;
-    
-    setupWindows();
-    configureWindowSettings();
 
+    configureWindowSettings();
     // Register TAB shortcut for toggling window visibility
     m_shortcutManager.registerShortcut(
         ImGuiKey_Tab, 0,
@@ -224,7 +223,7 @@ void UIManager::renderAllWindows() {
     }
 }
 
-void UIManager::setupWindows() {
+void UIManager::setupWindows(BlotApp* app) {
     if (!m_windowManager) return;
     
     // Create and register texture viewer window
@@ -234,6 +233,9 @@ void UIManager::setupWindows() {
     
     // Create toolbar window
     auto toolbarWindow = std::make_shared<ToolbarWindow>("Toolbar###MainToolbar", Window::Flags::None);
+    if (app) {
+        toolbarWindow->setShowMenuTip(app->getSettings().showMenuTips);
+    }
     m_windowManager->createWindow("Toolbar", toolbarWindow);
     
     // Connect theme panel to toolbar window

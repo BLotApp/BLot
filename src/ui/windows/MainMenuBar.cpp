@@ -17,7 +17,13 @@ void MainMenuBar::triggerAction(const std::string& actionId) {
     }
 }
 
+void MainMenuBar::setEventSystem(systems::EventSystem* eventSystem) {
+    m_eventSystem = eventSystem;
+    std::cout << "[MainMenuBar] setEventSystem ptr: " << eventSystem << std::endl;
+}
+
 bool MainMenuBar::hasAction(const std::string& actionId) const {
+    std::cout << "[MainMenuBar] hasAction called, m_eventSystem ptr: " << m_eventSystem << std::endl;
     return m_eventSystem ? m_eventSystem->hasAction(actionId) : false;
 }
 
@@ -152,12 +158,24 @@ void MainMenuBar::render() {
         }
         
         // Workspace menu
+        std::cout << "[MainMenuBar] hasAction(get_available_workspaces): " << hasAction("get_available_workspaces") << std::endl;
+        std::cout << "[MainMenuBar] hasAction(load_workspace): " << hasAction("load_workspace") << std::endl;
         if (ImGui::BeginMenu("Workspace")) {
             // Load submenu
             if (ImGui::BeginMenu("Load")) {
                 if (hasAction("get_available_workspaces") && hasAction("load_workspace")) {
-                    // In a real implementation, you'd get the workspaces and display them
-                    ImGui::Text("Workspace loading available");
+                    // Get the list of workspaces from the event system
+                    if (m_eventSystem) {
+                        auto workspaces = m_eventSystem->triggerAction<std::vector<std::string>>("get_available_workspaces");
+                        for (const auto& ws : workspaces) {
+                            if (ImGui::MenuItem(ws.c_str())) {
+                                m_eventSystem->triggerAction("load_workspace", ws);
+                            }
+                        }
+                        if (workspaces.empty()) {
+                            ImGui::Text("No workspaces found");
+                        }
+                    }
                 } else {
                     ImGui::Text("Workspace loading not available");
                 }

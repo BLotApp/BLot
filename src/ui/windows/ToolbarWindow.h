@@ -49,6 +49,9 @@ public:
     ImVec4 getFillColor() const { return m_fillColor; }
     ImVec4 getStrokeColor() const { return m_strokeColor; }
 
+    void setToolName(const std::string& name) { m_toolName = name; }
+    void setShowMenuTip(bool show) { m_showMenuTip = show; }
+
 private:
     // Tool state
     int m_currentTool = 0;
@@ -90,6 +93,9 @@ private:
     void saveSwatchesToFile(const std::string& path);
     void loadSwatchesFromFile(const std::string& path);
     void renderContents() override;
+
+    std::string m_toolName;
+    bool m_showMenuTip = true;
 };
 
 } // namespace blot 

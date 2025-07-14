@@ -62,10 +62,12 @@ BlotApp::BlotApp()
     // Initialize UI management
     m_uiManager = std::make_unique<blot::UIManager>(m_window);
     m_uiManager->initImGui();
-    
-    // Disable debug mode by default
-    m_debugMode = false;
     m_uiManager->setDebugMode(false);
+    m_uiManager->setupWindows(this); // 1. Create all windows
+
+    registerUIActions(m_ecsManager->getEventSystem()); // 2. Register actions
+
+    connectEventSystemToUI(); // 3. Set event system on MainMenuBar
     
     // Set up window callbacks
     m_uiManager->setupWindowCallbacks(this);
@@ -230,8 +232,8 @@ void BlotApp::connectEventSystemToUI() {
     auto& eventSystem = m_ecsManager->getEventSystem();
     
     // Connect MainMenuBar to the ECS event system
-    auto mainMenuBar = std::dynamic_pointer_cast<blot::MainMenuBar>(
-        m_uiManager->getWindowManager()->getWindow("MainMenuBar"));
+    auto mainMenuBar = m_uiManager->getMainMenuBar();
+    std::cout << "[BlotApp] Setting event system on MainMenuBar: " << mainMenuBar << " with eventSystem ptr: " << &eventSystem << std::endl;
     if (mainMenuBar) {
         mainMenuBar->setEventSystem(&eventSystem);
         
@@ -343,6 +345,7 @@ void BlotApp::connectAddonManagerToEventSystem(blot::systems::EventSystem& event
 }
 
 void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
+    std::cout << "[BlotApp] registerUIActions eventSystem ptr: " << &eventSystem << std::endl;
     // File menu actions
     eventSystem.registerAction("new_sketch", [this]() {
         std::cout << "New sketch action triggered" << std::endl;
@@ -544,12 +547,14 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
         }
         return {};
     }));
-    
+    std::cout << "[BlotApp] Registered get_available_workspaces: " << eventSystem.hasAction("get_available_workspaces") << std::endl;
+
     eventSystem.registerAction("load_workspace", std::function<void(const std::string&)>([this](const std::string& workspaceName) {
         if (m_uiManager) {
             m_uiManager->loadWorkspace(workspaceName);
         }
     }));
+    std::cout << "[BlotApp] Registered load_workspace: " << eventSystem.hasAction("load_workspace") << std::endl;
     
     eventSystem.registerAction("save_workspace", std::function<void(const std::string&)>([this](const std::string& workspaceName) {
         if (m_uiManager) {

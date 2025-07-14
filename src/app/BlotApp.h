@@ -62,6 +62,9 @@ public:
     blot::CanvasManager* getCanvasManager() { return m_canvasManager.get(); }
     blot::UIManager* getUIManager() { return m_uiManager.get(); }
     
+    AppSettings& getSettings() { return m_settings; }
+    const AppSettings& getSettings() const { return m_settings; }
+    
 private:
     void initWindow();
     void initGraphics();

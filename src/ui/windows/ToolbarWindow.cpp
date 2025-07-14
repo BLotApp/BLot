@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <iostream>
 
 namespace blot {
 
@@ -91,6 +92,11 @@ void ToolbarWindow::setOnToolStateChanged(std::function<void(bool, const ImVec2&
 }
 
 void ToolbarWindow::renderContents() {
+    // Show menu tip if enabled
+    if (m_showMenuTip && !m_toolName.empty()) {
+        ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.2f, 1.0f), "Tip: %s", m_toolName.c_str());
+        ImGui::Separator();
+    }
     renderTools();
     ImGui::SameLine();
     renderColors();
@@ -265,7 +271,7 @@ void ToolbarWindow::saveSwatchesToFile(const std::string& path) {
         std::ofstream file(path);
         file << j.dump(4);
     } catch (const std::exception& e) {
-        // Handle error
+        std::cerr << "Failed to save swatches: " << e.what() << std::endl;
     }
 }
 
@@ -287,7 +293,7 @@ void ToolbarWindow::loadSwatchesFromFile(const std::string& path) {
             }
         }
     } catch (const std::exception& e) {
-        // Handle error
+        std::cerr << "Failed to load swatches: " << e.what() << std::endl;
     }
 }
 

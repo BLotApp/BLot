@@ -103,6 +103,10 @@ public:
     void saveCurrentTheme(const std::string& path);
     void loadTheme(const std::string& path);
 
+    void setupWindows(BlotApp* app);
+
+    MainMenuBar* getMainMenuBar() { return m_mainMenuBar.get(); }
+
 private:
     // GLFW window reference
     GLFWwindow* m_window;
@@ -131,7 +135,6 @@ private:
     bool m_debugMode = false;
     
     // Setup methods
-    void setupWindows();
     void configureWindowSettings();
     std::unique_ptr<MainMenuBar> m_mainMenuBar;
 };

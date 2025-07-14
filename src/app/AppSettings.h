@@ -68,4 +68,5 @@ struct AppSettings {
     void saveSettings();
     void loadSettings();
     void resetToDefaults();
+    bool showMenuTips = true;
 }; 
