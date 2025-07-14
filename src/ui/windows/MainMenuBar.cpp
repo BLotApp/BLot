@@ -166,7 +166,7 @@ void MainMenuBar::render() {
                 if (hasAction("get_available_workspaces") && hasAction("load_workspace")) {
                     // Get the list of workspaces from the event system
                     if (m_eventSystem) {
-                        auto workspaces = m_eventSystem->triggerAction<std::vector<std::string>>("get_available_workspaces");
+                        auto workspaces = m_eventSystem->triggerActionWithResult<std::vector<std::string>>("get_available_workspaces");
                         for (const auto& ws : workspaces) {
                             if (ImGui::MenuItem(ws.c_str())) {
                                 m_eventSystem->triggerAction("load_workspace", ws);

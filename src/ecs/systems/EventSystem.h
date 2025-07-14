@@ -97,6 +97,18 @@ public:
     template<typename... Args>
     void registerAction(const std::string& actionId, std::function<void(Args...)> action);
 
+    template<typename T>
+    T triggerActionWithResult(const std::string& actionId) {
+        auto it = m_actions.find(actionId);
+        if (it != m_actions.end()) {
+            try {
+                auto func = std::any_cast<std::function<T()>>(&it->second);
+                if (func) return (*func)();
+            } catch (const std::bad_any_cast&) {}
+        }
+        return T{};
+    }
+
 private:
     entt::registry& m_registry;
     
