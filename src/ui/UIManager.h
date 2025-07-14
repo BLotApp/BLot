@@ -20,6 +20,7 @@ class BlotApp;
 #include "ui/TextRenderer.h"
 #include "ui/ImGuiRenderer.h"
 #include <GLFW/glfw3.h>
+#include "ShortcutManager.h"
 
 // Forward declarations
 namespace blot {
@@ -66,12 +67,8 @@ public:
     // Getters for external access
     WindowManager* getWindowManager() { return m_windowManager.get(); }
     WorkspaceManager* getWorkspaceManager() { return m_workspaceManager.get(); }
-    DebugPanel* getDebugPanel() { return m_debugPanel.get(); }
-    InfoWindow* getInfoWindow() { return m_infoWindow.get(); }
-    ThemePanel* getThemePanel() { return m_themePanel.get(); }
-    TerminalWindow* getTerminalWindow() { return m_terminalWindow.get(); }
-    LogWindow* getLogWindow() { return m_logWindow.get(); }
-    
+    ShortcutManager& getShortcutManager() { return m_shortcutManager; }
+   
     // Templated window getters for type-safe access
     template<typename T>
     std::shared_ptr<T> getWindowAs(const std::string& name) {
@@ -115,15 +112,14 @@ private:
     // Workspace manager
     std::unique_ptr<WorkspaceManager> m_workspaceManager;
     
-    // UI Panels
-    std::unique_ptr<DebugPanel> m_debugPanel;
-    std::unique_ptr<InfoWindow> m_infoWindow;
-    std::unique_ptr<ThemePanel> m_themePanel;
-    
-    // New windows
-    std::unique_ptr<TerminalWindow> m_terminalWindow;
-    std::unique_ptr<LogWindow> m_logWindow;
+    // Save workspace dialog (still managed as unique_ptr, but registered with WindowManager)
     std::unique_ptr<SaveWorkspaceDialog> m_saveWorkspaceDialog;
+
+    // Hide all windows except menubar flag
+    bool m_bHideWindows = false;
+
+    // Shortcut manager
+    ShortcutManager m_shortcutManager;
     
     // ImGui with enhanced text rendering
     std::unique_ptr<TextRenderer> m_textRenderer;

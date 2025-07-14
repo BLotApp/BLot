@@ -38,20 +38,17 @@ UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     // Connect WindowManager to WorkspaceManager
     m_workspaceManager->setWindowManager(m_windowManager.get());
     
-    // Create UI panels
-    m_debugPanel = std::make_unique<DebugPanel>();
-    m_infoWindow = std::make_unique<InfoWindow>();
-    m_themePanel = std::make_unique<ThemePanel>();
-    
-    // Create new windows
-    m_terminalWindow = std::make_unique<TerminalWindow>();
-    m_logWindow = std::make_unique<LogWindow>();
-    m_saveWorkspaceDialog = std::make_unique<SaveWorkspaceDialog>("Save Workspace");
-    
     m_currentTheme = ImGuiTheme::Light;
     
     setupWindows();
     configureWindowSettings();
+
+    // Register TAB shortcut for toggling window visibility
+    m_shortcutManager.registerShortcut(
+        ImGuiKey_Tab, 0,
+        [this]() { m_bHideWindows = !m_bHideWindows; },
+        "Toggle all windows (except menubar)"
+    );
 }
 
 UIManager::~UIManager() {
@@ -142,6 +139,11 @@ void UIManager::update() {
         }
     }
     
+    // --- Shortcuts ---
+    m_shortcutManager.processShortcuts();
+    m_shortcutManager.showHelpOverlay();
+    // -----------------
+    
     // Update UI components
     if (m_windowManager) {
         m_windowManager->update();
@@ -206,30 +208,16 @@ void UIManager::setupDockspace() {
 }
 
 void UIManager::renderAllWindows() {
-    // Render all windows through the window manager
     if (m_windowManager) {
+        // Hide/show all windows except MainMenuBar based on m_bHideWindows
+        for (const auto& name : m_windowManager->getAllWindowNames()) {
+            if (name == "MainMenuBar") {
+                m_windowManager->setWindowVisible(name, true);
+            } else {
+                m_windowManager->setWindowVisible(name, !m_bHideWindows);
+            }
+        }
         m_windowManager->renderAllWindows();
-    }
-    
-    // Render panels
-    if (m_debugPanel) {
-        m_debugPanel->render();
-    }
-    
-    if (m_infoWindow) {
-        m_infoWindow->render();
-    }
-    
-    if (m_themePanel) {
-        m_themePanel->render();
-    }
-    
-    if (m_terminalWindow) {
-        m_terminalWindow->render();
-    }
-    
-    if (m_logWindow) {
-        m_logWindow->render();
     }
 }
 
@@ -246,8 +234,11 @@ void UIManager::setupWindows() {
     m_windowManager->createWindow("Toolbar", toolbarWindow);
     
     // Connect theme panel to toolbar window
-    if (m_themePanel) {
-        m_themePanel->setToolbarWindow(toolbarWindow);
+    if (m_windowManager->getWindow("ThemePanel")) { // Assuming ThemePanel is registered with WindowManager
+        auto themePanel = std::dynamic_pointer_cast<ThemePanel>(m_windowManager->getWindow("ThemePanel"));
+        if (themePanel) {
+            themePanel->setToolbarWindow(toolbarWindow);
+        }
     }
     
     // Create canvas window

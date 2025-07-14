@@ -135,6 +135,7 @@ set(SOURCES
     src/ui/WorkspaceManager.h
     src/ui/CodeEditor.cpp
     src/ui/CodeEditor.h
+    src/ui/ShortcutManager.cpp
     src/ecs/ECSManager.cpp
     src/ecs/systems/CanvasSystems.cpp
     src/ecs/systems/EventSystem.cpp
