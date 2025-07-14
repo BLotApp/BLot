@@ -1,5 +1,10 @@
 # TODO
 
+- [ ] Learn more about Continuous Integration (CI) for C++ projects
+    - Research how to set up CI pipelines (e.g., GitHub Actions)
+    - Explore tools for code quality, formatting (clang-format), and linting (clang-tidy)
+    - Try adding a basic CI workflow to this project to automate builds and checks
+
 ## UI Improvements
 
 ### Multi-Column Support
