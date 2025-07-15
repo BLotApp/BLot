@@ -53,33 +53,47 @@ BlotApp::BlotApp()
     // Load application settings
     m_settings.loadSettings();
     
-    // Sync colors with settings (now handled by ToolbarWindow)
-    
     initWindow();
     initGraphics();
     initAddons();
-    
+
     // Initialize UI management
-    m_uiManager = std::make_unique<blot::UIManager>(m_window);
-    m_uiManager->initImGui();
-    m_uiManager->setDebugMode(false);
-    m_uiManager->setupWindows(this); // 1. Create all windows
-
-    registerUIActions(m_ecsManager->getEventSystem()); // 2. Register actions
-
-    connectEventSystemToUI(); // 3. Set event system on MainMenuBar
-    
-    // Set up window callbacks
-    m_uiManager->setupWindowCallbacks(this);
-    
-    // Initialize code editor
-    m_codeEditor = std::make_unique<CodeEditor>();
-    if (m_codeEditor) {
-        m_codeEditor->loadDefaultTemplate();
+    try {
+        m_uiManager = std::make_unique<blot::UIManager>(m_window);
+        std::cout << "BlotApp: After UIManager allocation" << std::endl;
+        m_uiManager->setBlotApp(this);
+        std::cout << "BlotApp: After setBlotApp" << std::endl;
+        m_uiManager->initImGui();
+        std::cout << "BlotApp: After initImGui" << std::endl;
+        m_uiManager->setupWindows(this);
+        std::cout << "BlotApp: After setupWindows" << std::endl;
+        registerUIActions(m_ecsManager->getEventSystem());
+        std::cout << "BlotApp: After registerUIActions" << std::endl;
+        connectEventSystemToUI();
+        std::cout << "BlotApp: After connectEventSystemToUI" << std::endl;
+        m_uiManager->setupWindowCallbacks(this);
+        std::cout << "BlotApp: After setupWindowCallbacks" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in BlotApp UIManager setup: " << e.what() << std::endl;
     }
+    
+    std::cout << "BlotApp: After UIManager setup" << std::endl;
+    try {
+        // Initialize code editor
+        m_codeEditor = std::make_unique<CodeEditor>();
+        std::cout << "BlotApp: After CodeEditor allocation" << std::endl;
+        if (m_codeEditor) {
+            m_codeEditor->loadDefaultTemplate();
+            std::cout << "BlotApp: After loadDefaultTemplate" << std::endl;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in BlotApp constructor: " << e.what() << std::endl;
+    }
+    std::cout << "BlotApp constructor finished" << std::endl;
 }
 
 BlotApp::~BlotApp() {
+    std::cout << "BlotApp destructor called" << std::endl;
     // Save current ImGui layout
     if (m_uiManager) {
         m_uiManager->saveCurrentImGuiLayout();
@@ -471,9 +485,6 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     eventSystem.registerAction("set_debug_mode", std::function<void(bool)>([this](bool enabled) {
         std::cout << "Set debug mode action triggered: " << enabled << std::endl;
         setDebugMode(enabled);
-        if (m_uiManager) {
-            m_uiManager->setDebugMode(enabled);
-        }
     }));
     
     // Canvas management actions
@@ -529,9 +540,9 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
         return false;
     }));
     
-    eventSystem.registerAction("set_window_visibility", std::function<void(const std::string&, bool)>([this](const std::string& windowName, bool visible) {
+    eventSystem.registerAction("set_window_visibility", std::function<void(std::pair<std::string, bool>)>([this](std::pair<std::string, bool> data) {
         if (m_uiManager) {
-            m_uiManager->setWindowVisibility(windowName, visible);
+            m_uiManager->setWindowVisibility(data.first, data.second);
         }
     }));
     
@@ -594,8 +605,9 @@ void BlotApp::run() {
         update();
 
         // Clear and render
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(1.0f, 0.0f, 1.0f, 1.0f); // Magenta for debug
         glClear(GL_COLOR_BUFFER_BIT);
+        std::cout << "Rendering frame..." << std::endl;
         
         // Check for OpenGL errors
         if (m_debugMode) {

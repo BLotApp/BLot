@@ -8,7 +8,7 @@ namespace blot {
 
 class InfoWindow : public Window {
 public:
-    InfoWindow(const std::string& title = "Info Window", Flags flags = Flags::None);
+    InfoWindow(const std::string& title = "Info", Flags flags = Flags::None);
     virtual ~InfoWindow() = default;
 
     // Info window specific methods

@@ -12,20 +12,22 @@ SaveWorkspaceDialog::SaveWorkspaceDialog(const std::string& title, Window::Flags
 }
 
 void SaveWorkspaceDialog::renderContents() {
-    ImGui::SetNextWindowSize(ImVec2(400, 150), ImGuiCond_FirstUseEver);
+    // Set a reasonable minimum size every frame to prevent tiny/narrow dialogs
+    ImGui::SetNextWindowSize(ImVec2(400, 220), ImGuiCond_Appearing);
+    ImGui::SetWindowSize(ImVec2(400, 220), ImGuiCond_Always);
+
+    // Make the main content scrollable if needed
+    ImGui::BeginChild("##DialogContent", ImVec2(0, 100), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
     ImGui::Text("Enter workspace name:");
     ImGui::Spacing();
     // Focus on the input field when the dialog opens
     if (ImGui::IsWindowAppearing()) {
         ImGui::SetKeyboardFocusHere();
     }
-    if (ImGui::InputText("##WorkspaceName", m_nameBuffer, sizeof(m_nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        // Save when Enter is pressed
-        if (m_saveCallback && strlen(m_nameBuffer) > 0) {
-            m_saveCallback(m_nameBuffer);
-            m_shouldClose = true;
-        }
-    }
+    // Use a visible label for the input
+    bool enterPressed = ImGui::InputText("Workspace Name", m_nameBuffer, sizeof(m_nameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+    ImGui::EndChild();
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -35,16 +37,17 @@ void SaveWorkspaceDialog::renderContents() {
     float totalWidth = buttonWidth * 2 + spacing;
     float startX = (ImGui::GetWindowWidth() - totalWidth) * 0.5f;
     ImGui::SetCursorPosX(startX);
-    if (ImGui::Button("Save", ImVec2(buttonWidth, 0))) {
-        if (m_saveCallback && strlen(m_nameBuffer) > 0) {
-            m_saveCallback(m_nameBuffer);
-            m_shouldClose = true;
-        }
-    }
+    bool saveClicked = ImGui::Button("Save", ImVec2(buttonWidth, 0));
     ImGui::SameLine();
     ImGui::Dummy(ImVec2(spacing, 0));
     ImGui::SameLine();
-    if (ImGui::Button("Cancel", ImVec2(buttonWidth, 0))) {
+    bool cancelClicked = ImGui::Button("Cancel", ImVec2(buttonWidth, 0));
+    // Save on Enter or Save button
+    if ((enterPressed || saveClicked) && m_saveCallback && strlen(m_nameBuffer) > 0) {
+        m_saveCallback(m_nameBuffer);
+        m_shouldClose = true;
+    }
+    if (cancelClicked) {
         if (m_cancelCallback) {
             m_cancelCallback();
         }

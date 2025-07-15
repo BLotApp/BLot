@@ -1,0 +1,12 @@
+{
+  "description": "Optimized for creative coding - Canvas on left, Code editor on right",
+  "imguiLayout": "",
+  "name": "Creative Coding",
+  "windowVisibility": {
+    "Canvas": true,
+    "CodeEditor": true,
+    "Info": true,
+    "Properties": true,
+    "Toolbar": true
+  }
+}

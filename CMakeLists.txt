@@ -78,129 +78,52 @@ include_directories(third_party/portable-file-dialogs)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/implot)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/implot3d)
 
-# Source files
-set(SOURCES
-    src/app/main.cpp
-    src/app/BlotApp.cpp
-    src/app/AppSettings.cpp
-    src/canvas/Canvas.cpp
-    src/canvas/CanvasManager.cpp
-    src/rendering/Graphics.cpp
-    src/rendering/Blend2DRenderer.cpp
-    src/rendering/Renderer.cpp
-    src/addons/AddonBase.cpp
-    src/addons/AddonManager.cpp
-    src/resources/VertexBuffer.cpp
-    src/resources/Shader.cpp
-    src/ui/WindowManager.cpp
-    src/ui/WindowManager.h
-    src/ui/TextRenderer.cpp
-    src/ui/ImGuiRenderer.cpp
-    src/ui/CoordinateSystem.cpp
-    src/ui/windows/Window.cpp
-    src/ui/windows/ImGuiWindow.cpp
-    src/ui/windows/ImGuiWindow.h
-    src/ui/windows/CanvasWindow.cpp
-    src/ui/windows/InfoWindow.cpp
-    src/ui/windows/ToolbarWindow.cpp
-    src/ui/windows/StrokeWindow.cpp
-    src/ui/windows/StrokeWindow.h
-    src/ui/windows/TextureViewerWindow.cpp
-    src/ui/windows/TextureViewerWindow.h
-    src/ui/windows/DebugPanel.cpp
-    src/ui/windows/DebugPanel.h
-    src/ui/windows/ThemePanel.cpp
-    src/ui/windows/ThemePanel.h
-    src/ui/windows/TerminalWindow.cpp
-    src/ui/windows/TerminalWindow.h
-    src/ui/windows/LogWindow.cpp
-    src/ui/windows/LogWindow.h
-    src/ui/windows/MainMenuBar.cpp
-    src/ui/windows/MainMenuBar.h
-    src/ui/windows/AddonManagerWindow.cpp
-    src/ui/windows/AddonManagerWindow.h
-    src/ui/windows/NodeEditorWindow.cpp
-    src/ui/windows/NodeEditorWindow.h
-    src/ui/windows/PropertiesWindow.cpp
-    src/ui/windows/PropertiesWindow.h
-    src/ui/windows/CodeEditorWindow.cpp
-    src/ui/windows/CodeEditorWindow.h
-    src/ui/windows/ThemeEditorWindow.cpp
-    src/ui/windows/ThemeEditorWindow.h
-    src/ui/windows/SaveWorkspaceDialog.cpp
-    src/ui/windows/SaveWorkspaceDialog.h
-    src/ui/UIManager.cpp
-    src/ui/UIManager.h
-    src/ui/WorkspaceManager.cpp
-    src/ui/WorkspaceManager.h
-    src/ui/CodeEditor.cpp
-    src/ui/CodeEditor.h
-    src/ui/ShortcutManager.cpp
-    src/ecs/ECSManager.cpp
-    src/ecs/systems/CanvasSystems.cpp
-    src/ecs/systems/EventSystem.cpp
-    src/scripting/ScriptEngine.cpp
-    src/ecs/systems/ShapeRenderingSystem.cpp
-    src/ecs/systems/ShapeRenderingSystem.h
-    src/rendering/RenderingManager.cpp
-    src/rendering/RenderingManager.h
-    # ImPlot sources
-    third_party/implot/implot.cpp
-    third_party/implot/implot_items.cpp
-    third_party/implot/implot_demo.cpp
-    # ImPlot3D sources
-    third_party/implot3d/implot3d.cpp
-    third_party/implot3d/implot3d_items.cpp
-    third_party/implot3d/implot3d_demo.cpp
-    third_party/implot3d/implot3d_meshes.cpp
+# Automatically collect all source and header files in src/
+file(GLOB_RECURSE BLOT_SOURCES
+    src/*.cpp
+    src/*.c
+    src/*.h
+    src/*.hpp
+)
+# Exclude third_party sources if needed
+list(FILTER BLOT_SOURCES EXCLUDE REGEX "third_party/")
+
+# GLOB ImGui core sources
+file(GLOB IMGUI_SOURCES
+    third_party/imgui/imgui.cpp
+    third_party/imgui/imgui_draw.cpp
+    third_party/imgui/imgui_tables.cpp
+    third_party/imgui/imgui_widgets.cpp
+    third_party/imgui/imgui_demo.cpp
+)
+# GLOB ImGui backends (only the ones you use)
+file(GLOB IMGUI_BACKEND_SOURCES
+    third_party/imgui/backends/imgui_impl_glfw.cpp
+    third_party/imgui/backends/imgui_impl_opengl3.cpp
+)
+# GLOB ImGuiColorTextEdit
+file(GLOB IMGUI_COLOR_TEXT_EDIT_SOURCES
     third_party/ImGuiColorTextEdit/TextEditor.cpp
-    third_party/ImGuiColorTextEdit/TextEditor.h
-    # ImGui sources
-    third_party/imgui/imgui.cpp
-    third_party/imgui/imgui.h
-    third_party/imgui/imgui_draw.cpp
-    third_party/imgui/imgui_internal.h
-    third_party/imgui/imgui_tables.cpp
-    third_party/imgui/imgui_widgets.cpp
-    third_party/imgui/imgui_demo.cpp
-    third_party/imgui/imconfig.h
-    third_party/imgui/imstb_rectpack.h
-    third_party/imgui/imstb_textedit.h
-    third_party/imgui/imstb_truetype.h
-    # ImGui backends
-    third_party/imgui/backends/imgui_impl_glfw.cpp
-    third_party/imgui/backends/imgui_impl_glfw.h
-    third_party/imgui/backends/imgui_impl_opengl3.cpp
-    third_party/imgui/backends/imgui_impl_opengl3.h
-    third_party/imgui/backends/imgui_impl_opengl3_loader.h
-    # (Add more backend files here if you want them visible)
-    src/ecs/components/ShapeComponent.h
-    src/ecs/components/StyleComponent.h
-    src/ecs/components/NodeComponent.h
 )
-
-# ImGui sources (submodule)
-set(IMGUI_SOURCES
-    third_party/imgui/imgui.cpp
-    third_party/imgui/imgui_draw.cpp
-    third_party/imgui/imgui_tables.cpp
-    third_party/imgui/imgui_widgets.cpp
-    third_party/imgui/imgui_demo.cpp
-    third_party/imgui/backends/imgui_impl_glfw.cpp
-    third_party/imgui/backends/imgui_impl_opengl3.cpp
-)
-
-# ImGui Node Editor sources (submodule)
-set(NODE_EDITOR_SOURCES
+# GLOB imgui-node-editor sources
+file(GLOB IMGUI_NODE_EDITOR_SOURCES
     third_party/imgui-node-editor/imgui_node_editor.cpp
     third_party/imgui-node-editor/imgui_node_editor_api.cpp
     third_party/imgui-node-editor/imgui_canvas.cpp
     third_party/imgui-node-editor/crude_json.cpp
 )
 
-list(APPEND SOURCES ${IMGUI_SOURCES} ${NODE_EDITOR_SOURCES})
+# Add AppPaths utility source
+set(APP_PATHS_SOURCES src/AppPaths.cpp)
 
-add_executable(blot ${SOURCES})
+add_executable(blot ${BLOT_SOURCES})
+target_sources(blot PRIVATE
+    ${IMGUI_SOURCES}
+    ${IMGUI_BACKEND_SOURCES}
+    ${IMGUI_COLOR_TEXT_EDIT_SOURCES}
+    ${IMGUI_NODE_EDITOR_SOURCES}
+    ${APP_PATHS_SOURCES}
+)
 
 # Use local glad (not vcpkg or submodule target)
 target_include_directories(blot PRIVATE ${CMAKE_SOURCE_DIR}/third_party/glad/include)

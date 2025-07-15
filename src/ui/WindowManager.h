@@ -47,6 +47,14 @@ struct WindowSettingsComponent {
     std::string category = "General"; // e.g., "Tools", "Debug", "Main"
 };
 
+// WorkspaceConfig struct (moved from WorkspaceManager)
+struct WorkspaceConfig {
+    std::string name;
+    std::string description;
+    std::map<std::string, bool> windowVisibility;
+    std::string imguiLayout;
+};
+
 class WindowManager {
 public:
     WindowManager();
@@ -91,7 +99,8 @@ public:
     void setWindowVisible(const std::string& name, bool visible);
     void toggleWindow(const std::string& name);
     void showAllWindows();
-    void hideAllWindows();
+    void hideAllWindows(const std::vector<std::string>& except = {"MainMenuBar"});
+    void setMainMenuBar(bool visible);
     
     // Window settings management
     void setWindowSettings(const std::string& name, const WindowSettingsComponent& settings);
@@ -109,6 +118,26 @@ public:
     void handleInput();
     void update();
     
+    // Workspace management (moved from WorkspaceManager)
+    bool loadWorkspace(const std::string& workspaceName);
+    bool saveWorkspace(const std::string& workspaceName);
+    bool saveWorkspaceAs(const std::string& workspaceName);
+    bool createWorkspace(const std::string& workspaceName, const WorkspaceConfig& config);
+    bool deleteWorkspace(const std::string& workspaceName);
+    std::vector<std::string> getAvailableWorkspaces() const;
+    std::vector<std::pair<std::string, std::string>> getAvailableWorkspacesWithNames() const;
+    WorkspaceConfig getWorkspaceConfig(const std::string& workspaceName) const;
+    std::string getCurrentWorkspace() const { return m_currentWorkspace; }
+    void setWindowVisibility(const std::string& windowName, bool visible);
+    bool getWindowVisibility(const std::string& windowName) const;
+    void setWindowPosition(const std::string& windowName, float x, float y);
+    void setWindowSize(const std::string& windowName, float width, float height);
+    std::pair<float, float> getWindowPosition(const std::string& windowName) const;
+    std::pair<float, float> getWindowSize(const std::string& windowName) const;
+    void saveCurrentImGuiLayout();
+    void loadImGuiLayout(const std::string& layoutData);
+    std::string getCurrentImGuiLayout() const;
+    
     // Registry access
     entt::registry& getRegistry() { return m_registry; }
     const entt::registry& getRegistry() const { return m_registry; }
@@ -120,6 +149,23 @@ private:
     void updateFocus();
     void handleEscapeKey();
     void sortWindowsByZOrder();
+
+    // Workspace-related members (paths set via AppPaths utility)
+    std::string m_workspaceDir;
+    std::string m_mainIniPath;
+    std::map<std::string, WorkspaceConfig> m_workspaces;
+    std::string m_currentWorkspace;
+
+    // Helper methods for workspace management
+    void ensureWorkspaceDirectory();
+    void createDefaultWorkspaces();
+    void loadExistingWorkspaces();
+    std::string getWorkspaceConfigPath(const std::string& workspaceName) const;
+    bool loadWorkspaceConfig(const std::string& workspaceName);
+    bool saveWorkspaceConfig(const std::string& workspaceName);
+    WorkspaceConfig captureCurrentUIState(const std::string& workspaceName);
+    WorkspaceConfig createWorkspaceFromCurrentState(const std::string& workspaceName);
+    void updateMainIniFile();
 };
 
 } // namespace blot 

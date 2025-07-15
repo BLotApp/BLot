@@ -15,6 +15,7 @@
 #include "windows/MainMenuBar.h"
 #include "windows/SaveWorkspaceDialog.h"
 #include "windows/CanvasWindow.h"
+#include "windows/WindowManagerPanel.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -26,19 +27,35 @@
 #include <iostream>
 #include <filesystem>
 #include "app/BlotApp.h"
+#include <set>
+#include <algorithm>
 
 namespace blot {
+// Helper for icon and color
+static const char* getIconForType(NotificationType type) {
+    switch (type) {
+        case NotificationType::Info: return ICON_FA_INFO_CIRCLE;
+        case NotificationType::Success: return ICON_FA_CHECK_CIRCLE;
+        case NotificationType::Warning: return ICON_FA_EXCLAMATION_TRIANGLE;
+        case NotificationType::Error: return ICON_FA_TIMES_CIRCLE;
+        default: return ICON_FA_INFO_CIRCLE;
+    }
+}
+static ImVec4 getColorForType(NotificationType type) {
+    switch (type) {
+        case NotificationType::Info: return ImVec4(0.2f, 0.6f, 1.0f, 1.0f);
+        case NotificationType::Success: return ImVec4(0.2f, 0.8f, 0.2f, 1.0f);
+        case NotificationType::Warning: return ImVec4(1.0f, 0.7f, 0.2f, 1.0f);
+        case NotificationType::Error: return ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+        default: return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+}
 
 UIManager::UIManager(GLFWwindow* window) : m_window(window) {
     // Create window manager
     m_windowManager = std::make_unique<WindowManager>();
     
-    // Create workspace manager
-    m_workspaceManager = std::make_unique<WorkspaceManager>();
-    
-    // Connect WindowManager to WorkspaceManager
-    m_workspaceManager->setWindowManager(m_windowManager.get());
-    
+    // Remove WorkspaceManager construction and setup
     m_currentTheme = ImGuiTheme::Light;
 
     configureWindowSettings();
@@ -110,6 +127,7 @@ void UIManager::shutdownImGui() {
 }
 
 void UIManager::update() {
+    std::cout << "[UIManager] update() called" << std::endl;
     // Start ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -126,11 +144,11 @@ void UIManager::update() {
     setupDockspace();
     
     // Show debug menu bar
-    if (m_debugMode) {
+    if (m_blotApp->getDebugMode()) {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Debug")) {
                 if (ImGui::MenuItem("Exit Debug Mode")) {
-                    m_debugMode = false;
+                    m_blotApp->setDebugMode(false);
                 }
                 ImGui::EndMenu();
             }
@@ -155,7 +173,7 @@ void UIManager::update() {
     static bool f12Pressed = false;
     if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_F12) == GLFW_PRESS) {
         if (!f12Pressed) {
-            m_debugMode = !m_debugMode;
+            m_blotApp->setDebugMode(!m_blotApp->getDebugMode());
             f12Pressed = true;
         }
     } else {
@@ -221,6 +239,70 @@ void UIManager::renderAllWindows() {
         }
         m_windowManager->renderAllWindows();
     }
+    // Render notifications (toasts)
+    float y = 20.0f;
+    float x = ImGui::GetIO().DisplaySize.x - 350.0f;
+    for (auto& n : m_notifications) {
+        ImGui::SetNextWindowPos(ImVec2(x, y), ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.85f);
+        ImGui::PushStyleColor(ImGuiCol_Text, getColorForType(n.type));
+        ImGui::Begin((std::string("##toast") + std::to_string(&n - &m_notifications[0])).c_str(), nullptr,
+            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs);
+        ImGui::Text("%s  %s", getIconForType(n.type), n.message.c_str());
+        ImGui::End();
+        ImGui::PopStyleColor();
+        y += 48.0f;
+        n.timeRemaining -= ImGui::GetIO().DeltaTime;
+    }
+    m_notifications.erase(
+        std::remove_if(m_notifications.begin(), m_notifications.end(),
+            [](const Notification& n) { return n.timeRemaining <= 0; }),
+        m_notifications.end());
+    // Before loading workspace, print all registered window names
+    auto allWindows = m_windowManager->getAllWindowNames();
+    std::cout << "Registered windows: ";
+    for (const auto& w : allWindows) std::cout << w << ", ";
+    std::cout << std::endl;
+    // Render modals (blocking popups)
+    if (!m_modals.empty()) {
+        Modal& m = m_modals.front();
+        if (m.open) ImGui::OpenPopup(m.title.c_str());
+        ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+        float modalWidth = (std::min)(600.0f, displaySize.x * 0.8f);
+        float modalHeight = (std::min)(300.0f, displaySize.y * 0.6f);
+        ImGui::SetNextWindowSize(ImVec2(modalWidth, modalHeight), ImGuiCond_Appearing);
+        if (ImGui::BeginPopupModal(m.title.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar)) {
+            ImGui::TextColored(getColorForType(m.type), "%s", getIconForType(m.type));
+            ImGui::SameLine();
+            // Scrollable message area, fixed height
+            float buttonAreaHeight = 50.0f;
+            ImVec2 childSize = ImVec2(0, ImGui::GetWindowHeight() - buttonAreaHeight - ImGui::GetCursorPosY() - 16.0f);
+            ImGui::BeginChild("##ModalMessage", childSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+            ImGui::TextWrapped("%s", m.message.c_str());
+            ImGui::EndChild();
+            ImGui::Spacing();
+            // Buttons at bottom right (Cancel left, OK right)
+            float buttonWidth = 90.0f;
+            float spacing = 12.0f;
+            float totalButtonWidth = buttonWidth * 2 + spacing;
+            float startX = ImGui::GetWindowContentRegionMax().x - totalButtonWidth;
+            ImGui::SetCursorPosX(startX > 0 ? startX : 0);
+            bool cancel = ImGui::Button("Cancel", ImVec2(buttonWidth, 0));
+            ImGui::SameLine();
+            bool ok = ImGui::Button("OK", ImVec2(buttonWidth, 0));
+            if (ok) {
+                if (m.onOk) m.onOk();
+                m.open = false;
+                ImGui::CloseCurrentPopup();
+                m_modals.pop_front();
+            } else if (cancel) {
+                m.open = false;
+                ImGui::CloseCurrentPopup();
+                m_modals.pop_front();
+            }
+            ImGui::EndPopup();
+        }
+    }
 }
 
 void UIManager::setupWindows(BlotApp* app) {
@@ -229,14 +311,17 @@ void UIManager::setupWindows(BlotApp* app) {
     // Create and register texture viewer window
     auto textureViewerWindow = std::make_shared<TextureViewerWindow>("Texture###MainTexture", 
                                                           Window::Flags::NoScrollbar | Window::Flags::NoCollapse);
-    m_windowManager->createWindow("Texture", textureViewerWindow);
+    m_windowManager->createWindow(textureViewerWindow->getTitle(), textureViewerWindow);
     
-    // Create toolbar window
-    auto toolbarWindow = std::make_shared<ToolbarWindow>("Toolbar###MainToolbar", Window::Flags::None);
+    // Create toolbar window with appropriate flags
+    auto toolbarWindow = std::make_shared<ToolbarWindow>(
+        "Toolbar###MainToolbar",
+        Window::Flags::NoTitleBar | Window::Flags::NoResize | Window::Flags::NoCollapse
+    );
     if (app) {
         toolbarWindow->setShowMenuTip(app->getSettings().showMenuTips);
     }
-    m_windowManager->createWindow("Toolbar", toolbarWindow);
+    m_windowManager->createWindow(toolbarWindow->getTitle(), toolbarWindow);
     
     // Connect theme panel to toolbar window
     if (m_windowManager->getWindow("ThemePanel")) { // Assuming ThemePanel is registered with WindowManager
@@ -249,22 +334,21 @@ void UIManager::setupWindows(BlotApp* app) {
     // Create canvas window
     auto canvasWindow = std::make_shared<CanvasWindow>("Canvas###MainCanvas", 
                                                       Window::Flags::NoScrollbar | Window::Flags::NoCollapse);
-    m_windowManager->createWindow("Canvas", canvasWindow);
+    m_windowManager->createWindow(canvasWindow->getTitle(), canvasWindow);
     
     // Create info window
-    auto infoWindow = std::make_shared<InfoWindow>("Info Window###MainInfoWindow", 
-                                                  Window::Flags::AlwaysAutoResize);
-    m_windowManager->createWindow("InfoWindow", infoWindow);
+    auto infoWindow = std::make_shared<InfoWindow>();
+    m_windowManager->createWindow(infoWindow->getTitle(), infoWindow);
     
     // Create properties window
     auto propertiesWindow = std::make_shared<PropertiesWindow>("Properties###MainProperties", 
                                                              Window::Flags::None);
-    m_windowManager->createWindow("Properties", propertiesWindow);
+    m_windowManager->createWindow(propertiesWindow->getTitle(), propertiesWindow);
     
     // Create code editor window
     auto codeEditorWindow = std::make_shared<CodeEditorWindow>("Code Editor###MainCodeEditor", 
                                                               Window::Flags::None);
-    m_windowManager->createWindow("CodeEditor", codeEditorWindow);
+    m_windowManager->createWindow(codeEditorWindow->getTitle(), codeEditorWindow);
     
     // Create main menu bar (standalone, not managed by WindowManager)
     m_mainMenuBar = std::make_unique<MainMenuBar>("Main Menu Bar");
@@ -272,36 +356,42 @@ void UIManager::setupWindows(BlotApp* app) {
     // Create addon manager window
     auto addonManagerWindow = std::make_shared<AddonManagerWindow>("Addon Manager###AddonManager", 
                                                                   Window::Flags::None);
-    m_windowManager->createWindow("AddonManager", addonManagerWindow);
+    m_windowManager->createWindow(addonManagerWindow->getTitle(), addonManagerWindow);
     
     // Create node editor window
     auto nodeEditorWindow = std::make_shared<NodeEditorWindow>("Node Editor###NodeEditor", 
                                                               Window::Flags::None);
-    m_windowManager->createWindow("NodeEditor", nodeEditorWindow);
+    m_windowManager->createWindow(nodeEditorWindow->getTitle(), nodeEditorWindow);
     
     // Create stroke window
     auto strokeWindow = std::make_shared<StrokeWindow>("Stroke###StrokeWindow", Window::Flags::None);
-    m_windowManager->createWindow("Stroke", strokeWindow);
+    m_windowManager->createWindow(strokeWindow->getTitle(), strokeWindow);
     
     // Create and register theme editor window
     auto themeEditorWindow = std::make_shared<ThemeEditorWindow>("Theme Editor###ThemeEditor", 
                                                                Window::Flags::None);
     themeEditorWindow->setUIManager(this);
-    m_windowManager->createWindow("ThemeEditor", themeEditorWindow);
+    m_windowManager->createWindow(themeEditorWindow->getTitle(), themeEditorWindow);
     
+    // Initialize save workspace dialog before registering
+    m_saveWorkspaceDialog = std::make_unique<SaveWorkspaceDialog>("Save Workspace", Window::Flags::Modal);
     // Register save workspace dialog (not shown by default)
     auto saveWorkspaceDialog = std::shared_ptr<SaveWorkspaceDialog>(m_saveWorkspaceDialog.get(), [](SaveWorkspaceDialog*){});
-    m_windowManager->createWindow("SaveWorkspaceDialog", saveWorkspaceDialog);
+    m_windowManager->createWindow(saveWorkspaceDialog->getTitle(), saveWorkspaceDialog);
+
+    // Register Window Manager panel
+    auto windowManagerPanel = std::make_shared<WindowManagerPanel>("Window Manager", m_windowManager.get(), Window::Flags::None);
+    m_windowManager->createWindow(windowManagerPanel->getTitle(), windowManagerPanel);
 }
 
 void UIManager::configureWindowSettings() {
     if (!m_windowManager) return;
     
-    // Configure window settings
+    // Configure toolbar window settings
     WindowSettingsComponent toolbarSettings;
     toolbarSettings.category = "Tools";
     toolbarSettings.showByDefault = true;
-    toolbarSettings.showInMenu = true;
+    toolbarSettings.showInMenu = true; // Set to false if you don't want it in the menu
     m_windowManager->setWindowSettings("Toolbar", toolbarSettings);
     
     WindowSettingsComponent coordinateSystemSettings;
@@ -486,8 +576,8 @@ void UIManager::loadTheme(const std::string& path) {
 }
 
 void UIManager::setWindowVisibility(const std::string& windowName, bool visible) {
-    if (m_workspaceManager) {
-        m_workspaceManager->setWindowVisibility(windowName, visible);
+    if (m_windowManager) {
+        m_windowManager->setWindowVisibility(windowName, visible);
     }
     
     if (m_windowManager) {
@@ -531,15 +621,11 @@ std::vector<std::string> UIManager::getAllWindowNames() const {
 
 
 bool UIManager::loadWorkspace(const std::string& workspaceName) {
-    if (m_workspaceManager) {
+    if (m_windowManager) {
         std::cout << "Loading workspace: " << workspaceName << std::endl;
-        
-        // First, hide all windows
-        setWindowVisibilityAll(false);
-        
-        bool success = m_workspaceManager->loadWorkspace(workspaceName);
+        m_windowManager->hideAllWindows({"MainMenuBar"}); // Hide all except MainMenuBar
+        bool success = m_windowManager->loadWorkspace(workspaceName);
         if (success) {
-            // Force ImGui to update its layout
             ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
             std::cout << "Workspace loaded successfully" << std::endl;
         } else {
@@ -551,36 +637,36 @@ bool UIManager::loadWorkspace(const std::string& workspaceName) {
 }
 
 bool UIManager::saveWorkspace(const std::string& workspaceName) {
-    if (m_workspaceManager) {
-        return m_workspaceManager->saveWorkspace(workspaceName);
+    if (m_windowManager) {
+        return m_windowManager->saveWorkspace(workspaceName);
     }
     return false;
 }
 
 bool UIManager::saveWorkspaceAs(const std::string& workspaceName) {
-    if (m_workspaceManager) {
-        return m_workspaceManager->saveWorkspaceAs(workspaceName);
+    if (m_windowManager) {
+        return m_windowManager->saveWorkspaceAs(workspaceName);
     }
     return false;
 }
 
 std::string UIManager::getCurrentWorkspace() const {
-    if (m_workspaceManager) {
-        return m_workspaceManager->getCurrentWorkspace();
+    if (m_windowManager) {
+        return m_windowManager->getCurrentWorkspace();
     }
     return "default";
 }
 
 std::vector<std::pair<std::string, std::string>> UIManager::getAvailableWorkspaces() const {
-    if (m_workspaceManager) {
-        return m_workspaceManager->getAvailableWorkspacesWithNames();
+    if (m_windowManager) {
+        return m_windowManager->getAvailableWorkspacesWithNames();
     }
     return {};
 }
 
 std::vector<std::string> UIManager::getAllWorkspaceNames() const {
-    if (m_workspaceManager) {
-        return m_workspaceManager->getAvailableWorkspaces();
+    if (m_windowManager) {
+        return m_windowManager->getAvailableWorkspaces();
     }
     return {};
 }
@@ -641,9 +727,16 @@ void UIManager::setupWindowCallbacks(BlotApp* app) {
 }
 
 void UIManager::saveCurrentImGuiLayout() {
-    if (m_workspaceManager) {
-        m_workspaceManager->saveCurrentImGuiLayout();
+    if (m_windowManager) {
+        m_windowManager->saveCurrentImGuiLayout();
     }
+}
+
+void UIManager::showNotification(const std::string& message, NotificationType type, float duration) {
+    m_notifications.push_back({message, type, duration});
+}
+void UIManager::showModal(const std::string& title, const std::string& message, NotificationType type, std::function<void()> onOk) {
+    m_modals.push_back({title, message, type, onOk, true});
 }
 
 } // namespace blot 

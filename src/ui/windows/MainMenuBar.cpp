@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <iostream>
 #include "canvas/Canvas.h"
+#include "app/BlotApp.h"
 
 namespace blot {
 
@@ -62,11 +63,19 @@ void MainMenuBar::render() {
         if (ImGui::BeginMenu("View")) {
             // Window visibility submenu
             if (ImGui::BeginMenu("Windows")) {
-                if (hasAction("get_all_windows") && hasAction("get_window_visibility") && hasAction("set_window_visibility")) {
-                    // Trigger actions to get window data
-                    triggerAction("get_all_windows");
-                    // Note: In a real implementation, you'd need to handle the return values
-                    // This is a simplified version
+                if (m_uiManager && m_uiManager->getWindowManager()) {
+                    auto windowManager = m_uiManager->getWindowManager();
+                    auto windowNames = windowManager->getAllWindowNames();
+                    for (const auto& win : windowNames) {
+                        bool isVisible = windowManager->isWindowVisible(win);
+                        if (ImGui::MenuItem(win.c_str(), nullptr, isVisible)) {
+                            windowManager->setWindowVisible(win, !isVisible);
+                            isVisible = !isVisible; // Immediate update for UI
+                        }
+                    }
+                    if (windowNames.empty()) {
+                        ImGui::Text("No windows found");
+                    }
                 } else {
                     ImGui::Text("Window management not available");
                 }
@@ -237,10 +246,10 @@ void MainMenuBar::render() {
         
         // Debug menu
         if (ImGui::BeginMenu("Debug")) {
-            if (hasAction("get_debug_mode") && hasAction("set_debug_mode")) {
-                // In a real implementation, you'd get the current debug mode
-                if (ImGui::MenuItem("Debug Mode", nullptr, false)) {
-                    m_eventSystem->triggerAction("set_debug_mode", true);
+            if (m_uiManager) {
+                bool debugMode = m_uiManager->getBlotApp()->getDebugMode();
+                if (ImGui::MenuItem("Debug Mode", nullptr, debugMode)) {
+                    m_uiManager->getBlotApp()->setDebugMode(!debugMode);
                 }
             } else {
                 ImGui::Text("Debug mode not available");
