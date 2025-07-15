@@ -178,6 +178,7 @@ void MainMenuBar::render() {
                         auto workspaces = m_eventSystem->triggerActionWithResult<std::vector<std::string>>("get_available_workspaces");
                         for (const auto& ws : workspaces) {
                             if (ImGui::MenuItem(ws.c_str())) {
+                                std::cout << "[MainMenuBar] MenuItem clicked: " << ws << std::endl;
                                 m_eventSystem->triggerAction("load_workspace", ws);
                             }
                         }

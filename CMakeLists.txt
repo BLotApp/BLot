@@ -228,3 +228,7 @@ source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/
 source_group("ECS" FILES src/ecs/ECSManager.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/EventSystem.cpp)
 source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
+
+# spdlog is now included as a subdependency
+add_subdirectory(third_party/spdlog)
+target_link_libraries(blot PRIVATE spdlog::spdlog) 

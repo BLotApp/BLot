@@ -373,6 +373,11 @@ void UIManager::setupWindows(BlotApp* app) {
     themeEditorWindow->setUIManager(this);
     m_windowManager->createWindow(themeEditorWindow->getTitle(), themeEditorWindow);
     
+    // Create and register log window
+    auto logWindow = std::make_shared<LogWindow>("Log###LogWindow", Window::Flags::None);
+    m_windowManager->createWindow(logWindow->getTitle(), logWindow);
+    logWindow->setupSpdlogSink();
+    
     // Initialize save workspace dialog before registering
     m_saveWorkspaceDialog = std::make_unique<SaveWorkspaceDialog>("Save Workspace", Window::Flags::Modal);
     // Register save workspace dialog (not shown by default)
@@ -621,6 +626,7 @@ std::vector<std::string> UIManager::getAllWindowNames() const {
 
 
 bool UIManager::loadWorkspace(const std::string& workspaceName) {
+    std::cout << "[UIManager] loadWorkspace called with: " << workspaceName << std::endl;
     if (m_windowManager) {
         std::cout << "Loading workspace: " << workspaceName << std::endl;
         m_windowManager->hideAllWindows({"MainMenuBar"}); // Hide all except MainMenuBar

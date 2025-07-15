@@ -7,14 +7,35 @@ BLot (Pronounced Beelot) is a small creative coding app inspired by DrawBot and 
 ### Dependencies
 
 | Library      | Purpose                        | How Managed   | Notes                                 |
-|--------------|--------------------------------|---------------|---------------------------------------|
-| GLFW3        | Window/input management        | vcpkg         | Native/system for Pi recommended      |
-| FreeType     | Font/text rendering            | vcpkg         |                                       |
-| GLM          | Math (vectors/matrices)        | submodule     | Header-only                           |
-| GLAD         | OpenGL loader                  | vcpkg         |                                       |
-| Dear ImGui   | UI framework                   | submodule     | Not managed by vcpkg                  |
-| Blend2D      | 2D vector graphics             | vcpkg         | Native/system for Pi recommended      |
-| EnTT         | ECS (Entity-Component-System)  | submodule     | Header-only                           |
+|-------------|--------------------------------|---------------|---------------------------------------|
+| [GLFW3]     | Window/input management        | vcpkg         | Native/system for Pi recommended      |
+| [FreeType]  | Font/text rendering            | vcpkg         |                                       |
+| [GLM]       | Math (vectors/matrices)        | submodule     | Header-only                           |
+| [GLAD]      | OpenGL loader                  | vcpkg         |                                       |
+| [DearImGui] | UI framework                   | submodule     | Not managed by vcpkg                  |
+| [Blend2D]   | 2D vector graphics             | vcpkg         | Native/system for Pi recommended      |
+| [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only                           |
+| [spdlog]    | Logging                        | FetchContent  | Fetched automatically by CMake        |
+
+All dependencies except spdlog are included as submodules or in the third_party directory. spdlog is fetched automatically by CMake.
+
+**Dependency URLs:**
+
+[GLFW3]: https://github.com/glfw/glfw
+[FreeType]: https://gitlab.freedesktop.org/freetype/freetype
+[GLM]: https://github.com/g-truc/glm
+[GLAD]: https://github.com/Dav1dde/glad
+[DearImGui]: https://github.com/ocornut/imgui
+[Blend2D]: https://github.com/blend2d/blend2d
+[EnTT]: https://github.com/skypjack/entt
+[spdlog]: https://github.com/gabime/spdlog
+
+### Windows Troubleshooting
+If you see a 'dubious ownership' error for spdlog during build, run:
+
+    git config --global --add safe.directory F:/repos/blot/build/_deps/spdlog-src
+
+Or use the provided build scripts, which handle this automatically.
 
 ### Prerequisites
 

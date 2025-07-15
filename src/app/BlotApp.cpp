@@ -555,6 +555,7 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     }));
     std::cout << "[BlotApp] Registered get_available_workspaces: " << eventSystem.hasAction("get_available_workspaces") << std::endl;
 
+    std::cout << "[EventSystem] Registering load_workspace action" << std::endl;
     eventSystem.registerAction("load_workspace", std::function<void(const std::string&)>([this](const std::string& workspaceName) {
         if (m_uiManager) {
             m_uiManager->loadWorkspace(workspaceName);

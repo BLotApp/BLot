@@ -448,47 +448,48 @@ std::vector<std::string> WindowManager::getMenuWindows() {
 
 // Workspace management methods
 bool WindowManager::loadWorkspace(const std::string& workspaceName) {
-    std::cout << "Loading workspace: " << workspaceName << std::endl;
+    std::cout << "[Workspace] Requested to load: '" << workspaceName << "'" << std::endl;
+    // Check if workspace is already loaded in memory
     if (m_workspaces.find(workspaceName) == m_workspaces.end()) {
-        std::cerr << "Workspace '" << workspaceName << "' not found" << std::endl;
-        return false;
+        std::cout << "[Workspace] Not in memory, attempting to load from disk..." << std::endl;
+        if (!loadWorkspaceConfig(workspaceName)) {
+            std::cerr << "[Workspace] Could not find or load workspace file for '" << workspaceName << "'" << std::endl;
+            return false;
+        }
+    } else {
+        std::cout << "[Workspace] Found in memory, using cached config." << std::endl;
     }
-    // Load workspace configuration
-    std::cout << "Loading workspace configuration..." << std::endl;
-    if (!loadWorkspaceConfig(workspaceName)) {
-        std::cerr << "Failed to load workspace config for '" << workspaceName << "'" << std::endl;
-        return false;
-    }
-    std::set<std::string> missingWindows;
     const auto& config = m_workspaces[workspaceName];
-    // Apply window visibility from workspace
+    std::cout << "[Workspace] Loaded config: name='" << config.name << "', description='" << config.description << "'" << std::endl;
+    std::cout << "[Workspace] Window visibility keys:";
+    for (const auto& [k, v] : config.windowVisibility) std::cout << " '" << k << "'";
+    std::cout << std::endl;
+    // Set all windows to visible by default, then apply config
     std::vector<std::string> allWindows = getAllWindowNames();
     std::set<std::string> allWindowSet(allWindows.begin(), allWindows.end());
     for (const auto& windowName : allWindows) {
-        std::cout << "  Setting " << windowName << " to visible (default)" << std::endl;
-        setWindowVisible(windowName, true);
+        setWindowVisible(windowName, false);
     }
+    std::set<std::string> missingWindows;
+    // Show only those listed as true in the config
     for (const auto& [windowName, isVisible] : config.windowVisibility) {
         if (allWindowSet.count(windowName)) {
-            if (!isVisible) {
-                std::cout << "  Setting " << windowName << " to hidden" << std::endl;
-                setWindowVisible(windowName, false);
-            }
+            setWindowVisible(windowName, isVisible);
+            std::cout << "[Workspace] Set '" << windowName << "' visible=" << isVisible << std::endl;
         } else {
             std::cerr << "[Workspace] Could not find window named '" << windowName << "' referenced in workspace. Skipping." << std::endl;
             missingWindows.insert(windowName);
         }
     }
-    // TODO: Show modal for missing windows if needed (UIManager responsibility)
     if (!config.imguiLayout.empty()) {
-        std::cout << "Loading ImGui layout from workspace..." << std::endl;
+        std::cout << "[Workspace] ImGui layout present (" << config.imguiLayout.size() << " bytes)." << std::endl;
         // loadImGuiLayout(config.imguiLayout); // Enable if needed
-        std::cout << "ImGui layout loading temporarily disabled for debugging" << std::endl;
+        std::cout << "[Workspace] ImGui layout loading temporarily disabled for debugging" << std::endl;
     } else {
-        std::cout << "No ImGui layout found in workspace, using default" << std::endl;
+        std::cout << "[Workspace] No ImGui layout found in workspace, using default" << std::endl;
     }
     m_currentWorkspace = workspaceName;
-    std::cout << "Loaded workspace: " << workspaceName << std::endl;
+    std::cout << "[Workspace] Loaded workspace: '" << workspaceName << "'" << std::endl;
     return true;
 }
 
@@ -658,13 +659,18 @@ std::string WindowManager::getWorkspaceConfigPath(const std::string& workspaceNa
 
 bool WindowManager::loadWorkspaceConfig(const std::string& workspaceName) {
     std::string configPath = getWorkspaceConfigPath(workspaceName);
+    std::cout << "[WorkspaceConfig] Attempting to load: " << configPath << std::endl;
     if (!std::filesystem::exists(configPath)) {
+        std::cerr << "[WorkspaceConfig] File does not exist: " << configPath << std::endl;
         return false;
     }
     try {
         std::ifstream file(configPath);
         nlohmann::json j;
         file >> j;
+        std::cout << "[WorkspaceConfig] JSON keys:";
+        for (auto it = j.begin(); it != j.end(); ++it) std::cout << " '" << it.key() << "'";
+        std::cout << std::endl;
         WorkspaceConfig& config = m_workspaces[workspaceName];
         config.name = j.value("name", workspaceName);
         config.description = j.value("description", "");
@@ -675,9 +681,10 @@ bool WindowManager::loadWorkspaceConfig(const std::string& workspaceName) {
             }
         }
         config.imguiLayout = j.value("imguiLayout", "");
+        std::cout << "[WorkspaceConfig] Loaded: name='" << config.name << "', description='" << config.description << "', windowVisibility=" << config.windowVisibility.size() << " windows, imguiLayout=" << (config.imguiLayout.empty() ? "empty" : "present") << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Error loading workspace config: " << e.what() << std::endl;
+        std::cerr << "[WorkspaceConfig] Error loading workspace config: " << e.what() << std::endl;
         return false;
     }
 }
