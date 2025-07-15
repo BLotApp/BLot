@@ -7,7 +7,7 @@
 // Transform component is defined in ECSManager.h
 #include "rendering/Graphics.h"
 #include <imgui.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 namespace blot {
 
@@ -108,7 +108,7 @@ void CanvasWindow::drawCanvasTexture() {
     auto canvasPtr = m_renderingManager->getCanvas(m_activeCanvasId);
     if (canvasPtr && *canvasPtr) {
         unsigned int texId = (*canvasPtr)->getColorTexture();
-        printf("[ImGui] Displaying texture: ID=%u, size=%.1fx%.1f\n", texId, m_canvasSize.x, m_canvasSize.y);
+        spdlog::debug("[ImGui] Displaying texture: ID={}, size={}x{}", texId, m_canvasSize.x, m_canvasSize.y);
         
         // Draw the image
         ImGui::Image((void*)(intptr_t)texId, m_canvasSize);
@@ -118,25 +118,23 @@ void CanvasWindow::drawCanvasTexture() {
         m_canvasEnd = ImGui::GetItemRectMax();
         m_canvasSize = ImVec2(m_canvasEnd.x - m_canvasPos.x, m_canvasEnd.y - m_canvasPos.y);
         
-        printf("[ImGui] Image bounds: pos=(%.1f,%.1f), size=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
-               m_canvasPos.x, m_canvasPos.y, m_canvasSize.x, m_canvasSize.y, m_canvasEnd.x, m_canvasEnd.y);
+        spdlog::debug("[ImGui] Image bounds: pos=({},{}), size=({},{}), end=({},{}))", m_canvasPos.x, m_canvasPos.y, m_canvasSize.x, m_canvasSize.y, m_canvasEnd.x, m_canvasEnd.y);
     } else {
-        printf("[ImGui] ERROR: No canvas resource found for active canvas\n");
+        spdlog::error("[ImGui] ERROR: No canvas resource found for active canvas");
     }
 }
 
 void CanvasWindow::handleShapeCreation() {
     if (m_currentTool == 0) { // Rectangle tool
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            printf("[Mouse] Left mouse clicked! canvasMousePos=(%.1f,%.1f)\n", m_canvasMousePos.x, m_canvasMousePos.y);
+            spdlog::debug("[Mouse] Left mouse clicked! canvasMousePos=({}, {})", m_canvasMousePos.x, m_canvasMousePos.y);
             m_toolStartPos = m_canvasMousePos;
             m_toolActive = true;
         }
         
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_toolActive) {
-            printf("[Mouse] Left mouse released, creating shape...\n");
-            printf("[Mouse] DEBUG: Tool was active, creating shape with start=(%.1f,%.1f), end=(%.1f,%.1f)\n", 
-                   m_toolStartPos.x, m_toolStartPos.y, m_canvasMousePos.x, m_canvasMousePos.y);
+            spdlog::debug("[Mouse] Left mouse released, creating shape...");
+            spdlog::debug("[Mouse] DEBUG: Tool was active, creating shape with start=({}, {}), end=({}, {})", m_toolStartPos.x, m_toolStartPos.y, m_canvasMousePos.x, m_canvasMousePos.y);
             createShape(m_toolStartPos, m_canvasMousePos);
             m_toolActive = false;
         }
@@ -145,23 +143,23 @@ void CanvasWindow::handleShapeCreation() {
 
 void CanvasWindow::createShape(const ImVec2& start, const ImVec2& end) {
     if (!m_ecs) {
-        printf("[CanvasWindow] ERROR: No ECS manager available\n");
+        spdlog::error("[CanvasWindow] ERROR: No ECS manager available");
         return;
     }
     
-    printf("[CanvasWindow] Input coordinates: start=(%.1f,%.1f), end=(%.1f,%.1f)\n", start.x, start.y, end.x, end.y);
+    spdlog::debug("[CanvasWindow] Input coordinates: start=({}, {}), end=({}, {})", start.x, start.y, end.x, end.y);
     
     ImVec2 blend2DStart = convertToBlend2DCoordinates(start);
     ImVec2 blend2DEnd = convertToBlend2DCoordinates(end);
     
-    printf("[CanvasWindow] Converted coordinates: start=(%.1f,%.1f), end=(%.1f,%.1f)\n", blend2DStart.x, blend2DStart.y, blend2DEnd.x, blend2DEnd.y);
+    spdlog::debug("[CanvasWindow] Converted coordinates: start=({}, {}), end=({}, {})", blend2DStart.x, blend2DStart.y, blend2DEnd.x, blend2DEnd.y);
     
     float x1 = std::min(blend2DStart.x, blend2DEnd.x);
     float y1 = std::min(blend2DStart.y, blend2DEnd.y);
     float x2 = std::max(blend2DStart.x, blend2DEnd.x);
     float y2 = std::max(blend2DStart.y, blend2DEnd.y);
     
-    printf("[CanvasWindow] Final shape coordinates: (%.1f,%.1f) to (%.1f,%.1f)\n", x1, y1, x2, y2);
+    spdlog::debug("[CanvasWindow] Final shape coordinates: ({} to {}, {} to {})", x1, y1, x2, y2);
     
     // Create ECS entity with shape components
     entt::entity shapeEntity = m_ecs->createEntity();
@@ -192,7 +190,7 @@ void CanvasWindow::createShape(const ImVec2& start, const ImVec2& end) {
     style.hasStroke = true;
     m_ecs->addComponent<blot::components::Style>(shapeEntity, style);
     
-    printf("[CanvasWindow] Created shape entity: %u\n", static_cast<unsigned int>(shapeEntity));
+    spdlog::debug("[CanvasWindow] Created shape entity: {}", static_cast<unsigned int>(shapeEntity));
 }
 
 ImVec2 CanvasWindow::convertToCanvasCoordinates(const ImVec2& screenPos) const {
@@ -200,39 +198,39 @@ ImVec2 CanvasWindow::convertToCanvasCoordinates(const ImVec2& screenPos) const {
 }
 
 ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const {
-    printf("[CanvasWindow] convertToBlend2DCoordinates: input=(%.1f,%.1f)\n", canvasPos.x, canvasPos.y);
+    spdlog::debug("[CanvasWindow] convertToBlend2DCoordinates: input=({}, {})", canvasPos.x, canvasPos.y);
     
     // Get actual canvas dimensions from the canvas resource
     if (!m_renderingManager || m_activeCanvasId == entt::null) {
-        printf("[CanvasWindow] ERROR: No rendering manager or active canvas\n");
+        spdlog::error("[CanvasWindow] ERROR: No rendering manager or active canvas");
         return canvasPos; // Return unchanged if no canvas available
     }
     
     auto canvasPtr = m_renderingManager->getCanvas(m_activeCanvasId);
     if (!canvasPtr || !*canvasPtr) {
-        printf("[CanvasWindow] ERROR: Active canvas not found in resources\n");
+        spdlog::error("[CanvasWindow] ERROR: Active canvas not found in resources");
         return canvasPos; // Return unchanged if canvas not found
     }
     
     auto graphics = (*canvasPtr)->getGraphics();
     if (!graphics) {
-        printf("[CanvasWindow] ERROR: No graphics object in canvas\n");
+        spdlog::error("[CanvasWindow] ERROR: No graphics object in canvas");
         return canvasPos; // Return unchanged if no graphics
     }
     
     auto renderer = graphics->getRenderer();
     if (!renderer) {
-        printf("[CanvasWindow] ERROR: No renderer in graphics object\n");
+        spdlog::error("[CanvasWindow] ERROR: No renderer in graphics object");
         return canvasPos; // Return unchanged if no renderer
     }
     
     float canvasWidth = static_cast<float>(renderer->getWidth());
     float canvasHeight = static_cast<float>(renderer->getHeight());
     
-    printf("[CanvasWindow] Canvas dimensions: %.1fx%.1f, ImGui size: %.1fx%.1f\n", canvasWidth, canvasHeight, m_canvasSize.x, m_canvasSize.y);
+    spdlog::debug("[CanvasWindow] Canvas dimensions: {}x{}, ImGui size: {}x{}", canvasWidth, canvasHeight, m_canvasSize.x, m_canvasSize.y);
     
     if (m_canvasSize.x <= 0.0f || m_canvasSize.y <= 0.0f) {
-        printf("[CanvasWindow] ERROR: Invalid canvas size: %.1fx%.1f\n", m_canvasSize.x, m_canvasSize.y);
+        spdlog::error("[CanvasWindow] ERROR: Invalid canvas size: {}x{}", m_canvasSize.x, m_canvasSize.y);
         return canvasPos; // Return unchanged if invalid size
     }
     
@@ -240,7 +238,7 @@ ImVec2 CanvasWindow::convertToBlend2DCoordinates(const ImVec2& canvasPos) const 
     float scaleY = canvasHeight / m_canvasSize.y;
     
     ImVec2 result = ImVec2(canvasPos.x * scaleX, canvasPos.y * scaleY);
-    printf("[CanvasWindow] Scale: (%.2f,%.2f), result: (%.1f,%.1f)\n", scaleX, scaleY, result.x, result.y);
+    spdlog::debug("[CanvasWindow] Scale: ({}x{}, result: ({}x{})", scaleX, scaleY, result.x, result.y);
     
     return result;
 }

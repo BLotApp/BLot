@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 #include <imgui.h>
 #include <GLFW/glfw3.h>
+#include <spdlog/spdlog.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -60,40 +61,40 @@ BlotApp::BlotApp()
     // Initialize UI management
     try {
         m_uiManager = std::make_unique<blot::UIManager>(m_window);
-        std::cout << "BlotApp: After UIManager allocation" << std::endl;
+        spdlog::info("BlotApp: After UIManager allocation");
         m_uiManager->setBlotApp(this);
-        std::cout << "BlotApp: After setBlotApp" << std::endl;
+        spdlog::info("BlotApp: After setBlotApp");
         m_uiManager->initImGui();
-        std::cout << "BlotApp: After initImGui" << std::endl;
+        spdlog::info("BlotApp: After initImGui");
         m_uiManager->setupWindows(this);
-        std::cout << "BlotApp: After setupWindows" << std::endl;
+        spdlog::info("BlotApp: After setupWindows");
         registerUIActions(m_ecsManager->getEventSystem());
-        std::cout << "BlotApp: After registerUIActions" << std::endl;
+        spdlog::info("BlotApp: After registerUIActions");
         connectEventSystemToUI();
-        std::cout << "BlotApp: After connectEventSystemToUI" << std::endl;
+        spdlog::info("BlotApp: After connectEventSystemToUI");
         m_uiManager->setupWindowCallbacks(this);
-        std::cout << "BlotApp: After setupWindowCallbacks" << std::endl;
+        spdlog::info("BlotApp: After setupWindowCallbacks");
     } catch (const std::exception& e) {
-        std::cerr << "Exception in BlotApp UIManager setup: " << e.what() << std::endl;
+        spdlog::error("Exception in BlotApp UIManager setup: {}", e.what());
     }
     
-    std::cout << "BlotApp: After UIManager setup" << std::endl;
+    spdlog::info("BlotApp: After UIManager setup");
     try {
         // Initialize code editor
         m_codeEditor = std::make_unique<CodeEditor>();
-        std::cout << "BlotApp: After CodeEditor allocation" << std::endl;
+        spdlog::info("BlotApp: After CodeEditor allocation");
         if (m_codeEditor) {
             m_codeEditor->loadDefaultTemplate();
-            std::cout << "BlotApp: After loadDefaultTemplate" << std::endl;
+            spdlog::info("BlotApp: After loadDefaultTemplate");
         }
     } catch (const std::exception& e) {
-        std::cerr << "Exception in BlotApp constructor: " << e.what() << std::endl;
+        spdlog::error("Exception in BlotApp constructor: {}", e.what());
     }
-    std::cout << "BlotApp constructor finished" << std::endl;
+    spdlog::info("BlotApp constructor finished");
 }
 
 BlotApp::~BlotApp() {
-    std::cout << "BlotApp destructor called" << std::endl;
+    spdlog::info("BlotApp destructor called");
     // Save current ImGui layout
     if (m_uiManager) {
         m_uiManager->saveCurrentImGuiLayout();
@@ -110,7 +111,7 @@ BlotApp::~BlotApp() {
 
 void BlotApp::initWindow() {
     if (m_debugMode) {
-        std::cout << "Initializing GLFW..." << std::endl;
+        spdlog::info("Initializing GLFW...");
     }
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
@@ -121,7 +122,7 @@ void BlotApp::initWindow() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     if (m_debugMode) {
-        std::cout << "Creating window with size " << m_windowWidth << "x" << m_windowHeight << std::endl;
+        spdlog::info("Creating window with size {}x{}", m_windowWidth, m_windowHeight);
     }
     m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "Blot - Creative Coding", nullptr, nullptr);
     if (!m_window) {
@@ -130,7 +131,7 @@ void BlotApp::initWindow() {
     }
     
     if (m_debugMode) {
-        std::cout << "Window created successfully" << std::endl;
+        spdlog::info("Window created successfully");
     }
     glfwMakeContextCurrent(m_window);
     
@@ -143,7 +144,7 @@ void BlotApp::initWindow() {
             int y = (mode->height - m_windowHeight) / 2;
             glfwSetWindowPos(m_window, x, y);
             if (m_debugMode) {
-                std::cout << "Window positioned at " << x << "," << y << " on monitor " << mode->width << "x" << mode->height << std::endl;
+                spdlog::info("Window positioned at {},{} on monitor {}x{}", x, y, mode->width, mode->height);
             }
         }
     }
@@ -172,7 +173,7 @@ void BlotApp::initWindow() {
     // Check for any GLFW errors
     const char* error;
     if (glfwGetError(&error) && error) {
-        std::cout << "GLFW error: " << error << std::endl;
+        spdlog::error("GLFW error: {}", error);
     }
 }
 
@@ -214,7 +215,7 @@ void BlotApp::initGraphics() {
 
 void BlotApp::setup() {
     // Final setup phase - everything is now initialized
-    std::cout << "Setting up application..." << std::endl;
+    spdlog::info("Setting up application...");
     
     // Connect ECS event system to UI components
     if (m_uiManager && m_ecsManager) {
@@ -231,7 +232,7 @@ void BlotApp::setup() {
         m_scriptEngine->runCode(m_codeEditor->getCode());
     }
     
-    std::cout << "Application setup complete" << std::endl;
+    spdlog::info("Application setup complete");
 }
 
 void BlotApp::connectEventSystemToUI() {
@@ -240,7 +241,7 @@ void BlotApp::connectEventSystemToUI() {
     
     // Connect MainMenuBar to the ECS event system
     auto mainMenuBar = m_uiManager->getMainMenuBar();
-    std::cout << "[BlotApp] Setting event system on MainMenuBar: " << mainMenuBar << " with eventSystem ptr: " << &eventSystem << std::endl;
+    spdlog::info("[BlotApp] Setting event system on MainMenuBar: 0x{:X} with eventSystem ptr: 0x{:X}", reinterpret_cast<uintptr_t>(mainMenuBar), reinterpret_cast<uintptr_t>(&eventSystem));
     if (mainMenuBar) {
         mainMenuBar->setEventSystem(&eventSystem);
         
@@ -322,7 +323,7 @@ void BlotApp::connectEventSystemToUI() {
 void BlotApp::connectAddonManagerToEventSystem(blot::systems::EventSystem& eventSystem) {
     // Register addon-related events with the ECS event system
     eventSystem.registerEvent("addon_loaded", [this](const blot::systems::Event& event) {
-        std::cout << "Addon loaded event: " << event.actionId << std::endl;
+        spdlog::info("Addon loaded event: {}", event.actionId);
         // Trigger addon manager's global event
         if (m_addonManager) {
             m_addonManager->triggerGlobalEvent("addon_loaded");
@@ -330,21 +331,21 @@ void BlotApp::connectAddonManagerToEventSystem(blot::systems::EventSystem& event
     });
     
     eventSystem.registerEvent("addon_unloaded", [this](const blot::systems::Event& event) {
-        std::cout << "Addon unloaded event: " << event.actionId << std::endl;
+        spdlog::info("Addon unloaded event: {}", event.actionId);
         if (m_addonManager) {
             m_addonManager->triggerGlobalEvent("addon_unloaded");
         }
     });
     
     eventSystem.registerEvent("addon_enabled", [this](const blot::systems::Event& event) {
-        std::cout << "Addon enabled event: " << event.actionId << std::endl;
+        spdlog::info("Addon enabled event: {}", event.actionId);
         if (m_addonManager) {
             m_addonManager->triggerGlobalEvent("addon_enabled");
         }
     });
     
     eventSystem.registerEvent("addon_disabled", [this](const blot::systems::Event& event) {
-        std::cout << "Addon disabled event: " << event.actionId << std::endl;
+        spdlog::info("Addon disabled event: {}", event.actionId);
         if (m_addonManager) {
             m_addonManager->triggerGlobalEvent("addon_disabled");
         }
@@ -352,31 +353,31 @@ void BlotApp::connectAddonManagerToEventSystem(blot::systems::EventSystem& event
 }
 
 void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
-    std::cout << "[BlotApp] registerUIActions eventSystem ptr: " << &eventSystem << std::endl;
+    spdlog::info("[BlotApp] registerUIActions eventSystem ptr: 0x{:X}", reinterpret_cast<uintptr_t>(&eventSystem));
     // File menu actions
     eventSystem.registerAction("new_sketch", [this]() {
-        std::cout << "New sketch action triggered" << std::endl;
+        spdlog::info("New sketch action triggered");
         // TODO: Implement new sketch functionality
     });
     
     eventSystem.registerAction("open_sketch", [this]() {
-        std::cout << "Open sketch action triggered" << std::endl;
+        spdlog::info("Open sketch action triggered");
         // TODO: Implement open sketch functionality
     });
     
     eventSystem.registerAction("save_sketch", [this]() {
-        std::cout << "Save sketch action triggered" << std::endl;
+        spdlog::info("Save sketch action triggered");
         // TODO: Implement save sketch functionality
     });
     
     eventSystem.registerAction("quit", [this]() {
-        std::cout << "Quit action triggered" << std::endl;
+        spdlog::info("Quit action triggered");
         m_running = false;
     });
     
     // Edit menu actions
     eventSystem.registerAction("addon_manager", [this]() {
-        std::cout << "Addon manager action triggered" << std::endl;
+        spdlog::info("Addon manager action triggered");
         auto addonManagerWindow = m_uiManager->getWindowManager()->getWindow("AddonManager");
         if (addonManagerWindow) {
             addonManagerWindow->show();
@@ -384,7 +385,7 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     });
     
     eventSystem.registerAction("reload_addons", [this]() {
-        std::cout << "Reload addons action triggered" << std::endl;
+        spdlog::info("Reload addons action triggered");
         if (m_addonManager) {
             m_addonManager->reloadAllAddons();
         }
@@ -392,7 +393,7 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     
     // View menu actions
     eventSystem.registerAction("theme_editor", [this]() {
-        std::cout << "Theme editor action triggered" << std::endl;
+        spdlog::info("Theme editor action triggered");
         auto themeEditorWindow = m_uiManager->getWindowManager()->getWindow("ThemeEditor");
         if (themeEditorWindow) {
             themeEditorWindow->show();
@@ -400,41 +401,41 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     });
     
     eventSystem.registerAction("implot_demo", [this]() {
-        std::cout << "ImPlot demo action triggered" << std::endl;
+        spdlog::info("ImPlot demo action triggered");
         // TODO: Implement ImPlot demo
     });
     
     eventSystem.registerAction("imgui_markdown_demo", [this]() {
-        std::cout << "ImGui markdown demo action triggered" << std::endl;
+        spdlog::info("ImGui markdown demo action triggered");
         // TODO: Implement markdown demo
     });
     
     eventSystem.registerAction("markdown_editor", [this]() {
-        std::cout << "Markdown editor action triggered" << std::endl;
+        spdlog::info("Markdown editor action triggered");
         // TODO: Implement markdown editor
     });
     
     // Canvas menu actions
     eventSystem.registerAction("new_canvas", [this]() {
-        std::cout << "New canvas action triggered" << std::endl;
+        spdlog::info("New canvas action triggered");
         // TODO: Implement new canvas functionality
     });
     
     eventSystem.registerAction("save_canvas", [this]() {
-        std::cout << "Save canvas action triggered" << std::endl;
+        spdlog::info("Save canvas action triggered");
         // TODO: Implement save canvas functionality
     });
     
     // Workspace menu actions
     eventSystem.registerAction("save_current_workspace", [this]() {
-        std::cout << "Save current workspace action triggered" << std::endl;
+        spdlog::info("Save current workspace action triggered");
         if (m_uiManager) {
             m_uiManager->saveWorkspace("current");
         }
     });
     
     eventSystem.registerAction("show_save_workspace_dialog", [this]() {
-        std::cout << "Show save workspace dialog action triggered" << std::endl;
+        spdlog::info("Show save workspace dialog action triggered");
         auto saveDialog = m_uiManager->getWindowManager()->getWindow("SaveWorkspaceDialog");
         if (saveDialog) {
             saveDialog->show();
@@ -443,20 +444,20 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     
     // Run menu actions
     eventSystem.registerAction("run_sketch", [this]() {
-        std::cout << "Run sketch action triggered" << std::endl;
+        spdlog::info("Run sketch action triggered");
         if (m_codeEditor) {
             m_scriptEngine->runCode(m_codeEditor->getCode());
         }
     });
     
     eventSystem.registerAction("stop_sketch", [this]() {
-        std::cout << "Stop sketch action triggered" << std::endl;
+        spdlog::info("Stop sketch action triggered");
         // TODO: Implement stop sketch functionality
     });
     
     // Theme switching actions
     eventSystem.registerAction("switch_theme", std::function<void(int)>([this](int theme) {
-        std::cout << "Switch theme action triggered: " << theme << std::endl;
+        spdlog::info("Switch theme action triggered: {}", theme);
         if (m_uiManager) {
             m_uiManager->setImGuiTheme(static_cast<blot::UIManager::ImGuiTheme>(theme));
             
@@ -471,7 +472,7 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     
     // Renderer switching actions
     eventSystem.registerAction("switch_renderer", std::function<void(int)>([this](int rendererType) {
-        std::cout << "Switch renderer action triggered: " << rendererType << std::endl;
+        spdlog::info("Switch renderer action triggered: {}", rendererType);
         // Switch renderer for the active canvas
         if (m_renderingManager) {
             auto canvasPtr = m_renderingManager->getCanvas(m_activeCanvasId);
@@ -483,43 +484,43 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     
     // Debug actions
     eventSystem.registerAction("set_debug_mode", std::function<void(bool)>([this](bool enabled) {
-        std::cout << "Set debug mode action triggered: " << enabled << std::endl;
+        spdlog::info("Set debug mode action triggered: {}", enabled);
         setDebugMode(enabled);
     }));
     
     // Canvas management actions
     eventSystem.registerAction("select_canvas", std::function<void(uint32_t)>([this](uint32_t canvasId) {
-        std::cout << "Select canvas action triggered: " << canvasId << std::endl;
+        spdlog::info("Select canvas action triggered: {}", canvasId);
         // TODO: Implement canvas selection
     }));
     
     eventSystem.registerAction("close_canvas", std::function<void(uint32_t)>([this](uint32_t canvasId) {
-        std::cout << "Close canvas action triggered: " << canvasId << std::endl;
+        spdlog::info("Close canvas action triggered: {}", canvasId);
         // TODO: Implement canvas closing
     }));
     
     // Canvas management actions using CanvasManager
     eventSystem.registerAction("new_canvas", std::function<void()>([this]() {
-        std::cout << "New canvas action triggered" << std::endl;
+        spdlog::info("New canvas action triggered");
         if (m_canvasManager && m_ecsManager) {
             // Create new ECS canvas entity only
             entt::entity newCanvasEntity = m_canvasManager->createCanvas(*m_ecsManager, m_windowWidth, m_windowHeight);
             m_activeCanvasId = newCanvasEntity;
-            std::cout << "Created new canvas entity: " << (uint32_t)newCanvasEntity << std::endl;
+            spdlog::info("Created new canvas entity: {}", (uint32_t)newCanvasEntity);
         }
     }));
     
     eventSystem.registerAction("close_active_canvas", std::function<void()>([this]() {
-        std::cout << "Close active canvas action triggered" << std::endl;
+        spdlog::info("Close active canvas action triggered");
         if (m_canvasManager && m_canvasManager->getCanvasCount() > 1) {
             size_t activeIndex = m_canvasManager->getActiveCanvasIndex();
             m_canvasManager->removeCanvas(activeIndex);
-            std::cout << "Closed canvas at index: " << activeIndex << std::endl;
+            spdlog::info("Closed canvas at index: {}", activeIndex);
         }
     }));
     
     eventSystem.registerAction("switch_canvas", std::function<void(size_t)>([this](size_t canvasIndex) {
-        std::cout << "Switch canvas action triggered: " << canvasIndex << std::endl;
+        spdlog::info("Switch canvas action triggered: {}", canvasIndex);
         if (m_canvasManager) {
             m_canvasManager->setActiveCanvas(canvasIndex);
         }
@@ -553,15 +554,15 @@ void BlotApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
         }
         return {};
     }));
-    std::cout << "[BlotApp] Registered get_available_workspaces: " << eventSystem.hasAction("get_available_workspaces") << std::endl;
+    spdlog::info("[BlotApp] Registered get_available_workspaces: {}", eventSystem.hasAction("get_available_workspaces"));
 
-    std::cout << "[EventSystem] Registering load_workspace action" << std::endl;
+    spdlog::info("[EventSystem] Registering load_workspace action");
     eventSystem.registerAction("load_workspace", std::function<void(const std::string&)>([this](const std::string& workspaceName) {
         if (m_uiManager) {
             m_uiManager->loadWorkspace(workspaceName);
         }
     }));
-    std::cout << "[BlotApp] Registered load_workspace: " << eventSystem.hasAction("load_workspace") << std::endl;
+    spdlog::info("[BlotApp] Registered load_workspace: {}", eventSystem.hasAction("load_workspace"));
     
     eventSystem.registerAction("save_workspace", std::function<void(const std::string&)>([this](const std::string& workspaceName) {
         if (m_uiManager) {
@@ -590,11 +591,11 @@ void BlotApp::initAddons() {
 
 void BlotApp::run() {
     if (!m_window) {
-        std::cout << "Error: Window is null! Exiting run()." << std::endl;
+        spdlog::error("Error: Window is null! Exiting run().");
         return;
     }
 
-    std::cout << "Entering main loop..." << std::endl;
+    spdlog::info("Entering main loop...");
     while (!glfwWindowShouldClose(m_window) && m_running) {
         float currentTime = static_cast<float>(glfwGetTime());
         m_deltaTime = currentTime - m_lastFrameTime;
@@ -608,13 +609,13 @@ void BlotApp::run() {
         // Clear and render
         glClearColor(1.0f, 0.0f, 1.0f, 1.0f); // Magenta for debug
         glClear(GL_COLOR_BUFFER_BIT);
-        std::cout << "Rendering frame..." << std::endl;
+        spdlog::info("Rendering frame...");
         
         // Check for OpenGL errors
         if (m_debugMode) {
             GLenum err;
             while ((err = glGetError()) != GL_NO_ERROR) {
-                std::cout << "OpenGL error: " << err << std::endl;
+                spdlog::error("OpenGL error: {}", err);
             }
         }
         
@@ -623,7 +624,7 @@ void BlotApp::run() {
         
         glfwSwapBuffers(m_window);
     }
-    std::cout << "Exited main loop." << std::endl;
+    spdlog::info("Exited main loop.");
 } 
 
 void BlotApp::update() {

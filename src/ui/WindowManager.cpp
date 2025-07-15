@@ -7,13 +7,14 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include "AppPaths.h"
+#include <spdlog/spdlog.h>
 
 namespace blot {
 
 WindowManager::WindowManager() : m_focusedWindowEntity(entt::null) {
     m_workspaceDir = AppPaths::getWorkspacesDir();
     m_mainIniPath = AppPaths::getImGuiIniPath();
-    std::cout << "[DEBUG] WindowManager constructed, workspaceDir=" << m_workspaceDir << std::endl;
+    spdlog::debug("[DEBUG] WindowManager constructed, workspaceDir={}", m_workspaceDir);
     loadExistingWorkspaces();
 }
 
@@ -192,7 +193,7 @@ void WindowManager::closeAllWindows() {
 }
 
 void WindowManager::renderAllWindows() {
-    std::cout << "[WindowManager] renderAllWindows() called" << std::endl;
+    spdlog::debug("[WindowManager] renderAllWindows() called");
     // Sort windows by z-order
     sortWindowsByZOrder();
     
@@ -448,22 +449,22 @@ std::vector<std::string> WindowManager::getMenuWindows() {
 
 // Workspace management methods
 bool WindowManager::loadWorkspace(const std::string& workspaceName) {
-    std::cout << "[Workspace] Requested to load: '" << workspaceName << "'" << std::endl;
+    spdlog::info("[Workspace] Requested to load: '{}'", workspaceName);
     // Check if workspace is already loaded in memory
     if (m_workspaces.find(workspaceName) == m_workspaces.end()) {
-        std::cout << "[Workspace] Not in memory, attempting to load from disk..." << std::endl;
+        spdlog::info("[Workspace] Not in memory, attempting to load from disk...");
         if (!loadWorkspaceConfig(workspaceName)) {
-            std::cerr << "[Workspace] Could not find or load workspace file for '" << workspaceName << "'" << std::endl;
+            spdlog::error("[Workspace] Could not find or load workspace file for '{}'", workspaceName);
             return false;
         }
     } else {
-        std::cout << "[Workspace] Found in memory, using cached config." << std::endl;
+        spdlog::info("[Workspace] Found in memory, using cached config.");
     }
     const auto& config = m_workspaces[workspaceName];
-    std::cout << "[Workspace] Loaded config: name='" << config.name << "', description='" << config.description << "'" << std::endl;
-    std::cout << "[Workspace] Window visibility keys:";
-    for (const auto& [k, v] : config.windowVisibility) std::cout << " '" << k << "'";
-    std::cout << std::endl;
+    spdlog::info("[Workspace] Loaded config: name='{}', description='{}'", config.name, config.description);
+    spdlog::info("[Workspace] Window visibility keys:");
+    for (const auto& [k, v] : config.windowVisibility) spdlog::info(" '{}'", k);
+    spdlog::info("");
     // Set all windows to visible by default, then apply config
     std::vector<std::string> allWindows = getAllWindowNames();
     std::set<std::string> allWindowSet(allWindows.begin(), allWindows.end());
@@ -475,21 +476,21 @@ bool WindowManager::loadWorkspace(const std::string& workspaceName) {
     for (const auto& [windowName, isVisible] : config.windowVisibility) {
         if (allWindowSet.count(windowName)) {
             setWindowVisible(windowName, isVisible);
-            std::cout << "[Workspace] Set '" << windowName << "' visible=" << isVisible << std::endl;
+            spdlog::info("[Workspace] Set '{}' visible={}", windowName, isVisible);
         } else {
-            std::cerr << "[Workspace] Could not find window named '" << windowName << "' referenced in workspace. Skipping." << std::endl;
+            spdlog::warn("[Workspace] Could not find window named '{}' referenced in workspace. Skipping.", windowName);
             missingWindows.insert(windowName);
         }
     }
     if (!config.imguiLayout.empty()) {
-        std::cout << "[Workspace] ImGui layout present (" << config.imguiLayout.size() << " bytes)." << std::endl;
+        spdlog::info("[Workspace] ImGui layout present ({}) bytes.", config.imguiLayout.size());
         // loadImGuiLayout(config.imguiLayout); // Enable if needed
-        std::cout << "[Workspace] ImGui layout loading temporarily disabled for debugging" << std::endl;
+        spdlog::info("[Workspace] ImGui layout loading temporarily disabled for debugging");
     } else {
-        std::cout << "[Workspace] No ImGui layout found in workspace, using default" << std::endl;
+        spdlog::info("[Workspace] No ImGui layout found in workspace, using default");
     }
     m_currentWorkspace = workspaceName;
-    std::cout << "[Workspace] Loaded workspace: '" << workspaceName << "'" << std::endl;
+    spdlog::info("[Workspace] Loaded workspace: '{}'", workspaceName);
     return true;
 }
 
@@ -497,10 +498,10 @@ bool WindowManager::saveWorkspace(const std::string& workspaceName) {
     WorkspaceConfig currentState = captureCurrentUIState(workspaceName);
     m_workspaces[workspaceName] = currentState;
     if (!saveWorkspaceConfig(workspaceName)) {
-        std::cerr << "Failed to save workspace config for '" << workspaceName << "'" << std::endl;
+        spdlog::error("Failed to save workspace config for '{}'", workspaceName);
         return false;
     }
-    std::cout << "Saved workspace: " << workspaceName << std::endl;
+    spdlog::info("Saved workspace: {}", workspaceName);
     return true;
 }
 
@@ -511,24 +512,24 @@ bool WindowManager::saveWorkspaceAs(const std::string& workspaceName) {
 }
 
 WorkspaceConfig WindowManager::captureCurrentUIState(const std::string& workspaceName) {
-    std::cout << "Capturing current UI state for workspace: " << workspaceName << std::endl;
+    spdlog::info("Capturing current UI state for workspace: {}", workspaceName);
     WorkspaceConfig config;
     config.name = workspaceName;
     config.description = "Custom workspace created on " + std::to_string(std::time(nullptr));
     std::vector<std::string> allWindows = getAllWindowNames();
-    std::cout << "Found " << allWindows.size() << " windows:" << std::endl;
+    spdlog::info("Found {} windows:", allWindows.size());
     for (const auto& windowName : allWindows) {
         bool isVisible = isWindowVisible(windowName);
         if (!isVisible) {
             config.windowVisibility[windowName] = false;
-            std::cout << "  - " << windowName << ": hidden (captured)" << std::endl;
+            spdlog::info("  - {} : hidden (captured)", windowName);
         } else {
-            std::cout << "  - " << windowName << ": visible (not captured)" << std::endl;
+            spdlog::info("  - {} : visible (not captured)", windowName);
         }
     }
     config.imguiLayout = getCurrentImGuiLayout();
-    std::cout << "ImGui layout captured: " << (config.imguiLayout.empty() ? "empty" : "non-empty") << std::endl;
-    std::cout << "UI state capture complete" << std::endl;
+    spdlog::info("ImGui layout captured: {}", config.imguiLayout.empty() ? "empty" : "non-empty");
+    spdlog::info("UI state capture complete");
     return config;
 }
 
@@ -538,7 +539,7 @@ WorkspaceConfig WindowManager::createWorkspaceFromCurrentState(const std::string
 
 bool WindowManager::createWorkspace(const std::string& workspaceName, const WorkspaceConfig& config) {
     if (m_workspaces.find(workspaceName) != m_workspaces.end()) {
-        std::cerr << "Workspace '" << workspaceName << "' already exists" << std::endl;
+        spdlog::error("Workspace '{}' already exists", workspaceName);
         return false;
     }
     m_workspaces[workspaceName] = config;
@@ -625,32 +626,32 @@ void WindowManager::ensureWorkspaceDirectory() {
 }
 
 void WindowManager::createDefaultWorkspaces() {
-    std::cout << "Workspaces are loaded dynamically from JSON files" << std::endl;
+    spdlog::info("Workspaces are loaded dynamically from JSON files");
 }
 
 void WindowManager::loadExistingWorkspaces() {
-    std::cout << "[DEBUG] Looking for workspaces in: " << std::filesystem::absolute(m_workspaceDir) << std::endl;
+    spdlog::debug("[DEBUG] Looking for workspaces in: {}", std::filesystem::absolute(m_workspaceDir).string());
     try {
         if (!std::filesystem::exists(m_workspaceDir)) {
-            std::cout << "[DEBUG] Workspace directory does not exist: " << m_workspaceDir << std::endl;
+            spdlog::debug("[DEBUG] Workspace directory does not exist: {}", m_workspaceDir);
             return;
         }
         for (const auto& entry : std::filesystem::directory_iterator(m_workspaceDir)) {
-            std::cout << "[DEBUG] Found file: " << entry.path() << std::endl;
+            spdlog::debug("[DEBUG] Found file: {}", entry.path().string());
             if (entry.is_regular_file() && entry.path().extension() == ".json") {
                 std::string workspaceName = entry.path().stem().string();
-                std::cout << "Found workspace file: " << workspaceName << std::endl;
+                spdlog::info("Found workspace file: {}", workspaceName);
                 if (loadWorkspaceConfig(workspaceName)) {
-                    std::cout << "Successfully loaded workspace: " << workspaceName << std::endl;
+                    spdlog::info("Successfully loaded workspace: {}", workspaceName);
                 } else {
-                    std::cout << "Failed to load workspace: " << workspaceName << std::endl;
+                    spdlog::warn("Failed to load workspace: {}", workspaceName);
                 }
             }
         }
     } catch (const std::exception& e) {
-        std::cerr << "Exception in loadExistingWorkspaces: " << e.what() << std::endl;
+        spdlog::error("Exception in loadExistingWorkspaces: {}", e.what());
     }
-    std::cout << "Finished loading existing workspaces" << std::endl;
+    spdlog::info("Finished loading existing workspaces");
 }
 
 std::string WindowManager::getWorkspaceConfigPath(const std::string& workspaceName) const {
@@ -659,18 +660,18 @@ std::string WindowManager::getWorkspaceConfigPath(const std::string& workspaceNa
 
 bool WindowManager::loadWorkspaceConfig(const std::string& workspaceName) {
     std::string configPath = getWorkspaceConfigPath(workspaceName);
-    std::cout << "[WorkspaceConfig] Attempting to load: " << configPath << std::endl;
+    spdlog::info("[WorkspaceConfig] Attempting to load: {}", configPath);
     if (!std::filesystem::exists(configPath)) {
-        std::cerr << "[WorkspaceConfig] File does not exist: " << configPath << std::endl;
+        spdlog::error("[WorkspaceConfig] File does not exist: {}", configPath);
         return false;
     }
     try {
         std::ifstream file(configPath);
         nlohmann::json j;
         file >> j;
-        std::cout << "[WorkspaceConfig] JSON keys:";
-        for (auto it = j.begin(); it != j.end(); ++it) std::cout << " '" << it.key() << "'";
-        std::cout << std::endl;
+        spdlog::info("[WorkspaceConfig] JSON keys:");
+        for (auto it = j.begin(); it != j.end(); ++it) spdlog::info(" '{}'", it.key());
+        spdlog::info("");
         WorkspaceConfig& config = m_workspaces[workspaceName];
         config.name = j.value("name", workspaceName);
         config.description = j.value("description", "");
@@ -681,10 +682,10 @@ bool WindowManager::loadWorkspaceConfig(const std::string& workspaceName) {
             }
         }
         config.imguiLayout = j.value("imguiLayout", "");
-        std::cout << "[WorkspaceConfig] Loaded: name='" << config.name << "', description='" << config.description << "', windowVisibility=" << config.windowVisibility.size() << " windows, imguiLayout=" << (config.imguiLayout.empty() ? "empty" : "present") << std::endl;
+        spdlog::info("[WorkspaceConfig] Loaded: name='{}', description='{}', windowVisibility={} windows, imguiLayout={}", config.name, config.description, config.windowVisibility.size(), (config.imguiLayout.empty() ? "empty" : "present"));
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "[WorkspaceConfig] Error loading workspace config: " << e.what() << std::endl;
+        spdlog::error("[WorkspaceConfig] Error loading workspace config: {}", e.what());
         return false;
     }
 }

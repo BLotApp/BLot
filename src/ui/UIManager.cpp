@@ -29,6 +29,7 @@
 #include "app/BlotApp.h"
 #include <set>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 namespace blot {
 // Helper for icon and color
@@ -127,7 +128,7 @@ void UIManager::shutdownImGui() {
 }
 
 void UIManager::update() {
-    std::cout << "[UIManager] update() called" << std::endl;
+    spdlog::debug("[UIManager] update() called");
     // Start ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -260,9 +261,9 @@ void UIManager::renderAllWindows() {
         m_notifications.end());
     // Before loading workspace, print all registered window names
     auto allWindows = m_windowManager->getAllWindowNames();
-    std::cout << "Registered windows: ";
-    for (const auto& w : allWindows) std::cout << w << ", ";
-    std::cout << std::endl;
+    spdlog::info("Registered windows: {}", allWindows.size());
+    for (const auto& w : allWindows) spdlog::info("{}", w);
+    spdlog::info("");
     // Render modals (blocking popups)
     if (!m_modals.empty()) {
         Modal& m = m_modals.front();

@@ -2,8 +2,8 @@
 #include <type_traits>
 #include <vector>
 #include <string>
-#include <iostream>
 #include <typeinfo>
+#include <spdlog/spdlog.h>
 
 // Property type enumeration for editor reflection
 enum propTypes {
@@ -48,6 +48,6 @@ TryGetProperties(T& component) {
 template<typename T>
 typename std::enable_if<!has_get_properties<T>::value, std::vector<sProp>>::type
 TryGetProperties(T&) {
-    std::cerr << "[Property Inspector] WARNING: Component '" << typeid(T).name() << "' missing GetProperties()\n";
+    spdlog::warn("[Property Inspector] WARNING: Component '{}' missing GetProperties()", typeid(T).name());
     return {};
 } 

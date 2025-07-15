@@ -3,7 +3,7 @@
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
 #include <imgui.h>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 namespace blot {
 
@@ -26,35 +26,33 @@ void DebugPanel::renderDebugInfo() {
 
 void DebugPanel::renderClearShapesButton() {
     if (ImGui::Button("Clear All Shapes")) {
-        printf("[DebugPanel] === Before Clear ===\n");
-        printf("[DebugPanel] Total entities: %zu\n", m_ecs->getEntityCount());
+        spdlog::debug("[DebugPanel] === Before Clear ===");
+        spdlog::debug("[DebugPanel] Total entities: {}", m_ecs->getEntityCount());
         auto allEntities = m_ecs->getAllEntities();
         for (auto entity : allEntities) {
             bool hasTransform = m_ecs->hasComponent<Transform>(entity);
             bool hasShape = m_ecs->hasComponent<blot::components::Shape>(entity);
             bool hasStyle = m_ecs->hasComponent<blot::components::Style>(entity);
-            printf("[DebugPanel] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
-                   (unsigned int)entity, hasTransform, hasShape, hasStyle);
+            spdlog::debug("[DebugPanel] Entity {}: Transform={}, Shape={}, Style={}", (unsigned int)entity, hasTransform, hasShape, hasStyle);
         }
         
         auto view = m_ecs->view<Transform, Shape, Style>();
         int count = 0;
         for (auto entity : view) {
-            printf("[DebugPanel] Destroying entity %u\n", (unsigned int)entity);
+            spdlog::debug("[DebugPanel] Destroying entity {}", (unsigned int)entity);
             m_ecs->destroyEntity(entity);
             count++;
         }
-        printf("[DebugPanel] Cleared %d shapes\n", count);
+        spdlog::debug("[DebugPanel] Cleared {} shapes", count);
         
-        printf("[DebugPanel] === After Clear ===\n");
-        printf("[DebugPanel] Total entities: %zu\n", m_ecs->getEntityCount());
+        spdlog::debug("[DebugPanel] === After Clear ===");
+        spdlog::debug("[DebugPanel] Total entities: {}", m_ecs->getEntityCount());
         allEntities = m_ecs->getAllEntities();
         for (auto entity : allEntities) {
             bool hasTransform = m_ecs->hasComponent<Transform>(entity);
             bool hasShape = m_ecs->hasComponent<blot::components::Shape>(entity);
             bool hasStyle = m_ecs->hasComponent<blot::components::Style>(entity);
-            printf("[DebugPanel] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
-                   (unsigned int)entity, hasTransform, hasShape, hasStyle);
+            spdlog::debug("[DebugPanel] Entity {}: Transform={}, Shape={}, Style={}", (unsigned int)entity, hasTransform, hasShape, hasStyle);
         }
     }
 }

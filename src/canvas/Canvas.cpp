@@ -7,7 +7,7 @@
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
 #include <filesystem>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 struct Canvas::Impl {
 	GLuint framebuffer = 0;
@@ -240,8 +240,7 @@ void Canvas::render() {
         const BLImage& img = renderer->getImage();
         BLImageData imgData;
         if (img.getData(&imgData) == BL_SUCCESS) {
-            printf("[Canvas] Uploading texture: size=%dx%d, format=%u, textureID=%u\n", 
-                   img.width(), img.height(), img.format(), m_impl->colorTexture);
+            spdlog::info("[Canvas] Uploading texture: size={}x{}, format={}, textureID={}", img.width(), img.height(), img.format(), static_cast<unsigned int>(m_impl->colorTexture));
             glBindTexture(GL_TEXTURE_2D, m_impl->colorTexture);
             // Blend2D uses BGRA format, but OpenGL might need RGBA
             GLenum format = GL_BGRA;
@@ -250,49 +249,48 @@ void Canvas::render() {
             } else if (img.format() == BL_FORMAT_XRGB32) {
                 format = GL_BGRA;  // BGRA for Blend2D
             }
-            printf("[Canvas] Using format: %u for image format: %u\n", format, img.format());
+            spdlog::info("[Canvas] Using format: {} for image format: {}", format, img.format());
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, img.width(), img.height(), format, GL_UNSIGNED_BYTE, imgData.pixelData);
             glBindTexture(GL_TEXTURE_2D, 0);
         } else {
-            printf("[Canvas] ERROR: Failed to get image data\n");
+            spdlog::error("[Canvas] ERROR: Failed to get image data");
         }
 		
         // Debug: Save the image after drawing
         renderer->flush();
         img.writeToFile("debug_after_render.png");
     } else {
-        printf("[Canvas] ERROR: No Blend2DRenderer found\n");
+        spdlog::error("[Canvas] ERROR: No Blend2DRenderer found");
     }
 }
 
 void Canvas::renderECSShapes() {
     if (!m_ecs || !m_graphics) {
-        printf("[Canvas] renderECSShapes: m_ecs=%p, m_graphics=%p\n", (void*)m_ecs, (void*)m_graphics.get());
+        spdlog::debug("[Canvas] renderECSShapes: m_ecs=0x{:X}, m_graphics=0x{:X}", reinterpret_cast<uintptr_t>(m_ecs), reinterpret_cast<uintptr_t>(m_graphics.get()));
         return;
     }
     
     // Get the renderer from graphics
     Blend2DRenderer* renderer = dynamic_cast<Blend2DRenderer*>(m_graphics->getRenderer());
     if (!renderer) {
-        printf("[Canvas] renderECSShapes: No Blend2DRenderer found\n");
+        spdlog::error("[Canvas] renderECSShapes: No Blend2DRenderer found");
         return;
     }
     
     // Get all entities with Transform, Shape, and Style components
     auto view = m_ecs->view<Transform, blot::components::Shape, blot::components::Style>();
     
-    printf("[Canvas] renderECSShapes: Checking for entities with shapes...\n");
-    printf("[Canvas] Total entities in registry: %zu\n", m_ecs->getEntityCount());
+    spdlog::debug("[Canvas] renderECSShapes: Checking for entities with shapes...");
+    spdlog::debug("[Canvas] Total entities in registry: {}", m_ecs->getEntityCount());
     
     // Debug: Check what components each entity has
     auto allEntities = m_ecs->getAllEntities();
-    printf("[Canvas] All entities: %zu\n", allEntities.size());
+    spdlog::debug("[Canvas] All entities: {}", allEntities.size());
     for (auto entity : allEntities) {
         bool hasTransform = m_ecs->hasComponent<Transform>(entity);
         bool hasShape = m_ecs->hasComponent<blot::components::Shape>(entity);
         bool hasStyle = m_ecs->hasComponent<blot::components::Style>(entity);
-        printf("[Canvas] Entity %u: Transform=%d, Shape=%d, Style=%d\n", 
-               (unsigned int)entity, hasTransform, hasShape, hasStyle);
+        spdlog::debug("[Canvas] Entity {}: Transform={}, Shape={}, Style={}", (unsigned int)entity, hasTransform, hasShape, hasStyle);
     }
     
     for (auto entity : view) {
@@ -322,23 +320,23 @@ void Canvas::renderECSShapes() {
         height *= transform.scaleY;
         
         // Debug: Print raw shape coordinates
-        printf("[Canvas] Raw shape coords: x1=%.2f, y1=%.2f, x2=%.2f, y2=%.2f\n", 
+        spdlog::debug("[Canvas] Raw shape coords: x1={:.2f}, y1={:.2f}, x2={:.2f}, y2={:.2f}", 
                shape.x1, shape.y1, shape.x2, shape.y2);
-        printf("[Canvas] Transform: x=%.2f, y=%.2f, scale=(%.2f,%.2f)\n", 
+        spdlog::debug("[Canvas] Transform: x={:.2f}, y={:.2f}, scale=(%.2f,%.2f)", 
                transform.x, transform.y, transform.scaleX, transform.scaleY);
         
         // Render based on shape type
-        printf("[Canvas] Rendering shape: type=%d, x=%.2f, y=%.2f, w=%.2f, h=%.2f, hasFill=%d, hasStroke=%d\n", 
+        spdlog::debug("[Canvas] Rendering shape: type={}, x={:.2f}, y={:.2f}, w={:.2f}, h={:.2f}, hasFill={}, hasStroke={}", 
                (int)shape.type, x, y, width, height, style.hasFill, style.hasStroke);
         
         switch (shape.type) {
             case blot::components::Shape::Type::Rectangle:
                 if (style.hasFill) {
-                    printf("[Canvas] Drawing filled rectangle\n");
+                    spdlog::debug("[Canvas] Drawing filled rectangle");
                     m_graphics->drawRect(x, y, width, height);
                 }
                 if (style.hasStroke) {
-                    printf("[Canvas] Drawing stroked rectangle\n");
+                    spdlog::debug("[Canvas] Drawing stroked rectangle");
                     m_graphics->drawRect(x, y, width, height);
                 }
                 break;
@@ -379,22 +377,22 @@ void Canvas::saveFrame(const std::string& filename) {
         if (renderer) {
             renderer->flush();
             const BLImage& img = renderer->getImage();
-            printf("[Canvas] Image info: %p size: %d x %d, format: %u, empty: %d\n", (void*)&img, img.width(), img.height(), img.format(), img.empty());
+            spdlog::info("[Canvas] Image info: {} size: {} x {}, format: {}, empty: {}", (void*)&img, img.width(), img.height(), img.format(), img.empty());
             std::string outFile = filename;
             if (std::filesystem::path(outFile).extension().empty()) {
                 outFile += ".png";
             }
             BLResult res = img.writeToFile(outFile.c_str());
             if (res == BL_SUCCESS) {
-                printf("[Canvas] Saved Blend2D image to: %s\n", outFile.c_str());
+                spdlog::info("[Canvas] Saved Blend2D image to: {}", outFile);
             } else {
-                printf("[Canvas] ERROR: Failed to save Blend2D image to: %s (error code: %d)\n", outFile.c_str(), res);
+                spdlog::error("[Canvas] ERROR: Failed to save Blend2D image to: {} (error code: {})", outFile, res);
             }
         } else {
-            printf("[Canvas] ERROR: Renderer is not Blend2DRenderer.\n");
+            spdlog::error("[Canvas] ERROR: Renderer is not Blend2DRenderer.");
         }
     } else {
-        printf("[Canvas] ERROR: m_graphics is null.\n");
+        spdlog::error("[Canvas] ERROR: m_graphics is null.");
     }
 }
 
@@ -503,12 +501,12 @@ void Canvas::switchRenderer(RendererType type) {
         if (newRenderer->initialize(m_width, m_height)) {
             // Set the new renderer in graphics
             m_graphics->setRenderer(newRenderer.get());
-            std::cout << "Switched canvas renderer to: " << newRenderer->getName() << std::endl;
+            spdlog::info("Switched canvas renderer to: {}", newRenderer->getName());
         } else {
-            std::cerr << "Failed to initialize renderer: " << newRenderer->getName() << std::endl;
+            spdlog::error("Failed to initialize renderer: {}", newRenderer->getName());
         }
     } else {
-        std::cerr << "Failed to create renderer of type: " << static_cast<int>(type) << std::endl;
+        spdlog::error("Failed to create renderer of type: {}", static_cast<int>(type));
     }
 }
 
@@ -518,9 +516,9 @@ void Canvas::setRenderer(std::unique_ptr<IRenderer> renderer) {
         if (renderer->initialize(m_width, m_height)) {
             // Set the new renderer in graphics
             m_graphics->setRenderer(renderer.get());
-            std::cout << "Set canvas renderer to: " << renderer->getName() << std::endl;
+            spdlog::info("Set canvas renderer to: {}", renderer->getName());
         } else {
-            std::cerr << "Failed to initialize renderer: " << renderer->getName() << std::endl;
+            spdlog::error("Failed to initialize renderer: {}", renderer->getName());
         }
     }
 } 

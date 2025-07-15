@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
+#include <spdlog/spdlog.h>
 
 Blend2DRenderer::Blend2DRenderer() : m_initialized(false), m_width(0), m_height(0) {
     // Initialize stroke options with defaults
@@ -36,7 +37,7 @@ bool Blend2DRenderer::initialize(int width, int height) {
 void Blend2DRenderer::shutdown() {
     m_context.end();
     m_initialized = false;
-    std::cout << "[Blend2DRenderer] Shutdown" << std::endl;
+    spdlog::info("[Blend2DRenderer] Shutdown");
 }
 
 void Blend2DRenderer::resize(int width, int height) {
@@ -44,10 +45,10 @@ void Blend2DRenderer::resize(int width, int height) {
 }
 
 void Blend2DRenderer::beginFrame() {
-    std::cout << "[Blend2DRenderer] Begin Frame" << std::endl;
+    spdlog::info("[Blend2DRenderer] Begin Frame");
 }
 void Blend2DRenderer::endFrame() {
-    std::cout << "[Blend2DRenderer] End Frame" << std::endl;
+    spdlog::info("[Blend2DRenderer] End Frame");
 }
 
 void Blend2DRenderer::clear(const glm::vec4& color) {

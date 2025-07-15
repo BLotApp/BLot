@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <unordered_set>
+#include <spdlog/spdlog.h>
 
 AddonManager::AddonManager()
     : m_addonDirectory("addons")
@@ -20,7 +21,7 @@ void AddonManager::registerAddon(std::shared_ptr<AddonBase> addon) {
     m_addons[name] = addon;
     m_addonOrder.push_back(name);
     
-    std::cout << "Registered addon: " << name << std::endl;
+    spdlog::info("Registered addon: {}", name);
 }
 
 void AddonManager::unregisterAddon(const std::string& name) {
@@ -35,7 +36,7 @@ void AddonManager::unregisterAddon(const std::string& name) {
             m_addonOrder.erase(orderIt);
         }
         
-        std::cout << "Unregistered addon: " << name << std::endl;
+        spdlog::info("Unregistered addon: {}", name);
     }
 }
 
@@ -48,7 +49,7 @@ std::shared_ptr<AddonBase> AddonManager::getAddon(const std::string& name) const
 }
 
 bool AddonManager::initAll() {
-    std::cout << "Initializing all addons..." << std::endl;
+    spdlog::info("Initializing all addons...");
     
     // Sort addons by dependencies
     sortAddonsByDependencies();
@@ -56,9 +57,9 @@ bool AddonManager::initAll() {
     // Check for circular dependencies
     auto circular = getCircularDependencies();
     if (!circular.empty()) {
-        std::cerr << "Circular dependencies detected:" << std::endl;
+        spdlog::error("Circular dependencies detected:");
         for (const auto& dep : circular) {
-            std::cerr << "  " << dep << std::endl;
+            spdlog::error("  {}", dep);
         }
         return false;
     }
@@ -67,15 +68,15 @@ bool AddonManager::initAll() {
     for (const auto& name : m_addonOrder) {
         auto addon = m_addons[name];
         if (addon && addon->isEnabled()) {
-            std::cout << "Initializing addon: " << name << std::endl;
+            spdlog::info("Initializing addon: {}", name);
             if (!addon->init()) {
-                std::cerr << "Failed to initialize addon: " << name << std::endl;
+                spdlog::error("Failed to initialize addon: {}", name);
                 return false;
             }
         }
     }
     
-    std::cout << "All addons initialized successfully" << std::endl;
+    spdlog::info("All addons initialized successfully");
     return true;
 }
 
@@ -117,7 +118,7 @@ void AddonManager::cleanupAll() {
 }
 
 void AddonManager::initDefaultAddons() {
-    std::cout << "Initializing default addons..." << std::endl;
+    spdlog::info("Initializing default addons...");
     
     // Set up addon directory
     setAddonDirectory("addons");
@@ -128,14 +129,14 @@ void AddonManager::initDefaultAddons() {
     
     // Initialize all addons
     if (!initAll()) {
-        std::cerr << "Failed to initialize addons" << std::endl;
+        spdlog::error("Failed to initialize addons");
     }
 }
 
 void AddonManager::loadDefaultAddons() {
     // In a real implementation, you would dynamically load addons
     // For now, we'll just register some example addons
-    std::cout << "Loading default addons..." << std::endl;
+    spdlog::info("Loading default addons...");
     
     // Example: Register GUI addon
     // auto guiAddon = std::make_shared<bxGui>();
@@ -150,11 +151,11 @@ void AddonManager::scanAddonDirectory(const std::string& directory) {
     m_addonDirectory = directory;
     
     if (!std::filesystem::exists(directory)) {
-        std::cout << "Addon directory does not exist: " << directory << std::endl;
+        spdlog::info("Addon directory does not exist: {}", directory);
         return;
     }
     
-    std::cout << "Scanning addon directory: " << directory << std::endl;
+    spdlog::info("Scanning addon directory: {}", directory);
     
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
         if (entry.is_directory()) {
@@ -164,7 +165,7 @@ void AddonManager::scanAddonDirectory(const std::string& directory) {
             // Check for addon configuration file
             std::filesystem::path configFile = entry.path() / "addon.json";
             if (std::filesystem::exists(configFile)) {
-                std::cout << "Found addon: " << addonName << std::endl;
+                spdlog::info("Found addon: {}", addonName);
                 // In a real implementation, you would load the addon here
             }
         }
@@ -174,7 +175,7 @@ void AddonManager::scanAddonDirectory(const std::string& directory) {
 bool AddonManager::loadAddon(const std::string& path) {
     // This would dynamically load an addon from a shared library
     // For now, we'll just return true
-    std::cout << "Loading addon from: " << path << std::endl;
+    spdlog::info("Loading addon from: {}", path);
     return true;
 }
 
@@ -189,7 +190,7 @@ void AddonManager::reloadAddon(const std::string& name) {
 }
 
 void AddonManager::reloadAllAddons() {
-    std::cout << "Reloading all addons..." << std::endl;
+    spdlog::info("Reloading all addons...");
     
     // Cleanup all addons
     cleanupAll();
@@ -199,10 +200,10 @@ void AddonManager::reloadAllAddons() {
     
     // Re-initialize all addons
     if (!initAll()) {
-        std::cerr << "Failed to reload addons" << std::endl;
+        spdlog::error("Failed to reload addons");
     }
     
-    std::cout << "All addons reloaded" << std::endl;
+    spdlog::info("All addons reloaded");
 }
 
 void AddonManager::enableAddon(const std::string& name) {
@@ -274,12 +275,12 @@ std::vector<std::string> AddonManager::getAddonDependencies(const std::string& n
 
 void AddonManager::saveAddonConfig() {
     // Save addon configuration to file
-    std::cout << "Saving addon configuration..." << std::endl;
+    spdlog::info("Saving addon configuration...");
 }
 
 void AddonManager::loadAddonConfig() {
     // Load addon configuration from file
-    std::cout << "Loading addon configuration..." << std::endl;
+    spdlog::info("Loading addon configuration...");
 }
 
 void AddonManager::setAddonDirectory(const std::string& directory) {
@@ -306,7 +307,7 @@ bool AddonManager::checkDependencies(const std::string& addonName) {
     for (const auto& dep : addon->getDependencies()) {
         auto depAddon = getAddon(dep);
         if (!depAddon || !depAddon->isEnabled()) {
-            std::cerr << "Addon " << addonName << " depends on " << dep << " which is not available" << std::endl;
+            spdlog::error("Addon {} depends on {} which is not available", addonName, dep);
             return false;
         }
     }

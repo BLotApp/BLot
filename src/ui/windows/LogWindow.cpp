@@ -95,10 +95,11 @@ void LogWindow::renderFilterControls() {
     if (ImGui::Button("Clear")) {
         clearLog();
     }
-    ImGui::Separator();
 }
 
 void LogWindow::renderLogEntries() {
+    // Set black background for log text area only
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0, 0, 0, 1));
     ImGui::BeginChild("LogEntries", ImVec2(0, 0), true);
     std::lock_guard<std::mutex> lock(m_logMutex);
     for (const auto& entry : m_logEntries) {
@@ -127,6 +128,7 @@ void LogWindow::renderLogEntries() {
         m_scrollToBottom = false;
     }
     ImGui::EndChild();
+    ImGui::PopStyleColor();
 }
 
 ImVec4 LogWindow::getLogColor(LogLevel level) {

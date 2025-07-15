@@ -1,5 +1,6 @@
 #include "addons/AddonBase.h"
 #include <iostream>
+#include <spdlog/spdlog.h>
 
 AddonBase::AddonBase(const std::string& name, const std::string& version)
     : m_name(name)
@@ -42,15 +43,15 @@ void AddonBase::triggerEvent(const std::string& event) {
 }
 
 void AddonBase::log(const std::string& message) {
-    std::cout << "[Addon " << m_name << "] " << message << std::endl;
+    spdlog::info("[Addon {}] {}", m_name, message);
 }
 
 void AddonBase::error(const std::string& message) {
-    std::cerr << "[Addon " << m_name << " ERROR] " << message << std::endl;
+    spdlog::error("[Addon {} ERROR] {}", m_name, message);
 }
 
 void AddonBase::warning(const std::string& message) {
-    std::cout << "[Addon " << m_name << " WARNING] " << message << std::endl;
+    spdlog::warn("[Addon {} WARNING] {}", m_name, message);
 }
 
 void AddonBase::cleanup() {
