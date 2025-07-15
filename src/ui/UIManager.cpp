@@ -374,7 +374,7 @@ void UIManager::setupWindows(BlotApp* app) {
     m_windowManager->createWindow(themeEditorWindow->getTitle(), themeEditorWindow);
     
     // Create and register log window
-    auto logWindow = std::make_shared<LogWindow>("Log###LogWindow", Window::Flags::None);
+    auto logWindow = std::make_shared<blot::LogWindow>("Log###LogWindow", Window::Flags::None);
     m_windowManager->createWindow(logWindow->getTitle(), logWindow);
     logWindow->setupSpdlogSink();
     

@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <memory>
+namespace spdlog { class logger; namespace sinks { class sink; } }
 
 namespace blot {
 
@@ -19,7 +21,6 @@ struct LogEntry {
     LogLevel level;
     std::string message;
     std::string timestamp;
-    
     LogEntry(LogLevel lvl, const std::string& msg, const std::string& time = "")
         : level(lvl), message(msg), timestamp(time) {}
 };
@@ -30,12 +31,12 @@ public:
               Flags flags = Flags::None);
     virtual ~LogWindow() = default;
 
-    // Log functionality
-    void addLog(LogLevel level, const std::string& message);
-    void addDebug(const std::string& message);
-    void addInfo(const std::string& message);
-    void addWarning(const std::string& message);
-    void addError(const std::string& message);
+    // spdlog sink integration
+    void setupSpdlogSink();
+    void setSpdlogSink(std::shared_ptr<spdlog::sinks::sink> sink) { m_spdlogSink = sink; }
+    std::shared_ptr<spdlog::sinks::sink> getSpdlogSink() const { return m_spdlogSink; }
+
+    // For UI: clear log buffer
     void clearLog();
 
 private:
@@ -46,10 +47,17 @@ private:
     bool m_showInfo = true;
     bool m_showWarning = true;
     bool m_showError = true;
-    
-    // Log methods
+    bool m_showTimestamps = true; // Toggle for timestamp display
+    size_t m_maxLogLines = 1000;
+    std::shared_ptr<spdlog::sinks::sink> m_spdlogSink;
+
+    // Log methods (private, only used by the sink)
+    void addLogFromSink(LogLevel level, const std::string& message, const std::string& timestamp);
+
+    // UI methods
     void renderLogEntries();
     void renderFilterControls();
+    void renderMenuBar();
     ImVec4 getLogColor(LogLevel level);
     std::string getLogLevelString(LogLevel level);
     std::string getCurrentTimestamp();

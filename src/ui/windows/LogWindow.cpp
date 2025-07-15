@@ -4,18 +4,81 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/base_sink.h>
+#include <memory>
 
 namespace blot {
 
+// Custom spdlog sink that forwards messages to LogWindow
+class LogWindowSink : public spdlog::sinks::base_sink<std::mutex> {
+public:
+    LogWindowSink(LogWindow* logWindow) : m_logWindow(logWindow) {}
+protected:
+    void sink_it_(const spdlog::details::log_msg& msg) override {
+        if (!m_logWindow) return;
+        // Map spdlog level to LogLevel
+        LogLevel level = LogLevel::Info;
+        switch (msg.level) {
+            case spdlog::level::debug: level = LogLevel::Debug; break;
+            case spdlog::level::info: level = LogLevel::Info; break;
+            case spdlog::level::warn: level = LogLevel::Warning; break;
+            case spdlog::level::err: level = LogLevel::Error; break;
+            default: level = LogLevel::Info; break;
+        }
+        std::string message(msg.payload.begin(), msg.payload.end());
+        std::string timestamp = m_logWindow->getCurrentTimestamp();
+        m_logWindow->addLogFromSink(level, message, timestamp);
+    }
+    void flush_() override {}
+private:
+    LogWindow* m_logWindow;
+};
+
 LogWindow::LogWindow(const std::string& title, Flags flags)
     : Window(title, flags) {
-    // Add initial log entry
-    addInfo("Log window initialized.");
+    // Optionally, add an initial log entry via spdlog
+    // spdlog::info("Log window initialized.");
+}
+
+void LogWindow::setupSpdlogSink() {
+    // Create and set a custom sink for this LogWindow
+    auto sink = std::make_shared<LogWindowSink>(this);
+    setSpdlogSink(sink);
+    // Optionally, add this sink to the default logger
+    auto logger = spdlog::default_logger();
+    if (logger) {
+        logger->sinks().push_back(sink);
+    }
+}
+
+void LogWindow::addLogFromSink(LogLevel level, const std::string& message, const std::string& timestamp) {
+    std::lock_guard<std::mutex> lock(m_logMutex);
+    m_logEntries.emplace_back(level, message, timestamp);
+    if (m_logEntries.size() > m_maxLogLines) {
+        m_logEntries.erase(m_logEntries.begin());
+    }
+    m_scrollToBottom = true;
+}
+
+void LogWindow::clearLog() {
+    std::lock_guard<std::mutex> lock(m_logMutex);
+    m_logEntries.clear();
+    // Optionally, log this event via spdlog
+    spdlog::info("Log cleared.");
 }
 
 void LogWindow::renderContents() {
+    renderMenuBar();
     renderFilterControls();
     renderLogEntries();
+}
+
+void LogWindow::renderMenuBar() {
+    if (ImGui::BeginMenuBar()) {
+        ImGui::Checkbox("Show Timestamps", &m_showTimestamps);
+        ImGui::EndMenuBar();
+    }
 }
 
 void LogWindow::renderFilterControls() {
@@ -36,13 +99,9 @@ void LogWindow::renderFilterControls() {
 }
 
 void LogWindow::renderLogEntries() {
-    // Create a child window for the log entries
     ImGui::BeginChild("LogEntries", ImVec2(0, 0), true);
-    
     std::lock_guard<std::mutex> lock(m_logMutex);
-    
     for (const auto& entry : m_logEntries) {
-        // Check if this log level should be shown
         bool shouldShow = false;
         switch (entry.level) {
             case LogLevel::Debug: shouldShow = m_showDebug; break;
@@ -50,28 +109,23 @@ void LogWindow::renderLogEntries() {
             case LogLevel::Warning: shouldShow = m_showWarning; break;
             case LogLevel::Error: shouldShow = m_showError; break;
         }
-        
         if (!shouldShow) continue;
-        
-        // Set color based on log level
         ImGui::PushStyleColor(ImGuiCol_Text, getLogColor(entry.level));
-        
-        // Display timestamp and level
-        std::string header = "[" + entry.timestamp + "] [" + getLogLevelString(entry.level) + "] ";
+        std::string header;
+        if (m_showTimestamps) {
+            header = "[" + entry.timestamp + "] [" + getLogLevelString(entry.level) + "] ";
+        } else {
+            header = "[" + getLogLevelString(entry.level) + "] ";
+        }
         ImGui::TextUnformatted(header.c_str());
         ImGui::SameLine();
-        
-        // Display message
         ImGui::TextWrapped("%s", entry.message.c_str());
-        
         ImGui::PopStyleColor();
     }
-    
     if (m_scrollToBottom) {
         ImGui::SetScrollHereY(1.0f);
         m_scrollToBottom = false;
     }
-    
     ImGui::EndChild();
 }
 
@@ -100,45 +154,10 @@ std::string LogWindow::getCurrentTimestamp() {
     auto time_t = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
         now.time_since_epoch()) % 1000;
-    
     std::stringstream ss;
     ss << std::put_time(std::localtime(&time_t), "%H:%M:%S");
     ss << '.' << std::setfill('0') << std::setw(3) << ms.count();
     return ss.str();
-}
-
-void LogWindow::addLog(LogLevel level, const std::string& message) {
-    std::lock_guard<std::mutex> lock(m_logMutex);
-    m_logEntries.emplace_back(level, message, getCurrentTimestamp());
-    
-    // Limit log entries to prevent memory issues
-    if (m_logEntries.size() > 1000) {
-        m_logEntries.erase(m_logEntries.begin());
-    }
-    
-    m_scrollToBottom = true;
-}
-
-void LogWindow::addDebug(const std::string& message) {
-    addLog(LogLevel::Debug, message);
-}
-
-void LogWindow::addInfo(const std::string& message) {
-    addLog(LogLevel::Info, message);
-}
-
-void LogWindow::addWarning(const std::string& message) {
-    addLog(LogLevel::Warning, message);
-}
-
-void LogWindow::addError(const std::string& message) {
-    addLog(LogLevel::Error, message);
-}
-
-void LogWindow::clearLog() {
-    std::lock_guard<std::mutex> lock(m_logMutex);
-    m_logEntries.clear();
-    addInfo("Log cleared.");
 }
 
 } // namespace blot 

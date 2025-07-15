@@ -222,9 +222,28 @@ source_group("ThirdParty\\ImGui" FILES
     third_party/imgui/backends/imgui_impl_opengl3.h
     third_party/imgui/backends/imgui_impl_opengl3_loader.h
 )
-source_group("Addons" FILES src/addons/AddonBase.cpp src/addons/AddonManager.cpp)
-source_group("Resources" FILES src/resources/VertexBuffer.cpp src/resources/Shader.cpp)
-source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/windows/Window.cpp src/ui/windows/ImGuiWindow.cpp src/ui/windows/CanvasWindow.cpp src/ui/windows/InfoWindow.cpp src/ui/windows/ToolbarWindow.cpp src/ui/windows/StrokeWindow.cpp src/ui/windows/StrokeWindow.h src/ui/windows/TextureViewerWindow.cpp src/ui/windows/TextureViewerWindow.h src/ui/windows/DebugPanel.cpp src/ui/windows/DebugPanel.h src/ui/windows/ThemePanel.cpp src/ui/windows/ThemePanel.h src/ui/windows/TerminalWindow.cpp src/ui/windows/TerminalWindow.h src/ui/windows/LogWindow.cpp src/ui/windows/LogWindow.h src/ui/UIManager.cpp src/ui/UIManager.h)
+# GLOB all Addons sources and headers
+file(GLOB ADDONS_SOURCES src/addons/*.cpp src/addons/*.h)
+source_group("Addons" FILES ${ADDONS_SOURCES})
+
+# GLOB all Resources sources and headers
+file(GLOB RESOURCES_SOURCES src/resources/*.cpp src/resources/*.h)
+source_group("Resources" FILES ${RESOURCES_SOURCES})
+
+# GLOB all ECS sources and headers
+file(GLOB ECS_SOURCES src/ecs/*.cpp src/ecs/*.h src/ecs/systems/*.cpp src/ecs/systems/*.h)
+source_group("ECS" FILES ${ECS_SOURCES})
+
+# GLOB all Node sources and headers
+file(GLOB NODE_SOURCES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
+source_group("Node" FILES ${NODE_SOURCES})
+
+# GLOB all Scripting sources and headers
+file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
+source_group("Scripting" FILES ${SCRIPTING_SOURCES})
+
+# Use the globbed files in the source group and target sources
+source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/UIManager.cpp src/ui/UIManager.h)
 source_group("ECS" FILES src/ecs/ECSManager.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/EventSystem.cpp)
 source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
