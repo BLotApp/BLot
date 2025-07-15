@@ -15,7 +15,7 @@ BLot (Pronounced Beelot) is a small creative coding app inspired by DrawBot and 
 | [DearImGui] | UI framework                   | submodule     | Not managed by vcpkg                  |
 | [Blend2D]   | 2D vector graphics             | vcpkg         | Native/system for Pi recommended      |
 | [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only                           |
-| [spdlog]    | Logging                        | FetchContent  | Fetched automatically by CMake        |
+| [spdlog]    | Logging                        | submodule     | Header-only                           |
 
 All dependencies except spdlog are included as submodules or in the third_party directory. spdlog is fetched automatically by CMake.
 
