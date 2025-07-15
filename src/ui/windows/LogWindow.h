@@ -39,6 +39,12 @@ public:
     // For UI: clear log buffer
     void clearLog();
 
+    // Ensure this class is not abstract
+    void renderContents() override;
+
+    // Allow LogWindowSink to access protected/private members
+    friend class LogWindowSink;
+
 private:
     std::vector<LogEntry> m_logEntries;
     std::mutex m_logMutex;
@@ -51,17 +57,17 @@ private:
     size_t m_maxLogLines = 1000;
     std::shared_ptr<spdlog::sinks::sink> m_spdlogSink;
 
-    // Log methods (private, only used by the sink)
-    void addLogFromSink(LogLevel level, const std::string& message, const std::string& timestamp);
-
     // UI methods
     void renderLogEntries();
     void renderFilterControls();
     void renderMenuBar();
     ImVec4 getLogColor(LogLevel level);
     std::string getLogLevelString(LogLevel level);
+
+protected:
+    // Methods needed by LogWindowSink
+    void addLogFromSink(LogLevel level, const std::string& message, const std::string& timestamp);
     std::string getCurrentTimestamp();
-    void renderContents() override;
 };
 
 } // namespace blot 
