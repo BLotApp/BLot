@@ -1,3 +1,6 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include "CanvasWindow.h"
 #include "ImGuiWindow.h"
 #include "canvas/Canvas.h"

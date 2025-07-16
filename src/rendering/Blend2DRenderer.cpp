@@ -13,6 +13,8 @@
 #  include <windows.h>
 #endif
 #include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 #include <string>
 
 // Shader sources
@@ -78,7 +80,7 @@ bool Blend2DRenderer::initialize(int width, int height) {
     // OpenGL texture setup
     if (m_textureId == 0) glGenTextures(1, &m_textureId);
     glBindTexture(GL_TEXTURE_2D, m_textureId);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // Modern OpenGL: VAO/VBO setup
@@ -414,7 +416,7 @@ void Blend2DRenderer::flush() {
 
 void Blend2DRenderer::present() {
     glBindTexture(GL_TEXTURE_2D, m_textureId);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_BGRA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
     glUseProgram(m_shaderProgram);
     glBindVertexArray(m_vao);
     glActiveTexture(GL_TEXTURE0);

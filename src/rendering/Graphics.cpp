@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 #include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "rendering/Graphics.h"

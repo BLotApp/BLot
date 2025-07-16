@@ -38,10 +38,7 @@ target_include_directories(sample_blend2d_gradient PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party/entt/single_include
     ${CMAKE_SOURCE_DIR}/third_party/entt/src
     ${CMAKE_SOURCE_DIR}/third_party/glad/include
-    ${CMAKE_SOURCE_DIR}/third_party/imgui/examples/libs/glfw/include
+    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
 )
 
-# Link against the prebuilt GLFW library (adjust path if needed)
-target_link_libraries(sample_blend2d_gradient PRIVATE blend2d::blend2d opengl32
-    ${CMAKE_SOURCE_DIR}/third_party/imgui/examples/libs/glfw/lib-vc2010-64/glfw3.lib
-) 
+target_link_libraries(sample_blend2d_gradient PRIVATE blend2d::blend2d opengl32 glfw) 

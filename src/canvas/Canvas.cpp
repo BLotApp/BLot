@@ -1,4 +1,5 @@
 #include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
 #include <glm/gtc/matrix_transform.hpp>
 #include "Canvas.h"
 #include "rendering/Graphics.h"

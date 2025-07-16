@@ -1,4 +1,5 @@
-#include <glad/glad.h>
+#include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
 #include "ui/TextRenderer.h"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>

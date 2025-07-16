@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <GLFW/glfw3.h>
 #include "imgui.h"
 #include "rendering/Renderer.h"
 #include "ui/ImGuiRenderer.h"

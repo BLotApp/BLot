@@ -43,7 +43,12 @@ endif()
 # Find required packages with helpful error messages
 find_package(OpenGL REQUIRED)
 
-find_package(glfw3 CONFIG REQUIRED)
+# Prevent vcpkg or other packages from defining a GLFW target
+set(GLFW3_FOUND OFF CACHE BOOL "" FORCE)
+set(GLFW_FOUND OFF CACHE BOOL "" FORCE)
+# Optionally, disable vcpkg's find_package for glfw3
+set(GLFW3_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
+
 find_package(freetype REQUIRED)
 if(NOT freetype_FOUND)
     message(FATAL_ERROR "FreeType not found. Install with: vcpkg install freetype")
@@ -140,7 +145,6 @@ endif()
 
 # Modern dependency management: use imported targets (except glad)
 find_package(OpenGL REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(blend2d CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
@@ -253,3 +257,5 @@ add_subdirectory(third_party/spdlog)
 target_link_libraries(blot PRIVATE spdlog::spdlog) 
 
 add_subdirectory(works) 
+
+add_subdirectory(third_party/glfw) 

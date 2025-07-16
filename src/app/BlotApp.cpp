@@ -21,6 +21,7 @@
 // Third-party includes
 #include <nlohmann/json.hpp>
 #include <imgui.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
