@@ -72,6 +72,7 @@ public:
     virtual bool isInitialized() const = 0;
     virtual int getWidth() const = 0;
     virtual int getHeight() const = 0;
+    virtual uint8_t* getPixelBuffer() = 0;
 };
 
 // Factory function

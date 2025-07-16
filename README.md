@@ -2,7 +2,7 @@
 
 ![preview](screenshots/blot_0001.png)
 
-BLot (Pronounced Beelot) is a small creative coding app inspired by DrawBot and OpenFrameworks.
+BLot (Pronounced Beelot) is a creative coding framework inspired by DrawBot and OpenFrameworks.
 
 ### Dependencies
 
@@ -63,10 +63,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Inspired by [DrawBot](https://drawbot.com/) and [OpenFrameworks](https://openframeworks.cc/)
 - Uses [Dear ImGui](https://github.com/ocornut/imgui) for UI
+- With `Node Editor` integration from [imgui-node-editor](https://github.com/thedmd/imgui-node-editor)
 - Graphics powered by [OpenGL](https://www.opengl.org/) and [Blend2D](https://blend2d.com/)
 - Entity-Component-System by [EnTT](https://github.com/skypjack/entt)
-- Node editor integration with [imgui-node-editor](https://github.com/thedmd/imgui-node-editor)
+
 
 ## Development Credits
 
-This project was developed with assistance from Claude Sonnet 4, an AI coding assistant.
+This project was developed with assistance from Claude Sonnet 4.

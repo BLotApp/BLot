@@ -9,6 +9,48 @@
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
 #include <spdlog/spdlog.h>
+#ifdef _WIN32
+#  include <windows.h>
+#endif
+#include <glad/gl.h>
+#include <string>
+
+// Shader sources
+const char* vertexShaderSrc = R"(
+#version 330 core
+layout(location = 0) in vec2 inPos;
+layout(location = 1) in vec2 inUV;
+out vec2 fragUV;
+void main() {
+    fragUV = inUV;
+    gl_Position = vec4(inPos, 0.0, 1.0);
+}
+)";
+
+const char* fragmentShaderSrc = R"(
+#version 330 core
+in vec2 fragUV;
+out vec4 outColor;
+uniform sampler2D uTex;
+void main() {
+    outColor = texture(uTex, fragUV);
+}
+)";
+
+// Helper for shader compilation
+GLuint compileShader(GLenum type, const char* src) {
+    GLuint shader = glCreateShader(type);
+    glShaderSource(shader, 1, &src, nullptr);
+    glCompileShader(shader);
+    GLint success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        spdlog::error("Shader compilation failed: {}", infoLog);
+    }
+    return shader;
+}
 
 Blend2DRenderer::Blend2DRenderer() : m_initialized(false), m_width(0), m_height(0) {
     // Initialize stroke options with defaults
@@ -25,11 +67,55 @@ Blend2DRenderer::~Blend2DRenderer() {}
 
 bool Blend2DRenderer::initialize(int width, int height) {
     if (m_context) m_context.end();
-    m_image.create(width, height, BL_FORMAT_PRGB32);
+    m_width = width;
+    m_height = height;
+    m_pixelBuffer.resize(width * height * 4);
+    m_image.createFromData(width, height, BL_FORMAT_PRGB32, m_pixelBuffer.data(), width * 4, BL_DATA_ACCESS_RW, nullptr, nullptr);
     m_context.begin(m_image);
     m_context.setCompOp(BL_COMP_OP_SRC_COPY);
     m_context.fillAll(BLRgba32(0xFFFFFFFF));
     m_context.setCompOp(BL_COMP_OP_SRC_OVER);
+    // OpenGL texture setup
+    if (m_textureId == 0) glGenTextures(1, &m_textureId);
+    glBindTexture(GL_TEXTURE_2D, m_textureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // Modern OpenGL: VAO/VBO setup
+    if (m_vao == 0) {
+        static const float quadVertices[] = {
+            -1.0f, -1.0f, 0.0f, 1.0f,
+             1.0f, -1.0f, 1.0f, 1.0f,
+             1.0f,  1.0f, 1.0f, 0.0f,
+            -1.0f, -1.0f, 0.0f, 1.0f,
+             1.0f,  1.0f, 1.0f, 0.0f,
+            -1.0f,  1.0f, 0.0f, 0.0f
+        };
+        glGenVertexArrays(1, &m_vao);
+        glGenBuffers(1, &m_vbo);
+        glBindVertexArray(m_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        // Position attribute
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        // UV attribute
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+    // Shader program
+    if (m_shaderProgram == 0) {
+        GLuint vs = compileShader(GL_VERTEX_SHADER, vertexShaderSrc);
+        GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
+        m_shaderProgram = glCreateProgram();
+        glAttachShader(m_shaderProgram, vs);
+        glAttachShader(m_shaderProgram, fs);
+        glLinkProgram(m_shaderProgram);
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+    }
     m_initialized = true;
     return true;
 }
@@ -43,6 +129,12 @@ void Blend2DRenderer::shutdown() {
 void Blend2DRenderer::resize(int width, int height) {
     initialize(width, height);
 }
+
+uint8_t* Blend2DRenderer::getPixelBuffer() {
+    return m_pixelBuffer.data();
+}
+int Blend2DRenderer::getWidth() const { return m_width; }
+int Blend2DRenderer::getHeight() const { return m_height; }
 
 void Blend2DRenderer::beginFrame() {
     spdlog::info("[Blend2DRenderer] Begin Frame");
@@ -318,4 +410,17 @@ bool Blend2DRenderer::saveToMemory(std::vector<uint8_t>& data) { return false; }
 void Blend2DRenderer::flush() {
     m_context.end();
     m_context.begin(m_image);
+} 
+
+void Blend2DRenderer::present() {
+    glBindTexture(GL_TEXTURE_2D, m_textureId);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, m_pixelBuffer.data());
+    glUseProgram(m_shaderProgram);
+    glBindVertexArray(m_vao);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_textureId);
+    glUniform1i(glGetUniformLocation(m_shaderProgram, "uTex"), 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glUseProgram(0);
 } 

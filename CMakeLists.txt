@@ -251,3 +251,5 @@ source_group("Scripting" FILES src/scripting/ScriptEngine.cpp)
 # spdlog is now included as a subdependency
 add_subdirectory(third_party/spdlog)
 target_link_libraries(blot PRIVATE spdlog::spdlog) 
+
+add_subdirectory(works) 

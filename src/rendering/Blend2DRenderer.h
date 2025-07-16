@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _WIN32
+#  include <windows.h>
+#endif
+#include <glad/gl.h>
 #include "rendering/Renderer.h"
 #include <blend2d.h>
 #include <glm/glm.hpp>
@@ -53,8 +57,8 @@ public:
     RendererType getType() const override { return RendererType::Blend2D; }
     std::string getName() const override { return "Blend2D"; }
     bool isInitialized() const override { return m_initialized; }
-    int getWidth() const override { return m_width; }
-    int getHeight() const override { return m_height; }
+    int getWidth() const override;
+    int getHeight() const override;
 
     void noFill();
     void noStroke();
@@ -78,6 +82,10 @@ public:
 
     // Add this public getter for the BLImage
     const BLImage& getImage() const { return m_image; }
+
+    // New methods for direct window drawing
+    uint8_t* getPixelBuffer() override;
+    void present();
 
 private:
     void setupContext();
@@ -114,4 +122,10 @@ private:
     glm::vec4 m_fillColor = glm::vec4(1,1,1,1);
     glm::vec4 m_strokeColor = glm::vec4(0,0,0,1);
     float m_strokeWidth = 1.0f;
+
+    std::vector<uint8_t> m_pixelBuffer;
+    GLuint m_textureId = 0;
+    // Modern OpenGL members
+    GLuint m_vao = 0, m_vbo = 0;
+    GLuint m_shaderProgram = 0;
 }; 
