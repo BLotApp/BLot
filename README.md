@@ -44,7 +44,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Inspired by [OpenFrameworks](https://openframeworks.cc/) and [DrawBot](https://drawbot.com/) 
+- Inspired by [OpenFrameworks](https://openframeworks.cc/), [DrawBot](https://drawbot.com/) and Pixile. 
 - Uses [Dear ImGui](https://github.com/ocornut/imgui) for UI
 - With `Node Editor` integration from [imgui-node-editor](https://github.com/thedmd/imgui-node-editor)
 - Graphics powered by [OpenGL](https://www.opengl.org/) and [Blend2D](https://blend2d.com/)

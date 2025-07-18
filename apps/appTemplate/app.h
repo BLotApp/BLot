@@ -3,9 +3,11 @@
 #include <memory>
 #include <iostream>
 
-class AppTemplate : public IApp {
+namespace blot { class BlotEngine; class IApp; }
+
+class AppTemplate : public blot::IApp {
 public:
-    void setup(BlotEngine*) override {
+    void setup(blot::BlotEngine*) override {
         std::cout << "App Template setup!" << std::endl;
     }
     void update(float) override {}

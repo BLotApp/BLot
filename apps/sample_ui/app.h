@@ -7,12 +7,14 @@
 #include "rendering/RenderingManager.h"
 #include "ui/UIManager.h"
 
-class SampleUiApp : public IApp {
+namespace blot { class BlotEngine; class IApp; }
+
+class SampleUiApp : public blot::IApp {
 public:
     SampleUiApp();
     ~SampleUiApp();
 
-    void setup(BlotEngine* engine) override;
+    void setup(blot::BlotEngine* engine) override;
     void update(float deltaTime) override;
     void draw() override;
     void configureWindow(WindowSettings& settings) override;

@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
     auto appInstance = createApp();
-    BlotEngine engine(std::move(appInstance));
+    blot::BlotEngine engine(std::move(appInstance));
     engine.run();
     return 0;
 } 

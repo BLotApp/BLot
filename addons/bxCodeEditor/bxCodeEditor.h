@@ -2,7 +2,7 @@
 
 #include <string>
 #include <memory>
-#include "framework/AddonBase.h"
+#include "core/AddonBase.h"
 
 // Forward declaration
 class TextEditor;

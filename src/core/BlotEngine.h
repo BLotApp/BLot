@@ -18,6 +18,7 @@ namespace blot {
 class BlotEngine {
 public:
     BlotEngine(std::unique_ptr<IApp> app);
+    ~BlotEngine();
     void run();
 
     ECSManager* getECSManager() { return m_ecsManager.get(); }

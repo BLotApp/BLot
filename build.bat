@@ -168,12 +168,11 @@ echo ========================================
 echo.
 echo Built executables in: build\%OUTPUT_DIR%
 echo.
-echo To run an app, navigate to the output directory and run the desired executable, e.g.:
-echo   cd build\%OUTPUT_DIR%
-echo   BlotApp.exe
-echo   sample_blend2d_gradient.exe
-echo   sample_script_engine.exe
+echo To run an app, navigate to the output directory. Built executables:
+for %%f in ("%OUTPUT_DIR%\*.exe") do (
+    echo   %%~nxf
+)
 echo.
-:: Always keep the window open at the end so the user can see the output
+:: Keep the window open so the user can review results
 pause
 cmd /k 

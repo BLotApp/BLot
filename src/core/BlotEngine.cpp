@@ -13,6 +13,8 @@
 
 namespace blot {
 
+BlotEngine::~BlotEngine() = default;
+
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
     : m_app(std::move(app))
     , m_addonManager(std::make_unique<AddonManager>())

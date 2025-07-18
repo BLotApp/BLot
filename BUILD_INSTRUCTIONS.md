@@ -58,23 +58,41 @@ The Blot framework is now app-agnostic. All runnable applications are located in
 
 ### How to Build All Apps
 
-The provided build scripts (`build.bat` or `build.sh`) will build all apps in `apps/` by default. Each app will produce its own executable in the build output directory (e.g., `build/Release/BlotApp.exe`, `build/Release/sample_blend2d_gradient.exe`, etc.).
+By default CMake now builds the framework library **and** every sample application found under `apps/`.  This is controlled by the option `BUILD_APPS` (ON by default):
+
+```bash
+# turn apps off (library-only build)
+cmake -B build -DBUILD_APPS=OFF
+# turn apps on explicitly
+cmake -B build -DBUILD_APPS=ON
+```
+
+With apps enabled you will find a separate executable for each subdirectory—for example:
+
+```
+build/Release/
+    sample_ui.exe
+    sample_blend2d_gradient.exe
+    sample_script_engine.exe
+```
+
+`BlotApp.exe` was an earlier placeholder and no longer exists.
 
 ### How to Run a Specific App
 
-After building, navigate to the appropriate build output directory and run the desired app:
+After building, navigate to the output directory and run the desired app, e.g.:
 
 ```bash
 cd build/Release  # Windows
-# or
-cd build          # Linux/macOS
+# or cd build       # Linux/macOS
 
-# Run a specific app (replace with your app's name)
-./BlotApp         # Linux/macOS
-BlotApp.exe       # Windows
+# UI demo
+sample_ui.exe        # Windows
+./sample_ui          # Linux/macOS
 
-./sample_blend2d_gradient
-./sample_script_engine
+# Other demos
+sample_blend2d_gradient.exe
+sample_script_engine.exe
 ```
 
 ## Creating a New App

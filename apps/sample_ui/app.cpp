@@ -9,13 +9,15 @@
 
 // Third-party includes
 #include "core/json.h"
+
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 // Project includes
 #include "core/core.h"
@@ -65,14 +67,9 @@ SampleUiApp::~SampleUiApp() {
     if (getUIManager()) {
         getUIManager()->saveCurrentImGuiLayout();
     }
-    
-    // Save application settings
-    BlotEngine::getSettings().saveSettings();
-    
-    // Remove initWindow, run, and window/main loop logic
 }
 
-void SampleUiApp::setup() {
+void SampleUiApp::setup(blot::BlotEngine*) {
     // Final setup phase - everything is now initialized
     spdlog::info("Setting up application...");
     
@@ -323,7 +320,7 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     // Debug actions
     eventSystem.registerAction("set_debug_mode", std::function<void(bool)>([this](bool enabled) {
         spdlog::info("Set debug mode action triggered: {}", enabled);
-        BlotEngine::setDebugMode(enabled);
+        blot::BlotEngine::setDebugMode(enabled);
     }));
     
     // Canvas management actions
@@ -416,7 +413,7 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     }));
     
     eventSystem.registerAction("get_debug_mode", std::function<bool()>([this]() -> bool {
-        return BlotEngine::getDebugMode();
+        return blot::BlotEngine::getDebugMode();
     }));
 }
 
@@ -437,16 +434,16 @@ void SampleUiApp::update() {
 } 
 
 // Implement new getter methods
-blot::ECSManager* SampleUiApp::getECSManager() { return BlotEngine::getECSManager(); }
+blot::ECSManager* SampleUiApp::getECSManager() { return blot::BlotEngine::getECSManager(); }
 bxScriptEngine* SampleUiApp::getScriptEngine() {
     auto ptr = getAddonManager()->getAddon("bxScriptEngine");
     return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
 }
-blot::RenderingManager* SampleUiApp::getRenderingManager() { return BlotEngine::getRenderingManager(); }
-blot::CanvasManager* SampleUiApp::getCanvasManager() { return BlotEngine::getCanvasManager(); }
-blot::UIManager* SampleUiApp::getUIManager() { return BlotEngine::getUIManager(); }
-SettingsManager& SampleUiApp::getSettings() { return BlotEngine::getSettings(); }
-const SettingsManager& SampleUiApp::getSettings() const { return BlotEngine::getSettings(); }
+blot::RenderingManager* SampleUiApp::getRenderingManager() { return blot::BlotEngine::getRenderingManager(); }
+blot::CanvasManager* SampleUiApp::getCanvasManager() { return blot::BlotEngine::getCanvasManager(); }
+blot::UIManager* SampleUiApp::getUIManager() { return blot::BlotEngine::getUIManager(); }
+SettingsManager& SampleUiApp::getSettings() { return blot::BlotEngine::getSettings(); }
+const SettingsManager& SampleUiApp::getSettings() const { return blot::BlotEngine::getSettings(); }
 bxCodeEditor* SampleUiApp::getCodeEditor() {
     auto ptr = getAddonManager()->getAddon("bxCodeEditor");
     return ptr ? dynamic_cast<bxCodeEditor*>(ptr.get()) : nullptr;

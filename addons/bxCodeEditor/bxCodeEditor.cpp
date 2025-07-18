@@ -1,5 +1,5 @@
 #include "bxCodeEditor.h"
-#include "../third_party/ImGuiColorTextEdit/TextEditor.h"
+#include "third_party/ImGuiColorTextEdit/TextEditor.h"
 
 bxCodeEditor::bxCodeEditor()
     : AddonBase("bxCodeEditor")

@@ -1,12 +1,12 @@
-#include "scripting/ScriptEngine.h"
+#include "bxScriptEngine.h"
 #include "rendering/Graphics.h"
-#include "canvas/Canvas.h"
+#include "core/canvas/Canvas.h"
 #include <iostream>
 #include <random>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 
-ScriptEngine::ScriptEngine()
+bxScriptEngine::bxScriptEngine()
     : m_isRunning(false)
     , m_hasSetup(false)
     , m_hasDraw(false)
@@ -33,10 +33,10 @@ ScriptEngine::ScriptEngine()
     initAPI();
 }
 
-ScriptEngine::~ScriptEngine() {
+bxScriptEngine::~bxScriptEngine() {
 }
 
-void ScriptEngine::runCode(const std::string& code) {
+void bxScriptEngine::runCode(const std::string& code) {
     m_currentCode = code;
     m_isRunning = true;
     m_frameCount = 0;
@@ -61,11 +61,11 @@ void ScriptEngine::runCode(const std::string& code) {
     }
 }
 
-void ScriptEngine::stop() {
+void bxScriptEngine::stop() {
     m_isRunning = false;
 }
 
-void ScriptEngine::update(float deltaTime) {
+void bxScriptEngine::update(float deltaTime) {
     if (!m_isRunning) return;
     
     m_time += deltaTime;
@@ -81,7 +81,7 @@ void ScriptEngine::update(float deltaTime) {
     }
 }
 
-void ScriptEngine::size(int width, int height) {
+void bxScriptEngine::size(int width, int height) {
     m_width = width;
     m_height = height;
     if (m_canvas) {
@@ -89,13 +89,13 @@ void ScriptEngine::size(int width, int height) {
     }
 }
 
-void ScriptEngine::background(float r, float g, float b, float a) {
+void bxScriptEngine::background(float r, float g, float b, float a) {
     if (m_canvas) {
         m_canvas->background(r, g, b, a);
     }
 }
 
-void ScriptEngine::fill(float r, float g, float b, float a) {
+void bxScriptEngine::fill(float r, float g, float b, float a) {
     m_fillR = r;
     m_fillG = g;
     m_fillB = b;
@@ -103,11 +103,11 @@ void ScriptEngine::fill(float r, float g, float b, float a) {
     m_hasFill = true;
 }
 
-void ScriptEngine::noFill() {
+void bxScriptEngine::noFill() {
     m_hasFill = false;
 }
 
-void ScriptEngine::stroke(float r, float g, float b, float a) {
+void bxScriptEngine::stroke(float r, float g, float b, float a) {
     m_strokeR = r;
     m_strokeG = g;
     m_strokeB = b;
@@ -115,188 +115,188 @@ void ScriptEngine::stroke(float r, float g, float b, float a) {
     m_hasStroke = true;
 }
 
-void ScriptEngine::noStroke() {
+void bxScriptEngine::noStroke() {
     m_hasStroke = false;
 }
 
-void ScriptEngine::strokeWeight(float weight) {
+void bxScriptEngine::strokeWeight(float weight) {
     m_strokeWeight = weight;
 }
 
-void ScriptEngine::rect(float x, float y, float width, float height) {
+void bxScriptEngine::rect(float x, float y, float width, float height) {
     if (m_canvas) {
         m_canvas->rect(x, y, width, height);
     }
 }
 
-void ScriptEngine::ellipse(float x, float y, float width, float height) {
+void bxScriptEngine::ellipse(float x, float y, float width, float height) {
     if (m_canvas) {
         m_canvas->ellipse(x, y, width, height);
     }
 }
 
-void ScriptEngine::line(float x1, float y1, float x2, float y2) {
+void bxScriptEngine::line(float x1, float y1, float x2, float y2) {
     if (m_canvas) {
         m_canvas->line(x1, y1, x2, y2);
     }
 }
 
-void ScriptEngine::triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
+void bxScriptEngine::triangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     if (m_canvas) {
         m_canvas->triangle(x1, y1, x2, y2, x3, y3);
     }
 }
 
-void ScriptEngine::circle(float x, float y, float diameter) {
+void bxScriptEngine::circle(float x, float y, float diameter) {
     if (m_canvas) {
         m_canvas->circle(x, y, diameter);
     }
 }
 
-void ScriptEngine::text(const std::string& text, float x, float y) {
+void bxScriptEngine::text(const std::string& text, float x, float y) {
     if (m_canvas) {
         m_canvas->text(text, x, y);
     }
 }
 
-void ScriptEngine::textSize(float size) {
+void bxScriptEngine::textSize(float size) {
     m_textSize = size;
 }
 
-void ScriptEngine::textAlign(int align) {
+void bxScriptEngine::textAlign(int align) {
     m_textAlign = align;
 }
 
-void ScriptEngine::pushMatrix() {
+void bxScriptEngine::pushMatrix() {
     m_matrixStack.push_back(m_currentMatrix);
 }
 
-void ScriptEngine::popMatrix() {
+void bxScriptEngine::popMatrix() {
     if (!m_matrixStack.empty()) {
         m_currentMatrix = m_matrixStack.back();
         m_matrixStack.pop_back();
     }
 }
 
-void ScriptEngine::translate(float x, float y) {
+void bxScriptEngine::translate(float x, float y) {
     m_currentMatrix = glm::translate(m_currentMatrix, glm::vec3(x, y, 0.0f));
 }
 
-void ScriptEngine::rotate(float angle) {
+void bxScriptEngine::rotate(float angle) {
     m_currentMatrix = glm::rotate(m_currentMatrix, angle, glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-void ScriptEngine::scale(float x, float y) {
+void bxScriptEngine::scale(float x, float y) {
     m_currentMatrix = glm::scale(m_currentMatrix, glm::vec3(x, y, 1.0f));
 }
 
-float ScriptEngine::mouseX() const {
+float bxScriptEngine::mouseX() const {
     return m_mouseX;
 }
 
-float ScriptEngine::mouseY() const {
+float bxScriptEngine::mouseY() const {
     return m_mouseY;
 }
 
-bool ScriptEngine::mousePressed() const {
+bool bxScriptEngine::mousePressed() const {
     return m_mousePressed;
 }
 
-bool ScriptEngine::keyPressed() const {
+bool bxScriptEngine::keyPressed() const {
     return m_keyPressed;
 }
 
-char ScriptEngine::key() const {
+char bxScriptEngine::key() const {
     return m_currentKey;
 }
 
-int ScriptEngine::frameCount() const {
+int bxScriptEngine::frameCount() const {
     return m_frameCount;
 }
 
-float ScriptEngine::frameRate() const {
+float bxScriptEngine::frameRate() const {
     return m_frameRate;
 }
 
-void ScriptEngine::frameRate(float fps) {
+void bxScriptEngine::frameRate(float fps) {
     m_frameRate = fps;
 }
 
-float ScriptEngine::random(float min, float max) {
+float bxScriptEngine::random(float min, float max) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dis(min, max);
     return dis(gen);
 }
 
-float ScriptEngine::sin(float angle) {
+float bxScriptEngine::sin(float angle) {
     return std::sin(angle);
 }
 
-float ScriptEngine::cos(float angle) {
+float bxScriptEngine::cos(float angle) {
     return std::cos(angle);
 }
 
-float ScriptEngine::map(float value, float start1, float stop1, float start2, float stop2) {
+float bxScriptEngine::map(float value, float start1, float stop1, float start2, float stop2) {
     return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));
 }
 
-void ScriptEngine::setOnSetup(std::function<void()> callback) {
+void bxScriptEngine::setOnSetup(std::function<void()> callback) {
     m_onSetup = callback;
 }
 
-void ScriptEngine::setOnDraw(std::function<void()> callback) {
+void bxScriptEngine::setOnDraw(std::function<void()> callback) {
     m_onDraw = callback;
 }
 
-void ScriptEngine::setOnMousePressed(std::function<void()> callback) {
+void bxScriptEngine::setOnMousePressed(std::function<void()> callback) {
     m_onMousePressed = callback;
 }
 
-void ScriptEngine::setOnMouseReleased(std::function<void()> callback) {
+void bxScriptEngine::setOnMouseReleased(std::function<void()> callback) {
     m_onMouseReleased = callback;
 }
 
-void ScriptEngine::setOnKeyPressed(std::function<void()> callback) {
+void bxScriptEngine::setOnKeyPressed(std::function<void()> callback) {
     m_onKeyPressed = callback;
 }
 
-void ScriptEngine::setCanvas(std::shared_ptr<Canvas> canvas) {
+void bxScriptEngine::setCanvas(std::shared_ptr<Canvas> canvas) {
     m_canvas = canvas;
 }
 
-void ScriptEngine::setGraphics(std::shared_ptr<Graphics> graphics) {
+void bxScriptEngine::setGraphics(std::shared_ptr<Graphics> graphics) {
     m_graphics = graphics;
 }
 
-void ScriptEngine::initAPI() {
+void bxScriptEngine::initAPI() {
     // Initialize the API functions map
     // This would be used for dynamic function calling
 }
 
-void ScriptEngine::executeSetup() {
+void bxScriptEngine::executeSetup() {
     if (m_onSetup) {
         m_onSetup();
     }
 }
 
-void ScriptEngine::executeDraw() {
+void bxScriptEngine::executeDraw() {
     if (m_onDraw) {
         m_onDraw();
     }
 }
 
-void ScriptEngine::handleInput() {
+void bxScriptEngine::handleInput() {
     // Handle mouse and keyboard input
     // This would be called from the main application loop
 } 
 
-void ScriptEngine::strokeCap(int cap) {
+void bxScriptEngine::strokeCap(int cap) {
     if (m_canvas) m_canvas->strokeCap(cap);
 }
-void ScriptEngine::strokeJoin(int join) {
+void bxScriptEngine::strokeJoin(int join) {
     if (m_canvas) m_canvas->strokeJoin(join);
 }
-void ScriptEngine::strokeDash(const std::vector<float>& dashes, float offset) {
+void bxScriptEngine::strokeDash(const std::vector<float>& dashes, float offset) {
     if (m_canvas) m_canvas->strokeDash(dashes, offset);
 } 

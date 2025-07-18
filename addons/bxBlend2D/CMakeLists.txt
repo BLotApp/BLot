@@ -16,4 +16,12 @@ target_include_directories(bxBlend2D PUBLIC
     ${CMAKE_SOURCE_DIR}/third_party/glad/include
     ${CMAKE_SOURCE_DIR}/third_party/blend2d/src
 )
-target_link_libraries(bxBlend2D PUBLIC blend2d::blend2d) 
+target_link_libraries(bxBlend2D PUBLIC blend2d::blend2d)
+
+# -----------------------------------------------------------------------------
+# Optional examples
+option(BUILD_ADDON_EXAMPLES "Build examples in this addon" OFF)
+
+if(BUILD_ADDON_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
+    add_subdirectory(examples)
+endif() 

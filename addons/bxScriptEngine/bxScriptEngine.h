@@ -10,14 +10,16 @@
 class Canvas;
 class Graphics;
 
-class ScriptEngine {
+class bxScriptEngine {
 public:
-    ScriptEngine();
-    ~ScriptEngine();
+    bxScriptEngine();
+    ~bxScriptEngine();
     
     void runCode(const std::string& code);
     void stop();
     void update(float deltaTime);
+    // Convenience wrapper used by examples
+    void updateScript(float deltaTime) { update(deltaTime); }
     
     // API functions that can be called from scripts
     void size(int width, int height);

@@ -6,6 +6,8 @@ endif()
 
 project(Blot VERSION 1.0.0 LANGUAGES C CXX)
 
+option(BUILD_ADDON_EXAMPLES "Build all addon examples" OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -176,10 +178,10 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/addons")
     file(GLOB ADDON_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/addons" "${CMAKE_SOURCE_DIR}/addons/*")
     foreach(addon ${ADDON_DIRS})
         if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/addons/${addon}")
-            target_include_directories(blot PRIVATE "${CMAKE_SOURCE_DIR}/addons/${addon}")
+            target_include_directories(blot PUBLIC "${CMAKE_SOURCE_DIR}/addons/${addon}")
         endif()
     endforeach()
-    target_include_directories(blot PRIVATE "${CMAKE_SOURCE_DIR}/addons")
+    target_include_directories(blot PUBLIC "${CMAKE_SOURCE_DIR}/addons")
 endif()
 
 # Compiler flags
@@ -197,6 +199,13 @@ file(COPY addons DESTINATION ${CMAKE_BINARY_DIR})
 if(EXISTS ${CMAKE_SOURCE_DIR}/addons)
     add_subdirectory(addons)
 endif() 
+
+# -----------------------------------------------------------------------------
+# Optional sample / demo applications
+option(BUILD_APPS "Build sample applications in /apps" ON)
+if(BUILD_APPS)
+    add_subdirectory(apps)
+endif()
 
 # ImGuizmo integration
 set(IMGUIZMO_DIR ${CMAKE_SOURCE_DIR}/third_party/ImGuizmo)
@@ -262,7 +271,14 @@ source_group("Scripting" FILES src/scripting/ScriptEngine.cpp)
 
 # spdlog is now included as a subdependency
 add_subdirectory(third_party/spdlog)
-target_link_libraries(blot PRIVATE spdlog::spdlog) 
+target_link_libraries(blot PUBLIC spdlog::spdlog) 
+
+# Propagate third-party include directories needed by external consumers (apps)
+target_include_directories(blot PUBLIC
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
+    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
+)
 
 # add_subdirectory(works)  # Removed: directory no longer exists
 

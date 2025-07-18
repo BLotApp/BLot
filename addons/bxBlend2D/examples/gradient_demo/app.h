@@ -2,11 +2,11 @@
 #include "core/IApp.h"
 #include <memory>
 
-class BlotEngine;
+namespace blot { class BlotEngine; class IApp; }
 
-class SampleBlend2DGradientApp : public IApp {
+class GradientDemoApp : public blot::IApp {
 public:
-    void setup(BlotEngine*) override;
+    void setup(blot::BlotEngine*) override;
     void update(float) override;
     void draw() override;
     void configureWindow(WindowSettings& settings) override;
