@@ -1,6 +1,8 @@
 #include "InfoWindow.h"
 #include "../CoordinateSystem.h"
+#include "../UIManager.h"
 #include <imgui.h>
+#include "ecs/components/TransformComponent.h"
 
 namespace blot {
 
@@ -101,8 +103,12 @@ void InfoWindow::renderCoordinateInfo() {
 }
 
 CoordinateSystem::CoordinateInfo InfoWindow::getCoordinateInfo() const {
-    CoordinateSystem coordSystem;
-    return coordSystem.getCoordinateInfo(glm::vec2(m_mousePos.x, m_mousePos.y), static_cast<CoordinateSpace>(m_coordinateSystem));
+    // TODO: Pass a pointer to UIManager to InfoWindow and use it here instead of getInstance
+    // Example:
+    // if (!m_uiManager) return {};
+    // return m_uiManager->getCoordinateSystem().getCoordinateInfo(glm::vec2(m_mousePos.x, m_mousePos.y), static_cast<CoordinateSpace>(m_coordinateSystem));
+    // For now, return an empty CoordinateInfo
+    return {};
 }
 
 } // namespace blot 

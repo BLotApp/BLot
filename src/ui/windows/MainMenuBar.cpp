@@ -1,10 +1,10 @@
-#include "MainMenuBar.h"
+#include "ui/windows/MainMenuBar.h"
 #include "CodeEditorWindow.h"
-#include "../../ui/UIManager.h"
+#include "ui/UIManager.h"
 #include <imgui.h>
 #include <iostream>
-#include "canvas/Canvas.h"
-#include "app/BlotApp.h"
+#include "core/canvas/Canvas.h"
+#include "core/BlotEngine.h"
 
 namespace blot {
 
@@ -248,9 +248,9 @@ void MainMenuBar::render() {
         // Debug menu
         if (ImGui::BeginMenu("Debug")) {
             if (m_uiManager) {
-                bool debugMode = m_uiManager->getBlotApp()->getDebugMode();
+                bool debugMode = m_uiManager->getBlotEngine()->getDebugMode();
                 if (ImGui::MenuItem("Debug Mode", nullptr, debugMode)) {
-                    m_uiManager->getBlotApp()->setDebugMode(!debugMode);
+                    m_uiManager->getBlotEngine()->setDebugMode(!debugMode);
                 }
             } else {
                 ImGui::Text("Debug mode not available");

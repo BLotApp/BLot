@@ -1,0 +1,7 @@
+{
+  "name": "bxCodeEditor",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A modular code editor for Blot.",
+  "dependencies": ["bxScriptEngine"]
+} 

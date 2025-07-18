@@ -2,12 +2,15 @@
 
 #include "Window.h"
 #include "../../ecs/systems/EventSystem.h"
-#include "../../canvas/Canvas.h"
-#include "../../canvas/CanvasManager.h"
+#include "core/canvas/Canvas.h"
+#include "core/canvas/CanvasManager.h"
 #include <functional>
 #include <vector>
 #include <string>
 #include <memory>
+#include "core/BlotEngine.h"
+// Forward declaration to avoid circular include
+namespace blot { class UIManager; }
 
 // Forward declarations
 class ECSManager;
@@ -30,7 +33,7 @@ public:
     void setCodeEditorWindow(std::shared_ptr<blot::CodeEditorWindow> window) { m_codeEditorWindow = window; }
     
     // Set Canvas reference for renderer state
-    void setCanvas(std::shared_ptr<::Canvas> canvas) { m_canvas = canvas; }
+    void setCanvas(std::shared_ptr<Canvas> canvas) { m_canvas = canvas; }
     
     // Set CanvasManager reference for canvas operations
     void setCanvasManager(blot::CanvasManager* canvasManager) { m_canvasManager = canvasManager; }
@@ -53,7 +56,7 @@ private:
     std::shared_ptr<blot::CodeEditorWindow> m_codeEditorWindow;
     
     // Canvas reference for renderer state
-    std::shared_ptr<::Canvas> m_canvas;
+    std::shared_ptr<Canvas> m_canvas;
     
     // CanvasManager reference for canvas operations
     blot::CanvasManager* m_canvasManager = nullptr;

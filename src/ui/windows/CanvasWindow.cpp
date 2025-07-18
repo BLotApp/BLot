@@ -3,14 +3,15 @@
 #endif
 #include "CanvasWindow.h"
 #include "ImGuiWindow.h"
-#include "canvas/Canvas.h"
-#include "ecs/ECSManager.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
-// Transform component is defined in ECSManager.h
+#include "core/canvas/Canvas.h"
 #include "rendering/Graphics.h"
 #include <imgui.h>
 #include <spdlog/spdlog.h>
+#include "ecs/ECSManager.h"
+#include "rendering/RenderingManager.h"
+#include "ecs/components/TransformComponent.h"
+#include "ecs/components/ShapeComponent.h"
+#include "ecs/components/StyleComponent.h"
 
 namespace blot {
 
@@ -23,7 +24,7 @@ void CanvasWindow::setRenderingManager(RenderingManager* renderingManager) {
     m_renderingManager = renderingManager;
 }
 
-void CanvasWindow::setECSManager(ECSManager* ecs) {
+void CanvasWindow::setECSManager(blot::ECSManager* ecs) {
     m_ecs = ecs;
 }
 
@@ -168,12 +169,12 @@ void CanvasWindow::createShape(const ImVec2& start, const ImVec2& end) {
     entt::entity shapeEntity = m_ecs->createEntity();
     
     // Add Transform component
-    Transform transform;
-    transform.x = 0.0f;
-    transform.y = 0.0f;
-    transform.scaleX = 1.0f;
-    transform.scaleY = 1.0f;
-    m_ecs->addComponent<Transform>(shapeEntity, transform);
+    blot::components::Transform transform;
+    transform.position.x = 0.0f;
+    transform.position.y = 0.0f;
+    transform.scale.x = 1.0f;
+    transform.scale.y = 1.0f;
+    m_ecs->addComponent<blot::components::Transform>(shapeEntity, transform);
     
     // Add Shape component
     blot::components::Shape shape;

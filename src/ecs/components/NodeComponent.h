@@ -39,8 +39,8 @@ struct NodeConnection {
 };
 
 struct NodeComponent {
-    int nodeId;
-    NodeType type;
+    int nodeId = 0;
+    NodeType type = NodeType::Custom;
     std::string name;
     std::string category;
     
@@ -61,12 +61,30 @@ struct NodeComponent {
     bool isSelected = false;
     bool isVisible = true;
     
-    // Constructor for easy node creation
-    NodeComponent(NodeType type, const std::string& name = "")
-        : type(type), name(name) {
+    // Default constructor
+    NodeComponent() : nodeId(0), type(NodeType::Custom), name("") {
         setupDefaultPins();
     }
-    
+    // Constructor for easy node creation
+    NodeComponent(NodeType type, const std::string& name = "")
+        : nodeId(0), type(type), name(name) {
+        setupDefaultPins();
+    }
+    // Helper methods to get input/output pins
+    std::vector<NodePin> getInputs() const {
+        std::vector<NodePin> inputs;
+        for (const auto& pin : pins) {
+            if (pin.isInput) inputs.push_back(pin);
+        }
+        return inputs;
+    }
+    std::vector<NodePin> getOutputs() const {
+        std::vector<NodePin> outputs;
+        for (const auto& pin : pins) {
+            if (pin.isOutput) outputs.push_back(pin);
+        }
+        return outputs;
+    }
 private:
     void setupDefaultPins() {
         switch (type) {

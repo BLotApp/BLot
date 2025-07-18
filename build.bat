@@ -159,25 +159,21 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if exist "%BUILD_TYPE%\blot.exe" (
-    echo.
-    echo ========================================
-    echo Build successful!
-    echo ========================================
-    echo.
-    echo Executable: build\%BUILD_TYPE%\blot.exe
-    echo.
-    echo To run Blot:
-    echo   cd build\%BUILD_TYPE%
-    echo   blot.exe
-    echo.
-) else (
-    echo.
-    echo Build completed but executable not found.
-    echo Check the build directory for any errors.
-    echo.
-)
-
+:: After build, list all executables in the output directory
+set OUTPUT_DIR=%BUILD_TYPE%
+echo.
+echo ========================================
+echo Build successful!
+echo ========================================
+echo.
+echo Built executables in: build\%OUTPUT_DIR%
+echo.
+echo To run an app, navigate to the output directory and run the desired executable, e.g.:
+echo   cd build\%OUTPUT_DIR%
+echo   BlotApp.exe
+echo   sample_blend2d_gradient.exe
+echo   sample_script_engine.exe
+echo.
 :: Always keep the window open at the end so the user can see the output
 pause
 cmd /k 

@@ -2,7 +2,7 @@
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include <imgui.h>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include "core/json.h"
 #include <iostream>
 
 namespace blot {
@@ -256,11 +256,11 @@ void ToolbarWindow::toolButton(const char* icon, int toolType) {
 
 void ToolbarWindow::saveSwatchesToFile(const std::string& path) {
     try {
-        nlohmann::json j;
-        j["swatches"] = nlohmann::json::array();
+        blot::json j;
+        j["swatches"] = blot::json::array();
         
         for (const auto& color : m_swatches) {
-            nlohmann::json colorJson;
+            blot::json colorJson;
             colorJson["r"] = color.x;
             colorJson["g"] = color.y;
             colorJson["b"] = color.z;
@@ -279,7 +279,7 @@ void ToolbarWindow::loadSwatchesFromFile(const std::string& path) {
     try {
         std::ifstream file(path);
         if (file.is_open()) {
-            nlohmann::json j;
+            blot::json j;
             file >> j;
             
             m_swatches.clear();

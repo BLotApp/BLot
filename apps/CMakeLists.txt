@@ -1,0 +1,5 @@
+# CMakeLists.txt for all apps (formerly works)
+add_subdirectory(sample_ui)
+add_subdirectory(sample_blend2d_gradient)
+add_subdirectory(sample_script_engine)
+add_subdirectory(workingTemplate) 

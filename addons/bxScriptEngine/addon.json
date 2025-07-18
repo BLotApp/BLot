@@ -1,0 +1,7 @@
+{
+  "name": "bxScriptEngine",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A modular scripting engine for Blot.",
+  "dependencies": []
+} 

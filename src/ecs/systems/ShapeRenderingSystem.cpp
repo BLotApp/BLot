@@ -4,51 +4,57 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+#include "ecs/components/TransformComponent.h"
+#include "ecs/components/SelectionComponent.h"
+#include "rendering/IRenderer.h"
+// No direct include of Blend2DRenderer.h
 
 namespace blot {
 namespace systems {
 
-void ShapeRenderingSystem(ECSManager& ecs, std::shared_ptr<Blend2DRenderer> renderer) {
-    auto view = ecs.view<Transform, Shape, Style>();
+void ShapeRenderingSystem(ECSManager& ecs, std::shared_ptr<IRenderer> renderer) {
+    // If Blend2D-specific logic is needed, use dynamic_cast here
+    // Blend2DRenderer* blend2d = dynamic_cast<Blend2DRenderer*>(renderer.get());
+    auto view = ecs.view<components::Transform, components::Shape, components::Style>();
     
     for (auto entity : view) {
-        auto& transform = view.get<Transform>(entity);
-        auto& shape = view.get<Shape>(entity);
-        auto& style = view.get<Style>(entity);
+        auto& transform = view.get<components::Transform>(entity);
+        auto& shape = view.get<components::Shape>(entity);
+        auto& style = view.get<components::Style>(entity);
         
         switch (shape.type) {
-            case blot::components::Shape::Type::Rectangle:
+            case components::Shape::Type::Rectangle:
                 renderRectangle(transform, shape, style, renderer);
                 break;
-            case blot::components::Shape::Type::Ellipse:
+            case components::Shape::Type::Ellipse:
                 renderEllipse(transform, shape, style, renderer);
                 break;
-            case blot::components::Shape::Type::Line:
+            case components::Shape::Type::Line:
                 renderLine(transform, shape, style, renderer);
                 break;
-            case blot::components::Shape::Type::Polygon:
+            case components::Shape::Type::Polygon:
                 renderPolygon(transform, shape, style, renderer);
                 break;
-            case blot::components::Shape::Type::Star:
+            case components::Shape::Type::Star:
                 renderStar(transform, shape, style, renderer);
                 break;
         }
     }
 }
 
-void renderRectangle(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void renderRectangle(const components::Transform& transform, const components::Shape& shape, const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
-    float x = transform.x + shape.x1;
-    float y = transform.y + shape.y1;
+    float x = transform.position.x + shape.x1;
+    float y = transform.position.y + shape.y1;
     float width = shape.x2 - shape.x1;
     float height = shape.y2 - shape.y1;
     
     // Apply transform
-    x *= transform.scaleX;
-    y *= transform.scaleY;
-    width *= transform.scaleX;
-    height *= transform.scaleY;
+    x *= transform.scale.x;
+    y *= transform.scale.y;
+    width *= transform.scale.x;
+    height *= transform.scale.y;
     
     if (style.hasFill) {
         setFillStyle(style, renderer);
@@ -61,19 +67,19 @@ void renderRectangle(const Transform& transform, const Shape& shape, const Style
     }
 }
 
-void renderEllipse(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void renderEllipse(const components::Transform& transform, const components::Shape& shape, const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
-    float x = transform.x + shape.x1;
-    float y = transform.y + shape.y1;
+    float x = transform.position.x + shape.x1;
+    float y = transform.position.y + shape.y1;
     float width = shape.x2 - shape.x1;
     float height = shape.y2 - shape.y1;
     
     // Apply transform
-    x *= transform.scaleX;
-    y *= transform.scaleY;
-    width *= transform.scaleX;
-    height *= transform.scaleY;
+    x *= transform.scale.x;
+    y *= transform.scale.y;
+    width *= transform.scale.x;
+    height *= transform.scale.y;
     
     float centerX = x + width * 0.5f;
     float centerY = y + height * 0.5f;
@@ -91,35 +97,35 @@ void renderEllipse(const Transform& transform, const Shape& shape, const Style& 
     }
 }
 
-void renderLine(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void renderLine(const components::Transform& transform, const components::Shape& shape, const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer || !style.hasStroke) return;
     
-    float x1 = transform.x + shape.x1;
-    float y1 = transform.y + shape.y1;
-    float x2 = transform.x + shape.x2;
-    float y2 = transform.y + shape.y2;
+    float x1 = transform.position.x + shape.x1;
+    float y1 = transform.position.y + shape.y1;
+    float x2 = transform.position.x + shape.x2;
+    float y2 = transform.position.y + shape.y2;
     
     // Apply transform
-    x1 *= transform.scaleX;
-    y1 *= transform.scaleY;
-    x2 *= transform.scaleX;
-    y2 *= transform.scaleY;
+    x1 *= transform.scale.x;
+    y1 *= transform.scale.y;
+    x2 *= transform.scale.x;
+    y2 *= transform.scale.y;
     
     setStrokeStyle(style, renderer);
     renderer->drawLine(x1, y1, x2, y2);
 }
 
-void renderPolygon(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void renderPolygon(const components::Transform& transform, const components::Shape& shape, const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
-    float centerX = transform.x + shape.x1;
-    float centerY = transform.y + shape.y1;
+    float centerX = transform.position.x + shape.x1;
+    float centerY = transform.position.y + shape.y1;
     float radius = shape.x2 - shape.x1;
     
     // Apply transform
-    centerX *= transform.scaleX;
-    centerY *= transform.scaleY;
-    radius *= transform.scaleX;
+    centerX *= transform.scale.x;
+    centerY *= transform.scale.y;
+    radius *= transform.scale.x;
     
     std::vector<float> points;
     int sides = shape.sides;
@@ -146,19 +152,19 @@ void renderPolygon(const Transform& transform, const Shape& shape, const Style& 
     }
 }
 
-void renderStar(const Transform& transform, const Shape& shape, const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void renderStar(const components::Transform& transform, const components::Shape& shape, const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
-    float centerX = transform.x + shape.x1;
-    float centerY = transform.y + shape.y1;
+    float centerX = transform.position.x + shape.x1;
+    float centerY = transform.position.y + shape.y1;
     float outerRadius = shape.x2 - shape.x1;
     float innerRadius = outerRadius * shape.innerRadius;
     
     // Apply transform
-    centerX *= transform.scaleX;
-    centerY *= transform.scaleY;
-    outerRadius *= transform.scaleX;
-    innerRadius *= transform.scaleX;
+    centerX *= transform.scale.x;
+    centerY *= transform.scale.y;
+    outerRadius *= transform.scale.x;
+    innerRadius *= transform.scale.x;
     
     std::vector<float> points;
     int points_count = shape.sides * 2;
@@ -186,25 +192,25 @@ void renderStar(const Transform& transform, const Shape& shape, const Style& sty
     }
 }
 
-void renderSelectionOverlay(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<Blend2DRenderer> renderer) {
-    auto view = ecs.view<Transform, Shape, Selection>();
+void renderSelectionOverlay(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<IRenderer> renderer) {
+    auto view = ecs.view<components::Transform, components::Shape, components::Selection>();
     
     for (auto entity : view) {
-        auto& transform = view.get<Transform>(entity);
-        auto& shape = view.get<Shape>(entity);
-        auto& selection = view.get<Selection>(entity);
+        auto& transform = view.get<components::Transform>(entity);
+        auto& shape = view.get<components::Shape>(entity);
+        auto& selection = view.get<components::Selection>(entity);
         
         // Draw selection rectangle
-        float x = transform.x + shape.x1;
-        float y = transform.y + shape.y1;
+        float x = transform.position.x + shape.x1;
+        float y = transform.position.y + shape.y1;
         float width = shape.x2 - shape.x1;
         float height = shape.y2 - shape.y1;
         
         // Apply transform
-        x *= transform.scaleX;
-        y *= transform.scaleY;
-        width *= transform.scaleX;
-        height *= transform.scaleY;
+        x *= transform.scale.x;
+        y *= transform.scale.y;
+        width *= transform.scale.x;
+        height *= transform.scale.y;
         
         // Convert to screen coordinates
         float screenX = canvasPos.x + x;
@@ -219,37 +225,37 @@ void renderSelectionOverlay(ECSManager& ecs, const ImVec2& canvasPos, const ImVe
     }
 }
 
-void renderDrawingPreview(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<Blend2DRenderer> renderer) {
-    auto view = ecs.view<Transform, Shape, Style>();
+void renderDrawingPreview(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2& canvasSize, std::shared_ptr<IRenderer> renderer) {
+    auto view = ecs.view<components::Transform, components::Shape, components::Style>();
     
     for (auto entity : view) {
-        auto& transform = view.get<Transform>(entity);
-        auto& shape = view.get<Shape>(entity);
-        auto& style = view.get<Style>(entity);
+        auto& transform = view.get<components::Transform>(entity);
+        auto& shape = view.get<components::Shape>(entity);
+        auto& style = view.get<components::Style>(entity);
         
         // Convert to screen coordinates
-        float x = canvasPos.x + transform.x + shape.x1;
-        float y = canvasPos.y + transform.y + shape.y1;
+        float x = canvasPos.x + transform.position.x + shape.x1;
+        float y = canvasPos.y + transform.position.y + shape.y1;
         
         // Apply transform
-        x *= transform.scaleX;
-        y *= transform.scaleY;
+        x *= transform.scale.x;
+        y *= transform.scale.y;
         
         // Draw preview (simplified)
         if (renderer && style.hasStroke) {
             setStrokeStyle(style, renderer);
             switch (shape.type) {
-                case blot::components::Shape::Type::Rectangle:
-                    renderer->drawRect(x, y, (shape.x2 - shape.x1) * transform.scaleX, (shape.y2 - shape.y1) * transform.scaleY);
+                case components::Shape::Type::Rectangle:
+                    renderer->drawRect(x, y, (shape.x2 - shape.x1) * transform.scale.x, (shape.y2 - shape.y1) * transform.scale.y);
                     break;
-                case blot::components::Shape::Type::Ellipse:
-                    renderer->drawEllipse(x + (shape.x2 - shape.x1) * 0.5f * transform.scaleX, 
-                                        y + (shape.y2 - shape.y1) * 0.5f * transform.scaleY,
-                                        (shape.x2 - shape.x1) * 0.5f * transform.scaleX,
-                                        (shape.y2 - shape.y1) * 0.5f * transform.scaleY);
+                case components::Shape::Type::Ellipse:
+                    renderer->drawEllipse(x + (shape.x2 - shape.x1) * 0.5f * transform.scale.x, 
+                                        y + (shape.y2 - shape.y1) * 0.5f * transform.scale.y,
+                                        (shape.x2 - shape.x1) * 0.5f * transform.scale.x,
+                                        (shape.y2 - shape.y1) * 0.5f * transform.scale.y);
                     break;
-                case blot::components::Shape::Type::Line:
-                    renderer->drawLine(x, y, x + (shape.x2 - shape.x1) * transform.scaleX, y + (shape.y2 - shape.y1) * transform.scaleY);
+                case components::Shape::Type::Line:
+                    renderer->drawLine(x, y, x + (shape.x2 - shape.x1) * transform.scale.x, y + (shape.y2 - shape.y1) * transform.scale.y);
                     break;
                 default:
                     break;
@@ -258,14 +264,14 @@ void renderDrawingPreview(ECSManager& ecs, const ImVec2& canvasPos, const ImVec2
     }
 }
 
-void setFillStyle(const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void setFillStyle(const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
     glm::vec4 fillColor(style.fillR, style.fillG, style.fillB, style.fillA);
     renderer->setFillColor(fillColor);
 }
 
-void setStrokeStyle(const Style& style, std::shared_ptr<Blend2DRenderer> renderer) {
+void setStrokeStyle(const components::Style& style, std::shared_ptr<IRenderer> renderer) {
     if (!renderer) return;
     
     glm::vec4 strokeColor(style.strokeR, style.strokeG, style.strokeB, style.strokeA);

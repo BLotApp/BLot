@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <memory>
 #include <functional>
+#include "ecs/ECSManager.h"
 
 // Forward declarations
 class ECSManager;

@@ -3,20 +3,20 @@
 #include "Window.h"
 #include <memory>
 
-class AddonManager;
-
 namespace blot {
+
+class AddonManager;
 
 class AddonManagerWindow : public Window {
 public:
     AddonManagerWindow(const std::string& title = "Addon Manager", Flags flags = Flags::None);
     virtual ~AddonManagerWindow() = default;
 
-    void setAddonManager(std::shared_ptr<AddonManager> addonManager);
+    void setAddonManager(blot::AddonManager* addonManager);
     void renderContents() override;
 
 private:
-    std::shared_ptr<AddonManager> m_addonManager;
+    blot::AddonManager* m_addonManager = nullptr;
     void renderAddonManager();
 };
 

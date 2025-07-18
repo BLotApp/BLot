@@ -1,7 +1,9 @@
 #pragma once
 
+#include <string>
+
+namespace blot { class ECSManager; }
 #include "Window.h"
-#include "ecs/ECSManager.h"
 #include <imgui.h>
 
 namespace blot {

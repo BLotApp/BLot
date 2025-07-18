@@ -17,42 +17,23 @@ This document explains the organization of the application's folders and their p
 |     `fonts/`                | Font files for UI and rendering                                  |
 |     `user/`                 | User-generated or user-editable data                             |
 |         `workspaces/`       | Workspace configuration files (`.json`)                          |
+| `addons/`                   | Modular addon/plugin system; each addon in its own folder        |
+| `apps/`                     | Sample and user apps, each in its own subdirectory               |
 | `src/`                      | All application source code, organized by subsystem/feature      |
-|     `app/`                  | Application entry point, settings, main app logic                |
-|     `addons/`               | Core addon/plugin system code                                    |
-|     `canvas/`               | Canvas and canvas manager implementation                         |
-|     `ecs/`                  | Entity-Component-System (ECS) core logic                         |
-|         `components/`       | ECS component definitions                                        |
-|         `systems/`          | ECS system implementations                                       |
-|     `rendering/`            | Rendering backends, graphics utilities, renderer management      |
-|     `resources/`            | Resource management (shaders, vertex buffers, etc.)              |
-|     `scripting/`            | Scripting engine integration and logic                           |
-|     `ui/`                   | User interface core logic, ImGui integration, UI utilities       |
-|         `windows/`          | All ImGui-based window classes (menus, toolbars, dialogs, etc.)  |
-| `addons/`                   | Built-in or user-created add-ons/plugins                         |
+|     `core/`                 | Core engine logic, interfaces, and main app/engine classes       |
+|     `framework/`            | Addon base classes, managers, and shared framework code          |
+|     `rendering/`            | Rendering backends, renderer interfaces, and managers            |
+|     `ui/`                   | UI system, ImGui integration, windows, and UIManager             |
+|     `ecs/`                  | Entity-Component-System (ECS) implementation and components      |
+|     `resources/`            | Shaders, vertex buffers, and resource management                 |
+|     `scripting/`            | Scripting engine and related code                                |
 | `third_party/`              | External libraries and dependencies                              |
-| `build/`                    | Compiled binaries and copied resources after building            |
+| `DOCS/`                     | Project documentation                                            |
+| `works/` (if present)       | Legacy or experimental apps (being migrated to `apps/`)          |
 
 ---
 
-## Best Practices
-- **User Data:** Always store user-editable data in `assets/user/` to avoid overwriting during updates.
-- **Static Assets:** Place fonts, images, and other static resources in `assets/` (but outside `user/`).
-- **Addons:** Place new add-ons in the `addons/` directory.
-- **Build Output:** Run the application from the build output directory to ensure all resources are found.
-
----
-
-## Example: Adding a New Workspace
-1. Save a new workspace in the app, or manually add a `.json` file to `assets/user/workspaces/`.
-2. The workspace will appear in the Workspace > Load menu.
-
----
-
-## Updating or Packaging the App
-- Only update/replace files in `assets/` (except `assets/user/`) and `addons/`.
-- Instruct users to back up `assets/user/` for their custom data.
-
----
-
-For further details, see the code documentation or ask a maintainer. 
+## Umbrella Headers and Modularity
+- Major modules provide umbrella headers (e.g., `core/core.h`, `ui/ui.h`, `rendering/rendering.h`, `ecs/ecs.h`) to simplify includes and improve modularity.
+- Always use project-root-relative includes (e.g., `#include "core/core.h"`).
+- See `DOCS/includes.md` for more details on include conventions.

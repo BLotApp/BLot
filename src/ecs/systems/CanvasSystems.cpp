@@ -1,10 +1,12 @@
 #include "CanvasSystems.h"
+#include "ecs/systems/ShapeRenderingSystem.h"
+#include "ecs/components/TextureComponent.h"
 
 namespace blot {
 namespace systems {
 
 void CanvasUpdateSystem(ECSManager& ecs, RenderingManager* renderingManager, float deltaTime) {
-    auto view = ecs.view<TextureComponent>();
+    auto view = ecs.view<components::TextureComponent>();
     for (auto entity : view) {
         auto canvasPtr = renderingManager->getCanvas(entity);
         if (canvasPtr && *canvasPtr) {
@@ -14,7 +16,7 @@ void CanvasUpdateSystem(ECSManager& ecs, RenderingManager* renderingManager, flo
 }
 
 void CanvasRenderSystem(ECSManager& ecs, RenderingManager* renderingManager, entt::entity activeCanvasId) {
-    if (activeCanvasId != entt::null && ecs.hasComponent<TextureComponent>(activeCanvasId)) {
+    if (activeCanvasId != entt::null && ecs.hasComponent<components::TextureComponent>(activeCanvasId)) {
         auto canvasPtr = renderingManager->getCanvas(activeCanvasId);
         if (canvasPtr && *canvasPtr) {
             (*canvasPtr)->render();

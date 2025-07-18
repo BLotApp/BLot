@@ -57,6 +57,7 @@ endif()
 # Add GLM and EnTT from submodules
 include_directories(${CMAKE_SOURCE_DIR}/third_party/glm)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/json/single_include)
 
 # Remove vcpkg/system Blend2D
 # find_package(blend2d REQUIRED)
@@ -118,10 +119,7 @@ file(GLOB IMGUI_NODE_EDITOR_SOURCES
     third_party/imgui-node-editor/crude_json.cpp
 )
 
-# Add AppPaths utility source
-set(APP_PATHS_SOURCES src/AppPaths.cpp)
-
-add_executable(blot ${BLOT_SOURCES})
+add_library(blot STATIC ${BLOT_SOURCES})
 target_sources(blot PRIVATE
     ${IMGUI_SOURCES}
     ${IMGUI_BACKEND_SOURCES}
@@ -173,6 +171,17 @@ target_include_directories(blot PRIVATE
     ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
 )
 
+# Automatically add all addon subdirectories to the include path
+if(EXISTS "${CMAKE_SOURCE_DIR}/addons")
+    file(GLOB ADDON_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/addons" "${CMAKE_SOURCE_DIR}/addons/*")
+    foreach(addon ${ADDON_DIRS})
+        if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/addons/${addon}")
+            target_include_directories(blot PRIVATE "${CMAKE_SOURCE_DIR}/addons/${addon}")
+        endif()
+    endforeach()
+    target_include_directories(blot PRIVATE "${CMAKE_SOURCE_DIR}/addons")
+endif()
+
 # Compiler flags
 if(MSVC)
     target_compile_options(blot PRIVATE /W4)
@@ -203,10 +212,9 @@ add_executable(blend2d_test blend2d_test.cpp)
 target_link_libraries(blend2d_test PRIVATE blend2d::blend2d) 
 
 # Organize source files into folders for Visual Studio
-source_group("App" FILES src/app/main.cpp src/app/BlotApp.cpp)
-source_group("Canvas" FILES src/canvas/Canvas.cpp src/canvas/CanvasManager.cpp src/canvas/CanvasManager.h)
-source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Blend2DRenderer.cpp src/rendering/Renderer.cpp)
-source_group("CodeEditor" FILES src/ui/CodeEditor.cpp src/ui/CodeEditor.h)
+source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/CanvasManager.cpp src/framework/canvas/CanvasManager.h)
+source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Renderer.cpp)
+source_group("CodeEditor" FILES addons/bxCodeEditor/bxCodeEditor.cpp addons/bxCodeEditor/bxCodeEditor.h)
 source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)
 source_group("ThirdParty\\ImGui" FILES
     third_party/imgui/imgui.cpp
@@ -247,7 +255,7 @@ file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
 source_group("Scripting" FILES ${SCRIPTING_SOURCES})
 
 # Use the globbed files in the source group and target sources
-source_group("UI" FILES src/ui/TextRenderer.cpp src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/UIManager.cpp src/ui/UIManager.h)
+source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/UIManager.cpp src/ui/UIManager.h)
 source_group("ECS" FILES src/ecs/ECSManager.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/EventSystem.cpp)
 source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
@@ -256,6 +264,16 @@ source_group("Scripting" FILES src/scripting/ScriptEngine.cpp)
 add_subdirectory(third_party/spdlog)
 target_link_libraries(blot PRIVATE spdlog::spdlog) 
 
-add_subdirectory(works) 
+# add_subdirectory(works)  # Removed: directory no longer exists
 
 add_subdirectory(third_party/glfw) 
+
+target_include_directories(blot PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/ui
+    ${CMAKE_SOURCE_DIR}/src/rendering
+    ${CMAKE_SOURCE_DIR}/src/ecs
+    ${CMAKE_SOURCE_DIR}/src/core/canvas
+    # ...add others as needed
+) 

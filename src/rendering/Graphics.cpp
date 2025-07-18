@@ -7,8 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "rendering/Graphics.h"
-#include "rendering/Blend2DRenderer.h"
-#include <blend2d.h>
+
+namespace blot {
 
 struct Graphics::Impl {
 	GLuint shaderProgram = 0;
@@ -150,7 +150,6 @@ void Graphics::stroke() {
 }
 
 void Graphics::drawText(const std::string& text, float x, float y) {
-    // Basic text rendering - in a real implementation, this would use the TextRenderer
     // For now, we'll just draw a placeholder rectangle
     drawRect(x, y, text.length() * m_fontSize * 0.6f, m_fontSize);
 }
@@ -306,27 +305,23 @@ void Graphics::setRenderer(IRenderer* renderer) {
 
 void Graphics::setStrokeCap(int cap) {
     if (m_renderer) {
-        // Only Blend2DRenderer supports BLStrokeCap, so cast if needed
+        // If Blend2D-specific logic is needed, move to addon
         if (m_renderer->getType() == RendererType::Blend2D) {
-            auto* b2d = static_cast<Blend2DRenderer*>(m_renderer);
-            b2d->setStrokeCap(static_cast<BLStrokeCap>(cap));
+            // Extension point: handled in Blend2D addon
         }
     }
 }
 void Graphics::setStrokeJoin(int join) {
     if (m_renderer) {
         if (m_renderer->getType() == RendererType::Blend2D) {
-            auto* b2d = static_cast<Blend2DRenderer*>(m_renderer);
-            b2d->setStrokeJoin(static_cast<BLStrokeJoin>(join));
+            // Extension point: handled in Blend2D addon
         }
     }
 }
 void Graphics::setStrokeDash(const std::vector<float>& dashes, float offset) {
     if (m_renderer) {
         if (m_renderer->getType() == RendererType::Blend2D) {
-            auto* b2d = static_cast<Blend2DRenderer*>(m_renderer);
-            std::vector<double> d(dashes.begin(), dashes.end());
-            b2d->setStrokeDashPattern(d, static_cast<double>(offset));
+            // Extension point: handled in Blend2D addon
         }
     }
 } 
@@ -341,3 +336,5 @@ void Graphics::rect(float x, float y, float width, float height) {
         m_renderer->drawRect(x, y, width, height);
     }
 } 
+
+} // namespace blot 

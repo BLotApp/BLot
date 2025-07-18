@@ -4,7 +4,9 @@ This document explains how to create new components for the ECS (Entity-Componen
 
 ## 1. Basic Component Structure
 
-A component is a simple struct, typically placed in `src/ecs/components/`:
+A component is a simple struct.
+- If it is used by the core application (in `src/`), it must be placed in `src/ecs/components/`.
+- Addons and plugins may define their own components in their own directories, but should follow the same conventions and (optionally) support property reflection for editor integration.
 
 ```cpp
 struct MyComponent {
@@ -66,10 +68,20 @@ struct ExampleComponent {
 
 For more advanced use cases, consider using `std::variant` or a similar type-safe approach for the `data` field in `sProp`.
 
+## Component Header Inclusion Best Practices
+
+- **Never include component headers in general engine, manager, or utility headers.**
+- **Only include component headers in system headers** (and their implementations) where the system API explicitly operates on those components.
+- If a header only needs a pointer or reference to a type, prefer a forward declaration.
+- **Umbrella headers** (headers that include many components, like the now-removed `ecs/ecs.h`) should not be used, as they leak dependencies and slow down builds.
+- **Exception:** System headers are allowed to include component headers, as their purpose is to process those components directly.
+
 ---
 
 **Summary:**
 - Components are plain structs.
+- All core ECS component structs (used by code in `src/`) must be placed in `src/ecs/components/`.
+- Addons and plugins may define and register their own ECS components in their own directories.
 - Add `GetProperties()` to enable property editing in the editor.
 - If missing, a warning is logged.
 - No inheritance or macros required. 

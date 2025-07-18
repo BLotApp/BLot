@@ -1,5 +1,5 @@
 #include "AddonManagerWindow.h"
-#include "addons/AddonManager.h"
+#include "core/AddonManager.h"
 #include <imgui.h>
 
 namespace blot {
@@ -7,7 +7,7 @@ namespace blot {
 AddonManagerWindow::AddonManagerWindow(const std::string& title, Flags flags)
     : Window(title, flags) {}
 
-void AddonManagerWindow::setAddonManager(std::shared_ptr<AddonManager> addonManager) {
+void AddonManagerWindow::setAddonManager(blot::AddonManager* addonManager) {
     m_addonManager = addonManager;
 }
 

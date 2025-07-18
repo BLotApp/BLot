@@ -1,17 +1,18 @@
-#include "PropertiesWindow.h"
-#include "ecs/ECSManager.h"
+#include "ui/windows/PropertiesWindow.h"
+#include "ecs/components/DraggableComponent.h"
+#include "ecs/components/SelectableComponent.h"
+#include "ecs/components/CanvasComponent.h"
+#include "ecs/components/NodeComponent.h"
 #include "ecs/components/TransformComponent.h"
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
-#include "ecs/components/DraggableComponent.h"
-#include "ecs/components/SelectableComponent.h"
 #include "ecs/components/TextureComponent.h"
-#include "ecs/components/CanvasComponent.h"
-#include "ecs/PropertyReflection.h"
 #include <imgui.h>
 #include <array>
+#include "ecs/ECSManager.h"
 
 namespace blot {
+using namespace components;
 
 PropertiesWindow::PropertiesWindow(const std::string& title, Flags flags)
     : Window(title, flags) {
@@ -52,7 +53,7 @@ void PropertiesWindow::renderEntityList() {
     if (!m_ecs) return;
     ImGui::Text("Entities:");
     ImGui::BeginChild("EntityList", ImVec2(0, 100), true);
-    auto view = m_ecs->view<TransformComponent>();
+    auto view = m_ecs->view<components::Transform>();
     for (auto entity : view) {
         char label[64];
         snprintf(label, sizeof(label), "Entity %u", (unsigned int)entity);
@@ -120,13 +121,13 @@ void RenderComponentProperties(entt::entity entity, ECSManager* ecs, const char*
 void PropertiesWindow::renderAllComponentProperties() {
     entt::entity entity = static_cast<entt::entity>(m_selectedEntity);
     ECSManager* ecs = m_ecs.get();
-    RenderComponentProperties<TransformComponent>(entity, ecs, "Transform");
-    RenderComponentProperties<blot::components::Shape>(entity, ecs, "Shape");
-    RenderComponentProperties<blot::components::Style>(entity, ecs, "Style");
-    RenderComponentProperties<DraggableComponent>(entity, ecs, "Draggable");
-    RenderComponentProperties<SelectableComponent>(entity, ecs, "Selectable");
-    RenderComponentProperties<TextureComponent>(entity, ecs, "Texture");
-    RenderComponentProperties<CanvasComponent>(entity, ecs, "Canvas");
+    RenderComponentProperties<components::Transform>(entity, ecs, "Transform");
+    RenderComponentProperties<components::Shape>(entity, ecs, "Shape");
+    RenderComponentProperties<components::Style>(entity, ecs, "Style");
+    RenderComponentProperties<components::DraggableComponent>(entity, ecs, "Draggable");
+    RenderComponentProperties<components::SelectableComponent>(entity, ecs, "Selectable");
+    RenderComponentProperties<components::TextureComponent>(entity, ecs, "Texture");
+    RenderComponentProperties<components::CanvasComponent>(entity, ecs, "Canvas");
     // Add more as needed
 }
 

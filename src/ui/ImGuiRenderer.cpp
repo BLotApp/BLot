@@ -1,11 +1,9 @@
 #include "ui/ImGuiRenderer.h"
 #include "imgui_impl_opengl3.h"
 #include <iostream>
-#include "ui/TextRenderer.h"
 
-ImGuiRenderer::ImGuiRenderer(TextRenderer* textRenderer)
-    : m_textRenderer(textRenderer)
-    , m_useCustomFont(false)
+ImGuiRenderer::ImGuiRenderer()
+    : m_useCustomFont(false)
     , m_customFontSize(16)
     , m_customImGuiFont(nullptr)
     , m_fontAtlas(nullptr)
@@ -52,36 +50,7 @@ void ImGuiRenderer::setCustomFont(const std::string& fontPath, int fontSize) {
         m_customImGuiFont = io.Fonts->AddFontDefault();
     }
     
-    // Also set it in our text renderer
-    if (m_textRenderer) {
-        m_textRenderer->setFont(fontPath, fontSize);
-    }
-    
     m_useCustomFont = true;
-}
-
-void ImGuiRenderer::renderText(const std::string& text, float x, float y, float scale, const ImVec4& color) {
-    if (!m_textRenderer) return;
-    
-    glm::vec4 glmColor(color.x, color.y, color.z, color.w);
-    m_textRenderer->renderText(text, x, y, scale, glmColor);
-}
-
-void ImGuiRenderer::renderTextCentered(const std::string& text, float x, float y, float scale, const ImVec4& color) {
-    if (!m_textRenderer) return;
-    
-    // Save current alignment
-    auto currentAlignment = m_textRenderer->getTextAlignment();
-    
-    // Set to center alignment
-    m_textRenderer->setTextAlignment(TextAlignment::Center);
-    
-    // Render text
-    glm::vec4 glmColor(color.x, color.y, color.z, color.w);
-    m_textRenderer->renderText(text, x, y, scale, glmColor);
-    
-    // Restore alignment
-    m_textRenderer->setTextAlignment(currentAlignment);
 }
 
 void ImGuiRenderer::pushCustomFont() {

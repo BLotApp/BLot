@@ -2,6 +2,8 @@
 #include <string>
 #include "../PropertyReflection.h"
 
+namespace blot { namespace components {
+
 struct CanvasComponent {
     int width = 1024;
     int height = 768;
@@ -23,4 +25,6 @@ struct CanvasComponent {
             {8, "Grid Spacing", EPT_FLOAT, &gridSpacing}
         };
     }
-}; 
+};
+
+} } // namespace blot::components 

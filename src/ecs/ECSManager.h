@@ -6,91 +6,23 @@
 #include <vector>
 #include <unordered_map>
 #include "imgui.h"
-#include "components/ShapeComponent.h"
-#include "components/StyleComponent.h"
-#include "components/TextureComponent.h"
-#include "ecs/systems/CanvasSystems.h"
+#include "rendering/IRenderer.h"
 #include "ecs/systems/EventSystem.h"
+#include "core/IManager.h"
+#include "core/ISettings.h"
 
 // Forward declarations
+class bxScriptEngine;
+
+namespace blot {
 class Canvas;
-class Graphics;
-class ScriptEngine;
 class RenderingManager;
-class Blend2DRenderer;
-
-// Component definitions
-struct Transform {
-    float x = 0.0f, y = 0.0f;
-    float rotation = 0.0f;
-    float scaleX = 1.0f, scaleY = 1.0f;
-};
-
-// Use the new component types from the blot::components namespace
-using Shape = blot::components::Shape;
-using Style = blot::components::Style;
-
-struct Animation {
-    float duration = 1.0f;
-    float currentTime = 0.0f;
-    bool isPlaying = false;
-    bool loop = false;
-    
-    // Animation curves
-    enum Curve {
-        Linear,
-        EaseIn,
-        EaseOut,
-        EaseInOut,
-        Bounce,
-        Elastic
-    };
-    Curve curve = Linear;
-};
-
-struct Parameter {
-    std::string name;
-    float value = 0.0f;
-    float minValue = 0.0f;
-    float maxValue = 1.0f;
-    bool isConnected = false;
-    entt::entity connectedTo = entt::null;
-};
-
-struct Node {
-    std::string nodeType;
-    std::vector<std::string> inputs;
-    std::vector<std::string> outputs;
-    std::unordered_map<std::string, float> parameters;
-};
-
-struct Script {
-    std::string code;
-    bool isActive = true;
-    std::string language = "cpp";
-};
-
-// Drawing state component for UI interaction
-struct Drawing {
-    bool isActive = false;
-    bool isSelected = false;
-    bool isHovered = false;
-    ImVec2 startPos = ImVec2(0, 0);
-    ImVec2 currentPos = ImVec2(0, 0);
-    ImVec2 endPos = ImVec2(0, 0);
-};
-
-// Selection component for UI state
-struct Selection {
-    bool isSelected = false;
-    bool isMultiSelected = false;
-    int selectionIndex = -1;
-};
-
-class ECSManager {
+class ECSManager : public IManager, public ISettings {
 public:
     ECSManager();
     ~ECSManager();
+    void init() override {}
+    void shutdown() override {}
     
     // Entity management
     entt::entity createEntity(const std::string& name = "");
@@ -148,17 +80,19 @@ public:
     std::vector<entt::entity> getAllEntities() const;
     
     // Integration with other systems
-    void setCanvas(std::shared_ptr<Canvas> canvas);
-    void setGraphics(std::shared_ptr<Graphics> graphics);
-    void setScriptEngine(std::shared_ptr<ScriptEngine> scriptEngine);
+    // void setGraphics(std::shared_ptr<Graphics> graphics); // Removed, not needed
     
     void runCanvasSystems(RenderingManager* renderingManager, float deltaTime);
     void runCanvasRenderSystem(RenderingManager* renderingManager, entt::entity activeCanvasId);
-    void runShapeRenderingSystem(std::shared_ptr<Blend2DRenderer> renderer);
+    void runShapeRenderingSystem(std::shared_ptr<IRenderer> renderer);
     
     // Event system access
-    blot::systems::EventSystem& getEventSystem() { return *m_eventSystem; }
-    const blot::systems::EventSystem& getEventSystem() const { return *m_eventSystem; }
+    systems::EventSystem& getEventSystem() { return *m_eventSystem; }
+    const systems::EventSystem& getEventSystem() const { return *m_eventSystem; }
+    
+    // ISettings interface
+    json getSettings() const override;
+    void setSettings(const json& settings) override;
     
 private:
     entt::registry m_registry;
@@ -166,12 +100,10 @@ private:
     std::vector<entt::entity> m_entities;
     
     // System references
-    std::shared_ptr<Canvas> m_canvas;
-    std::shared_ptr<Graphics> m_graphics;
-    std::shared_ptr<ScriptEngine> m_scriptEngine;
+    // std::shared_ptr<Canvas> m_canvas; // Removed, not needed
     
     // Event system
-    std::unique_ptr<blot::systems::EventSystem> m_eventSystem;
+    std::unique_ptr<systems::EventSystem> m_eventSystem;
     
     // Systems
     void updateAnimationSystem(float deltaTime);
@@ -205,3 +137,4 @@ template<typename... Components>
 auto ECSManager::view() {
     return m_registry.view<Components...>();
 } 
+} // namespace blot 

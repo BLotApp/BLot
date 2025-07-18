@@ -8,6 +8,7 @@ Welcome to the Blot documentation! Click any link below to view the correspondin
 - [Folder Structure](./folder_structure.md)
 - [Logging](logging.md)
 - [Notification & Popup System](./notification_popup_system.md)
+- [Apps Overview](./apps.md)
 
 ---
 

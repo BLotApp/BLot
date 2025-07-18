@@ -2,7 +2,7 @@
 #include "../UIManager.h"
 #include <imgui.h>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include "core/json.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 
 namespace blot {

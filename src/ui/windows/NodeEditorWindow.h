@@ -8,9 +8,7 @@
 #include <imgui.h>
 #include <imgui_node_editor.h>
 #include <unordered_map>
-
-// Forward declarations
-class ECSManager;
+#include "ecs/ECSManager.h"
 
 namespace blot {
 

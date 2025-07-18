@@ -5,6 +5,7 @@
 #include <imgui.h>
 
 namespace blot {
+class UIManager;
 
 class InfoWindow : public Window {
 public:

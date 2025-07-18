@@ -4,7 +4,9 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <memory>
-#include "rendering/Renderer.h"
+#include "rendering/IRenderer.h"
+
+namespace blot {
 
 class Graphics {
 public:
@@ -118,4 +120,6 @@ private:
     IRenderer* m_renderer = nullptr;
     int m_canvasWidth = 0;
     int m_canvasHeight = 0;
-}; 
+};
+
+} // namespace blot 

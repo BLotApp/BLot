@@ -1,4 +1,4 @@
-# Build Instructions for BLot
+# Build Instructions for Blot
 
 ## Prerequisites
 
@@ -22,15 +22,6 @@ set VCPKG_ROOT=C:\path\to\vcpkg   # Windows
 ```bash
 # Install all dependencies
 vcpkg install glfw3 freetype glm glad imgui entt blend2d
-
-# Or install individually
-vcpkg install glfw3
-vcpkg install freetype
-vcpkg install glm
-vcpkg install glad
-vcpkg install imgui
-vcpkg install entt
-vcpkg install blend2d
 ```
 
 ### 3. Build the Project
@@ -60,6 +51,43 @@ cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
 make
 ```
+
+## Building and Running Apps in `apps/`
+
+The Blot framework is now app-agnostic. All runnable applications are located in the `apps/` directory. Each app in `apps/` is built as a separate executable.
+
+### How to Build All Apps
+
+The provided build scripts (`build.bat` or `build.sh`) will build all apps in `apps/` by default. Each app will produce its own executable in the build output directory (e.g., `build/Release/BlotApp.exe`, `build/Release/sample_blend2d_gradient.exe`, etc.).
+
+### How to Run a Specific App
+
+After building, navigate to the appropriate build output directory and run the desired app:
+
+```bash
+cd build/Release  # Windows
+# or
+cd build          # Linux/macOS
+
+# Run a specific app (replace with your app's name)
+./BlotApp         # Linux/macOS
+BlotApp.exe       # Windows
+
+./sample_blend2d_gradient
+./sample_script_engine
+```
+
+## Creating a New App
+
+To create a new app:
+1. Copy the `apps/workingTemplate` directory to a new folder under `apps/` (e.g., `apps/MyNewApp`).
+2. Rename files and update the CMake target name in `CMakeLists.txt` as needed.
+3. Add your app's logic to `main.cpp` and any other files.
+4. Add a line to `apps/CMakeLists.txt`:
+   ```cmake
+   add_subdirectory(MyNewApp)
+   ```
+5. Rebuild the project. Your new app will be built as its own executable.
 
 ## Troubleshooting
 
@@ -98,32 +126,19 @@ For development, you may also want to install:
 - **CMake Tools** extension for VS Code
 - **clang-format** for code formatting
 
-## Running the Application
-
-After successful build:
-```bash
-cd build/Release  # Windows
-# or
-cd build          # Linux/macOS
-
-./blot  # Linux/macOS
-# or
-blot.exe  # Windows
-```
-
 ## Project Structure
 
 ```
 blot/
-├── src/                    # Source files
-│   ├── addons/            # Addon implementations
-│   ├── BlotApp.cpp        # Main application
-│   ├── Canvas.cpp         # Creative coding canvas
-│   ├── Graphics.cpp       # Drawing operations
-│   └── ...
-├── CMakeLists.txt         # Build configuration
-├── vcpkg.json            # Dependencies
-├── build.bat             # Windows build script
-├── build.sh              # Linux/macOS build script
-└── README.md             # Project documentation
+├── src/                    # Framework source files
+├── apps/                  # All runnable apps
+│   ├── BlotApp/            # Example app
+│   ├── sample_blend2d_gradient/
+│   ├── sample_script_engine/
+│   └── workingTemplate/    # Template for new apps
+├── CMakeLists.txt          # Build configuration
+├── vcpkg.json              # Dependencies
+├── build.bat               # Windows build script
+├── build.sh                # Linux/macOS build script
+└── README.md               # Project documentation
 ``` 

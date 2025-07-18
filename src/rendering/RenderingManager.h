@@ -3,19 +3,31 @@
 #include <memory>
 #include <unordered_map>
 #include <entt/entt.hpp>
-#include "rendering/Blend2DRenderer.h"
-#include "rendering/Renderer.h"
-#include "canvas/Canvas.h"
+#include "rendering/IRenderer.h"
+#include "core/canvas/Canvas.h"
 #include "rendering/Graphics.h"
+#include "core/IManager.h"
+#include "core/ISettings.h"
 
-class RenderingManager {
+/**
+ * RenderingManager is the sole owner/manager of all engine-level IRenderer instances.
+ * All renderer creation, switching, and access should go through RenderingManager.
+ */
+namespace blot {
+class RenderingManager : public IManager, public ISettings {
 public:
     RenderingManager();
     ~RenderingManager();
+    void init() override {}
+    void shutdown() override {}
+    
+    // Main renderer management
+    void setMainRenderer(std::shared_ptr<IRenderer> renderer);
+    std::shared_ptr<IRenderer> getMainRenderer() const;
     
     // Renderer management
-    std::shared_ptr<Blend2DRenderer> getRenderer(entt::entity entity);
-    std::shared_ptr<Blend2DRenderer> createRenderer(entt::entity entity, int width, int height);
+    std::shared_ptr<IRenderer> getRenderer(entt::entity entity);
+    std::shared_ptr<IRenderer> createRenderer(entt::entity entity, RendererType type, int width, int height);
     void destroyRenderer(entt::entity entity);
     
     // Canvas management
@@ -32,8 +44,14 @@ public:
     // Resource cleanup
     void cleanup();
     
+    // ISettings interface
+    json getSettings() const override;
+    void setSettings(const json& settings) override;
+    
 private:
-    std::unordered_map<entt::entity, std::shared_ptr<Blend2DRenderer>> m_renderers;
+    std::shared_ptr<IRenderer> m_mainRenderer;
+    std::unordered_map<entt::entity, std::shared_ptr<IRenderer>> m_renderers;
     std::unordered_map<entt::entity, std::unique_ptr<Canvas>> m_canvases;
     std::unordered_map<entt::entity, std::shared_ptr<Graphics>> m_graphics;
-}; 
+};
+} // namespace blot 

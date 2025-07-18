@@ -1,16 +1,17 @@
 #include "NodeEditorWindow.h"
-#include <imgui.h>
-#include <imgui_node_editor.h>
-#include <unordered_map>
-#include "ecs/ECSManager.h"
 #include "ecs/components/NodeComponent.h"
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
+#include "ecs/ECSManager.h"
+#include <imgui.h>
+#include <imgui_node_editor.h>
+#include <unordered_map>
 #include <iostream>
 
 namespace ed = ax::NodeEditor;
 
 namespace blot {
+using namespace components;
 
 NodeEditorWindow::NodeEditorWindow(const std::string& title, Flags flags)
     : Window(title, flags), m_editorContext(nullptr) {
@@ -60,69 +61,69 @@ void NodeEditorWindow::renderNodeCreationButtons() {
         auto entity = m_ecs->createEntity("CircleNode");
         
         // Add NodeComponent
-        auto nodeComp = blot::components::NodeComponent(blot::components::NodeType::Circle, "Circle");
+        auto nodeComp = components::NodeComponent(components::NodeType::Circle, "Circle");
         nodeComp.nodeId = m_nextNodeId++;
-        m_ecs->addComponent<blot::components::NodeComponent>(entity, nodeComp);
+        m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
         
         // Add ShapeComponent
-        auto shapeComp = blot::components::Shape();
-        shapeComp.type = blot::components::Shape::Type::Ellipse;
+        auto shapeComp = components::Shape();
+        shapeComp.type = components::Shape::Type::Ellipse;
         shapeComp.x1 = 100.0f;
         shapeComp.y1 = 100.0f;
         shapeComp.x2 = 150.0f;
         shapeComp.y2 = 150.0f;
-        m_ecs->addComponent<blot::components::Shape>(entity, shapeComp);
+        m_ecs->addComponent<components::Shape>(entity, shapeComp);
         
         // Add StyleComponent
-        auto styleComp = blot::components::Style();
+        auto styleComp = components::Style();
         styleComp.fillR = 1.0f;
         styleComp.fillG = 0.0f;
         styleComp.fillB = 0.0f;
         styleComp.fillA = 1.0f;
-        m_ecs->addComponent<blot::components::Style>(entity, styleComp);
+        m_ecs->addComponent<components::Style>(entity, styleComp);
     }
     
     ImGui::SameLine();
     if (ImGui::Button("Add Rectangle Node")) {
         auto entity = m_ecs->createEntity("RectangleNode");
         
-        auto nodeComp = blot::components::NodeComponent(blot::components::NodeType::Rectangle, "Rectangle");
+        auto nodeComp = components::NodeComponent(components::NodeType::Rectangle, "Rectangle");
         nodeComp.nodeId = m_nextNodeId++;
-        m_ecs->addComponent<blot::components::NodeComponent>(entity, nodeComp);
+        m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
         
-        auto shapeComp = blot::components::Shape();
-        shapeComp.type = blot::components::Shape::Type::Rectangle;
+        auto shapeComp = components::Shape();
+        shapeComp.type = components::Shape::Type::Rectangle;
         shapeComp.x1 = 100.0f;
         shapeComp.y1 = 100.0f;
         shapeComp.x2 = 200.0f;
         shapeComp.y2 = 150.0f;
-        m_ecs->addComponent<blot::components::Shape>(entity, shapeComp);
+        m_ecs->addComponent<components::Shape>(entity, shapeComp);
         
-        auto styleComp = blot::components::Style();
+        auto styleComp = components::Style();
         styleComp.fillR = 0.0f;
         styleComp.fillG = 1.0f;
         styleComp.fillB = 0.0f;
         styleComp.fillA = 1.0f;
-        m_ecs->addComponent<blot::components::Style>(entity, styleComp);
+        m_ecs->addComponent<components::Style>(entity, styleComp);
     }
     
     ImGui::SameLine();
     if (ImGui::Button("Add Math Node")) {
         auto entity = m_ecs->createEntity("MathNode");
         
-        auto nodeComp = blot::components::NodeComponent(blot::components::NodeType::Add, "Add");
+        auto nodeComp = components::NodeComponent(components::NodeType::Add, "Add");
         nodeComp.nodeId = m_nextNodeId++;
-        m_ecs->addComponent<blot::components::NodeComponent>(entity, nodeComp);
+        m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
     }
 }
 
 void NodeEditorWindow::renderNodes() {
     if (!m_ecs) return;
     
-    auto view = m_ecs->view<blot::components::NodeComponent>();
+    auto view = m_ecs->view<components::NodeComponent>();
     
     for (auto entity : view) {
-        auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+        auto& nodeComp = view.get<components::NodeComponent>(entity);
         
         // Safety check for valid node ID
         if (nodeComp.nodeId <= 0) continue;
@@ -165,10 +166,10 @@ void NodeEditorWindow::renderNodes() {
 void NodeEditorWindow::renderConnections() {
     if (!m_ecs) return;
     
-    auto view = m_ecs->view<blot::components::NodeComponent>();
+    auto view = m_ecs->view<components::NodeComponent>();
     
     for (auto entity : view) {
-        auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+        auto& nodeComp = view.get<components::NodeComponent>(entity);
         
         for (const auto& conn : nodeComp.connections) {
             // Safety checks for valid connection data
@@ -216,9 +217,9 @@ void NodeEditorWindow::handleConnections() {
                 std::string fromPin, toPin;
                 bool fromIsOutput = false, toIsInput = false;
                 
-                auto view = m_ecs->view<blot::components::NodeComponent>();
+                auto view = m_ecs->view<components::NodeComponent>();
                 for (auto entity : view) {
-                    auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+                    auto& nodeComp = view.get<components::NodeComponent>(entity);
                     
                     if (nodeComp.nodeId == fromNode) {
                         for (auto& pin : nodeComp.pins) {
@@ -247,9 +248,9 @@ void NodeEditorWindow::handleConnections() {
                 if (fromIsOutput && toIsInput && !fromPin.empty() && !toPin.empty()) {
                     // Add connection to target node
                     for (auto entity : view) {
-                        auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+                        auto& nodeComp = view.get<components::NodeComponent>(entity);
                         if (nodeComp.nodeId == toNode) {
-                            blot::components::NodeConnection conn;
+                            components::NodeConnection conn;
                             conn.fromNodeId = fromNode;
                             conn.fromPin = fromPin;
                             conn.toNodeId = toNode;
@@ -281,9 +282,9 @@ void NodeEditorWindow::handleNodeDeletion() {
         ed::NodeId nodeId;
         while (ed::QueryDeletedNode(&nodeId)) {
             // Find and remove the node from ECS
-            auto view = m_ecs->view<blot::components::NodeComponent>();
+            auto view = m_ecs->view<components::NodeComponent>();
             for (auto entity : view) {
-                auto& nodeComp = view.get<blot::components::NodeComponent>(entity);
+                auto& nodeComp = view.get<components::NodeComponent>(entity);
                 if (nodeComp.nodeId == static_cast<int>(nodeId.Get())) {
                     // Remove the entity from ECS
                     m_ecs->destroyEntity(entity);

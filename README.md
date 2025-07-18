@@ -1,41 +1,22 @@
-# BLot
+# blot
 
 ![preview](screenshots/blot_0001.png)
 
-BLot (Pronounced Beelot) is a creative coding framework inspired by DrawBot and OpenFrameworks.
+Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFrameworks and DrawBot.
 
 ### Dependencies
 
-| Library      | Purpose                        | How Managed   | Notes                                 |
+| Library      | Purpose                       | How Managed   | Notes                                 |
 |-------------|--------------------------------|---------------|---------------------------------------|
-| [GLFW3]     | Window/input management        | vcpkg         | Native/system for Pi recommended      |
+| [GLFW3]     | Window/input management        | submodule     |                                       |
 | [FreeType]  | Font/text rendering            | vcpkg         |                                       |
 | [GLM]       | Math (vectors/matrices)        | submodule     | Header-only                           |
 | [GLAD]      | OpenGL loader                  | vcpkg         |                                       |
-| [DearImGui] | UI framework                   | submodule     | Not managed by vcpkg                  |
+| [DearImGui] | UI framework                   | submodule     |                                       |
 | [Blend2D]   | 2D vector graphics             | vcpkg         | Native/system for Pi recommended      |
 | [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only                           |
 | [spdlog]    | Logging                        | submodule     | Header-only                           |
 
-All dependencies except spdlog are included as submodules or in the third_party directory. spdlog is fetched automatically by CMake.
-
-**Dependency URLs:**
-
-[GLFW3]: https://github.com/glfw/glfw
-[FreeType]: https://gitlab.freedesktop.org/freetype/freetype
-[GLM]: https://github.com/g-truc/glm
-[GLAD]: https://github.com/Dav1dde/glad
-[DearImGui]: https://github.com/ocornut/imgui
-[Blend2D]: https://github.com/blend2d/blend2d
-[EnTT]: https://github.com/skypjack/entt
-[spdlog]: https://github.com/gabime/spdlog
-
-### Windows Troubleshooting
-If you see a 'dubious ownership' error for spdlog during build, run:
-
-    git config --global --add safe.directory F:/repos/blot/build/_deps/spdlog-src
-
-Or use the provided build scripts, which handle this automatically.
 
 ### Prerequisites
 
@@ -55,13 +36,15 @@ Use the build script.
 4. Add tests if applicable
 5. Submit a pull request
 
+For code style and contribution guidelines, see [docs/contributing.md](docs/contributing.md).
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
 
-- Inspired by [DrawBot](https://drawbot.com/) and [OpenFrameworks](https://openframeworks.cc/)
+- Inspired by [OpenFrameworks](https://openframeworks.cc/) and [DrawBot](https://drawbot.com/) 
 - Uses [Dear ImGui](https://github.com/ocornut/imgui) for UI
 - With `Node Editor` integration from [imgui-node-editor](https://github.com/thedmd/imgui-node-editor)
 - Graphics powered by [OpenGL](https://www.opengl.org/) and [Blend2D](https://blend2d.com/)
@@ -70,4 +53,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Development Credits
 
-This project was developed with assistance from Claude Sonnet 4.
+This project was developed with assistance from Claude Sonnet 4 and OpenAI ChatGPT-o3.
+
+[GLFW3]: https://github.com/glfw/glfw
+[FreeType]: https://gitlab.freedesktop.org/freetype/freetype
+[GLM]: https://github.com/g-truc/glm
+[GLAD]: https://github.com/Dav1dde/glad
+[DearImGui]: https://github.com/ocornut/imgui
+[Blend2D]: https://github.com/blend2d/blend2d
+[EnTT]: https://github.com/skypjack/entt
+[spdlog]: https://github.com/gabime/spdlog

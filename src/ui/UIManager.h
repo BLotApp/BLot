@@ -5,23 +5,26 @@
 #include <vector>
 #include <functional>
 #include <deque>
+#include "ui/WindowManager.h"
+#include "ui/ImGuiRenderer.h"
+#include "ui/windows/TextureViewerWindow.h"
+#include "ui/windows/ToolbarWindow.h"
+#include "ui/windows/CanvasWindow.h"
+#include "ui/windows/InfoWindow.h"
+#include "ui/windows/PropertiesWindow.h"
+#include "ui/windows/ThemePanel.h"
+#include "ui/ShortcutManager.h"
+#include "core/ISettings.h"
 
 // Forward declarations
 struct GLFWwindow;
-#include "windows/SaveWorkspaceDialog.h"
-class BlotApp;
-#include "windows/MainMenuBar.h"
+#include "ui/windows/SaveWorkspaceDialog.h"
+#include "core/BlotEngine.h"
+#include "ui/windows/MainMenuBar.h"
+#include "CoordinateSystem.h"
 
-#include "WindowManager.h"
-#include "windows/DebugPanel.h"
-#include "windows/InfoWindow.h"
-#include "windows/ThemePanel.h"
-#include "windows/TerminalWindow.h"
-#include "windows/LogWindow.h"
-#include "ui/TextRenderer.h"
-#include "ui/ImGuiRenderer.h"
+#include "ui/ui.h"
 #include <GLFW/glfw3.h>
-#include "ShortcutManager.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 
 // Forward declarations
@@ -48,10 +51,12 @@ struct Modal {
     bool open = true;
 };
 
-class UIManager {
+class UIManager : public IManager, public ISettings {
 public:
     UIManager(GLFWwindow* window);
     ~UIManager();
+    void init() override {}
+    void shutdown() override {}
 
     // Main UI operations
     void update();
@@ -72,7 +77,7 @@ public:
     std::vector<std::string> getAllWindowNames() const;
     
     // Window callback setup
-    void setupWindowCallbacks(BlotApp* app);
+    void setupWindowCallbacks(BlotEngine* engine);
     
     // Workspace management (now via WindowManager)
     bool loadWorkspace(const std::string& workspaceName);
@@ -86,7 +91,7 @@ public:
     // Getters for external access
     WindowManager* getWindowManager() { return m_windowManager.get(); }
     ShortcutManager& getShortcutManager() { return m_shortcutManager; }
-    BlotApp* getBlotApp() const { return m_blotApp; }
+    BlotEngine* getBlotEngine() const { return m_blotEngine; }
    
     // Templated window getters for type-safe access
     template<typename T>
@@ -100,7 +105,6 @@ public:
     }
     
     // Text renderer access
-    TextRenderer* getTextRenderer() { return m_textRenderer.get(); }
     ImGuiRenderer* getImGuiRenderer() { return m_imguiRenderer.get(); }
     
     // Save workspace dialog access
@@ -117,7 +121,7 @@ public:
     void saveCurrentTheme(const std::string& path);
     void loadTheme(const std::string& path);
 
-    void setupWindows(BlotApp* app);
+    void setupWindows(blot::BlotEngine* engine);
 
     MainMenuBar* getMainMenuBar() { return m_mainMenuBar.get(); }
 
@@ -125,7 +129,14 @@ public:
     void showNotification(const std::string& message, NotificationType type = NotificationType::Info, float duration = 3.0f);
     void showModal(const std::string& title, const std::string& message, NotificationType type = NotificationType::Info, std::function<void()> onOk = nullptr);
 
-    void setBlotApp(BlotApp* app) { m_blotApp = app; }
+    void setBlotEngine(BlotEngine* engine) { m_blotEngine = engine; }
+
+    CoordinateSystem& getCoordinateSystem() { return m_coordinateSystem; }
+    const CoordinateSystem& getCoordinateSystem() const { return m_coordinateSystem; }
+
+    // ISettings interface
+    json getSettings() const override;
+    void setSettings(const json& settings) override;
 
 private:
     // GLFW window reference
@@ -145,7 +156,6 @@ private:
     ShortcutManager m_shortcutManager;
     
     // ImGui with enhanced text rendering
-    std::unique_ptr<TextRenderer> m_textRenderer;
     std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
     
     // Setup methods
@@ -155,7 +165,8 @@ private:
     std::deque<Notification> m_notifications;
     std::deque<Modal> m_modals;
 
-    BlotApp* m_blotApp = nullptr;
+    BlotEngine* m_blotEngine = nullptr;
+    CoordinateSystem m_coordinateSystem;
 };
 
 } // namespace blot 

@@ -2,6 +2,8 @@
 #include <glm/glm.hpp>
 #include "../PropertyReflection.h"
 
+namespace blot { namespace components {
+
 struct DraggableComponent {
     bool draggable = true;
     bool dragging = false;
@@ -15,4 +17,6 @@ struct DraggableComponent {
             {3, "Drag Offset Y", EPT_FLOAT, &dragOffset.y}
         };
     }
-}; 
+};
+
+} } // namespace blot::components 

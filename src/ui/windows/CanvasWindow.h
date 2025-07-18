@@ -1,13 +1,15 @@
 #pragma once
 
 #include "Window.h"
-#include "canvas/Canvas.h"
-#include "ecs/ECSManager.h"
+#include "core/canvas/Canvas.h"
 #include "rendering/RenderingManager.h"
 #include <entt/entt.hpp>
 #include <memory>
+#include "ecs/ECSManager.h"
 
 namespace blot {
+
+class ECSManager;
 
 class CanvasWindow : public Window {
 public:
@@ -16,7 +18,7 @@ public:
 
     // Canvas-specific methods
     void setRenderingManager(RenderingManager* renderingManager);
-    void setECSManager(ECSManager* ecs);
+    void setECSManager(blot::ECSManager* ecs);
     void setActiveCanvasId(entt::entity canvasId);
     void setCurrentTool(int toolType);
     void setToolStartPos(const ImVec2& pos);
@@ -35,7 +37,7 @@ public:
 private:
     // Canvas state
     RenderingManager* m_renderingManager = nullptr;
-    ECSManager* m_ecs = nullptr;
+    blot::ECSManager* m_ecs = nullptr;
     entt::entity m_activeCanvasId = entt::null;
     
     // Tool state

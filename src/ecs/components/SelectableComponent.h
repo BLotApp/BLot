@@ -2,6 +2,8 @@
 #include <glm/glm.hpp>
 #include "../PropertyReflection.h"
 
+namespace blot { namespace components {
+
 struct SelectableComponent {
     bool selected = false;
     glm::vec4 highlightColor = glm::vec4(1.0f, 0.8f, 0.2f, 1.0f); // Optional: color when selected
@@ -15,4 +17,6 @@ struct SelectableComponent {
             {4, "Highlight A", EPT_FLOAT, &highlightColor.w}
         };
     }
-}; 
+};
+
+} } // namespace blot::components 

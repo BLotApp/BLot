@@ -1,35 +1,35 @@
-#include "UIManager.h"
-#include "windows/DebugPanel.h"
-#include "windows/InfoWindow.h"
-#include "windows/ThemePanel.h"
-#include "windows/TerminalWindow.h"
-#include "windows/LogWindow.h"
-#include "windows/TextureViewerWindow.h"
-#include "windows/ToolbarWindow.h"
-#include "windows/PropertiesWindow.h"
-#include "windows/CodeEditorWindow.h"
-#include "windows/AddonManagerWindow.h"
-#include "windows/NodeEditorWindow.h"
-#include "windows/ThemeEditorWindow.h"
-#include "windows/StrokeWindow.h"
-#include "windows/MainMenuBar.h"
-#include "windows/SaveWorkspaceDialog.h"
-#include "windows/CanvasWindow.h"
-#include "windows/WindowManagerPanel.h"
+#include "ui/ui.h"
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <windows.h>
 #include "../assets/fonts/fontRobotoRegular.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include <nlohmann/json.hpp>
+#include "core/json.h"
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-#include "app/BlotApp.h"
 #include <set>
 #include <algorithm>
 #include <spdlog/spdlog.h>
+#include "ui/WindowManager.h"
+#include "ui/ImGuiRenderer.h"
+#include "ui/windows/TextureViewerWindow.h"
+#include "ui/windows/ToolbarWindow.h"
+#include "ui/windows/CanvasWindow.h"
+#include "ui/windows/InfoWindow.h"
+#include "ui/windows/PropertiesWindow.h"
+#include "ui/windows/ThemePanel.h"
+#include "ui/windows/AddonManagerWindow.h"
+#include "ui/windows/NodeEditorWindow.h"
+#include "ui/windows/StrokeWindow.h"
+#include "ui/windows/ThemeEditorWindow.h"
+#include "ui/windows/LogWindow.h"
+#include "ui/windows/SaveWorkspaceDialog.h"
+#include "ui/windows/WindowManagerPanel.h"
+#include "core/BlotEngine.h"
+#include "ui/windows/CodeEditorWindow.h"
+#include "core/ISettings.h"
 
 namespace blot {
 // Helper for icon and color
@@ -116,8 +116,7 @@ void UIManager::initImGui() {
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // Initialize enhanced text renderer
-    m_textRenderer = std::make_unique<TextRenderer>();
-    m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_textRenderer.get());
+    m_imguiRenderer = std::make_unique<ImGuiRenderer>();
 }
 
 void UIManager::shutdownImGui() {
@@ -145,11 +144,11 @@ void UIManager::update() {
     setupDockspace();
     
     // Show debug menu bar
-    if (m_blotApp->getDebugMode()) {
+    if (m_blotEngine->getDebugMode()) {
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Debug")) {
                 if (ImGui::MenuItem("Exit Debug Mode")) {
-                    m_blotApp->setDebugMode(false);
+                    m_blotEngine->setDebugMode(false);
                 }
                 ImGui::EndMenu();
             }
@@ -174,7 +173,7 @@ void UIManager::update() {
     static bool f12Pressed = false;
     if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_F12) == GLFW_PRESS) {
         if (!f12Pressed) {
-            m_blotApp->setDebugMode(!m_blotApp->getDebugMode());
+            m_blotEngine->setDebugMode(!m_blotEngine->getDebugMode());
             f12Pressed = true;
         }
     } else {
@@ -306,7 +305,7 @@ void UIManager::renderAllWindows() {
     }
 }
 
-void UIManager::setupWindows(BlotApp* app) {
+void UIManager::setupWindows(BlotEngine* app) {
     if (!m_windowManager) return;
     
     // Create and register texture viewer window
@@ -319,9 +318,7 @@ void UIManager::setupWindows(BlotApp* app) {
         "Toolbar###MainToolbar",
         Window::Flags::NoTitleBar | Window::Flags::NoResize | Window::Flags::NoCollapse
     );
-    if (app) {
-        toolbarWindow->setShowMenuTip(app->getSettings().showMenuTips);
-    }
+    
     m_windowManager->createWindow(toolbarWindow->getTitle(), toolbarWindow);
     
     // Connect theme panel to toolbar window
@@ -357,6 +354,10 @@ void UIManager::setupWindows(BlotApp* app) {
     // Create addon manager window
     auto addonManagerWindow = std::make_shared<AddonManagerWindow>("Addon Manager###AddonManager", 
                                                                   Window::Flags::None);
+    // Set the central AddonManager pointer
+    if (m_blotEngine->getAddonManager()) {
+        addonManagerWindow->setAddonManager(m_blotEngine->getAddonManager());
+    }
     m_windowManager->createWindow(addonManagerWindow->getTitle(), addonManagerWindow);
     
     // Create node editor window
@@ -393,68 +394,7 @@ void UIManager::setupWindows(BlotApp* app) {
 void UIManager::configureWindowSettings() {
     if (!m_windowManager) return;
     
-    // Configure toolbar window settings
-    WindowSettingsComponent toolbarSettings;
-    toolbarSettings.category = "Tools";
-    toolbarSettings.showByDefault = true;
-    toolbarSettings.showInMenu = true; // Set to false if you don't want it in the menu
-    m_windowManager->setWindowSettings("Toolbar", toolbarSettings);
-    
-    WindowSettingsComponent coordinateSystemSettings;
-    coordinateSystemSettings.category = "Debug";
-    coordinateSystemSettings.showByDefault = true;
-    coordinateSystemSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("CoordinateSystem", coordinateSystemSettings);
-    
-    WindowSettingsComponent propertiesSettings;
-    propertiesSettings.category = "Tools";
-    propertiesSettings.showByDefault = false;
-    propertiesSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("Properties", propertiesSettings);
-    
-    WindowSettingsComponent canvasSettings;
-    canvasSettings.category = "Main";
-    canvasSettings.showByDefault = true;
-    canvasSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("Canvas", canvasSettings);
-    
-    WindowSettingsComponent codeEditorSettings;
-    codeEditorSettings.category = "Tools";
-    codeEditorSettings.showByDefault = true;
-    codeEditorSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("CodeEditor", codeEditorSettings);
-    
-    WindowSettingsComponent mainMenuBarSettings;
-    mainMenuBarSettings.category = "Main";
-    mainMenuBarSettings.showByDefault = true;
-    mainMenuBarSettings.showInMenu = false;
-    m_windowManager->setWindowSettings("MainMenuBar", mainMenuBarSettings);
-    
-    WindowSettingsComponent addonManagerSettings;
-    addonManagerSettings.category = "Tools";
-    addonManagerSettings.showByDefault = false;
-    addonManagerSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("AddonManager", addonManagerSettings);
-    
-    WindowSettingsComponent nodeEditorSettings;
-    nodeEditorSettings.category = "Tools";
-    nodeEditorSettings.showByDefault = false;
-    nodeEditorSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("NodeEditor", nodeEditorSettings);
-    
-    WindowSettingsComponent themeEditorSettings;
-    themeEditorSettings.category = "Tools";
-    themeEditorSettings.showByDefault = false;
-    themeEditorSettings.showInMenu = true;
-    m_windowManager->setWindowSettings("ThemeEditor", themeEditorSettings);
-    
-    WindowSettingsComponent saveWorkspaceDialogSettings;
-    saveWorkspaceDialogSettings.category = "Dialogs";
-    saveWorkspaceDialogSettings.showByDefault = false;
-    saveWorkspaceDialogSettings.showInMenu = false; // Don't show in menu since it's a dialog
-    m_windowManager->setWindowSettings("SaveWorkspaceDialog", saveWorkspaceDialogSettings);
-    
-    // Stroke window settings are configured in BlotApp.cpp
+    // Remove all usages of WindowSettingsComponent and setWindowSettings
 }
 
 void UIManager::setImGuiTheme(ImGuiTheme theme) {
@@ -507,11 +447,11 @@ void UIManager::saveCurrentTheme(const std::string& path) {
         std::filesystem::create_directories("themes");
         
         // Save current ImGui style to JSON
-        nlohmann::json themeJson;
+        blot::json themeJson;
         ImGuiStyle& style = ImGui::GetStyle();
         
         // Save colors
-        nlohmann::json colors;
+        blot::json colors;
         for (int i = 0; i < ImGuiCol_COUNT; i++) {
             ImVec4& color = style.Colors[i];
             colors[std::to_string(i)] = {
@@ -546,7 +486,7 @@ void UIManager::loadTheme(const std::string& path) {
             return;
         }
         
-        nlohmann::json themeJson;
+        blot::json themeJson;
         file >> themeJson;
         file.close();
         
@@ -678,7 +618,7 @@ std::vector<std::string> UIManager::getAllWorkspaceNames() const {
     return {};
 }
 
-void UIManager::setupWindowCallbacks(BlotApp* app) {
+void UIManager::setupWindowCallbacks(BlotEngine* app) {
     if (!m_windowManager || !app) return;
     
     // Get the main menu bar and set up its event system
@@ -744,6 +684,27 @@ void UIManager::showNotification(const std::string& message, NotificationType ty
 }
 void UIManager::showModal(const std::string& title, const std::string& message, NotificationType type, std::function<void()> onOk) {
     m_modals.push_back({title, message, type, onOk, true});
+}
+
+blot::json UIManager::getSettings() const {
+    blot::json j;
+    j["theme"] = static_cast<int>(m_currentTheme);
+    j["lastThemePath"] = m_lastThemePath;
+    // Optionally, save window manager state
+    if (m_windowManager) {
+        j["windowManager"] = m_windowManager->getSettings();
+    }
+    // Add more UI state as needed
+    return j;
+}
+
+void UIManager::setSettings(const blot::json& settings) {
+    if (settings.contains("theme")) m_currentTheme = static_cast<ImGuiTheme>(settings["theme"].get<int>());
+    if (settings.contains("lastThemePath")) m_lastThemePath = settings["lastThemePath"];
+    if (settings.contains("windowManager") && m_windowManager) {
+        m_windowManager->setSettings(settings["windowManager"]);
+    }
+    // Restore more UI state as needed
 }
 
 } // namespace blot 

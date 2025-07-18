@@ -3,13 +3,14 @@
 #include <glm/glm.hpp>
 #include "../PropertyReflection.h"
 
+namespace blot { namespace components {
+
 struct Guide {
     float position;
     bool vertical; // true = vertical, false = horizontal
     glm::vec4 color;
 };
 
-// Unified component for both canvases and textures
 struct TextureComponent {
     unsigned int textureId = 0;   // OpenGL/Vulkan/DirectX/etc. texture or FBO ID
     int width = 0;
@@ -39,4 +40,6 @@ struct TextureComponent {
             {8, "Show Guides", EPT_BOOL, &showGuides}
         };
     }
-}; 
+};
+
+} } // namespace blot::components 

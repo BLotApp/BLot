@@ -5,47 +5,9 @@
 #include <string>
 #include <entt/entt.hpp>
 #include "windows/Window.h"
+#include "core/ISettings.h"
 
 namespace blot {
-
-// Window Components
-struct WindowComponent {
-    std::shared_ptr<Window> window;
-    std::string name;
-    bool isVisible = true;
-    bool isFocused = false;
-    int zOrder = 0;
-};
-
-struct WindowTransformComponent {
-    ImVec2 position = ImVec2(0, 0);
-    ImVec2 size = ImVec2(400, 300);
-    ImVec2 minSize = ImVec2(100, 100);
-    ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);
-};
-
-struct WindowStyleComponent {
-    float alpha = 1.0f;
-    int flags = 0;
-    ImVec4 backgroundColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
-};
-
-struct WindowInputComponent {
-    bool handleMouse = true;
-    bool handleKeyboard = true;
-    bool closeOnEscape = true;
-};
-
-struct WindowSettingsComponent {
-    bool showInMenu = true;
-    bool showByDefault = true;
-    bool canBeHidden = true;
-    bool canBeMoved = true;
-    bool canBeResized = true;
-    bool canBeFocused = true;
-    std::string menuPath = ""; // e.g., "Windows/Canvas"
-    std::string category = "General"; // e.g., "Tools", "Debug", "Main"
-};
 
 // WorkspaceConfig struct (moved from WorkspaceManager)
 struct WorkspaceConfig {
@@ -55,7 +17,7 @@ struct WorkspaceConfig {
     std::string imguiLayout;
 };
 
-class WindowManager {
+class WindowManager : public ISettings {
 public:
     WindowManager();
     ~WindowManager();
@@ -103,8 +65,6 @@ public:
     void setMainMenuBar(bool visible);
     
     // Window settings management
-    void setWindowSettings(const std::string& name, const WindowSettingsComponent& settings);
-    WindowSettingsComponent getWindowSettings(const std::string& name);
     std::vector<std::string> getVisibleWindows();
     std::vector<std::string> getHiddenWindows();
     std::vector<std::string> getWindowsByCategory(const std::string& category);
@@ -141,6 +101,9 @@ public:
     // Registry access
     entt::registry& getRegistry() { return m_registry; }
     const entt::registry& getRegistry() const { return m_registry; }
+
+    json getSettings() const override;
+    void setSettings(const json& settings) override;
 
 private:
     entt::registry m_registry;

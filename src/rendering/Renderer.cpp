@@ -1,17 +1,10 @@
+#include "rendering/rendering.h"
 #include <memory>
-#include <map>
-#include "rendering/Renderer.h"
-#include "rendering/Blend2DRenderer.h"
+#include <vector>
+#include <string>
 
-std::unique_ptr<IRenderer> createRenderer(RendererType type) {
-    switch (type) {
-        //case RendererType::OpenGL:
-        //    return std::make_unique<OpenGLRenderer>();
-        case RendererType::Blend2D:
-            return std::make_unique<Blend2DRenderer>();
-        default:
-            return nullptr;
-    }
+std::shared_ptr<IRenderer> createRenderer(RendererType type) {
+    return RendererRegistry::instance().create(type);
 }
 
 // Helper function to get renderer type from string
