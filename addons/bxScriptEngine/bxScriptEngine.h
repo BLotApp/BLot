@@ -7,8 +7,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-class Canvas;
-class Graphics;
+namespace blot { class Canvas; class Graphics; }
 
 class bxScriptEngine {
 public:
@@ -75,8 +74,8 @@ public:
     void setOnKeyPressed(std::function<void()> callback);
     
     // Canvas integration
-    void setCanvas(std::shared_ptr<Canvas> canvas);
-    void setGraphics(std::shared_ptr<Graphics> graphics);
+    void setCanvas(std::shared_ptr<blot::Canvas> canvas);
+    void setGraphics(std::shared_ptr<blot::Graphics> graphics);
     
 private:
     void initAPI();
@@ -91,8 +90,8 @@ private:
     bool m_hasDraw;
     
     // Canvas and graphics
-    std::shared_ptr<Canvas> m_canvas;
-    std::shared_ptr<Graphics> m_graphics;
+    std::shared_ptr<blot::Canvas> m_canvas;
+    std::shared_ptr<blot::Graphics> m_graphics;
     
     // Animation state
     int m_frameCount;

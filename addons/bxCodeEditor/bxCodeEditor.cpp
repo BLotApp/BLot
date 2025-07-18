@@ -2,7 +2,7 @@
 #include "third_party/ImGuiColorTextEdit/TextEditor.h"
 
 bxCodeEditor::bxCodeEditor()
-    : AddonBase("bxCodeEditor")
+    : blot::AddonBase("bxCodeEditor")
     , m_editor(std::make_unique<TextEditor>()) {
     m_editor->SetLanguageDefinition(TextEditor::LanguageDefinition::CPlusPlus());
 }

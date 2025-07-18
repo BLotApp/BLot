@@ -2,7 +2,7 @@
 #include <iostream>
 
 bxTemplate::bxTemplate()
-    : AddonBase("bxTemplate", "1.0.0")
+    : blot::AddonBase("bxTemplate", "1.0.0")
     , m_initialized(false)
     , m_time(0.0f)
 {
@@ -16,17 +16,17 @@ bxTemplate::~bxTemplate() {
 }
 
 bool bxTemplate::init() {
-    log("Initializing bxTemplate addon");
+    this->log("Initializing bxTemplate addon");
     
     // Initialize addon-specific resources
     m_initialized = true;
     
-    log("bxTemplate addon initialized successfully");
+    this->log("bxTemplate addon initialized successfully");
     return true;
 }
 
 void bxTemplate::setup() {
-    log("Setting up bxTemplate addon");
+    this->log("Setting up bxTemplate addon");
     
     // Set up default parameters
     setParameter("speed", 1.0f);
@@ -44,7 +44,7 @@ void bxTemplate::update(float deltaTime) {
     float frequency = getParameter("frequency");
     
     // You can trigger events here
-    triggerEvent("update");
+    this->triggerEvent("update");
 }
 
 void bxTemplate::draw() {
@@ -54,7 +54,7 @@ void bxTemplate::draw() {
 
 void bxTemplate::cleanup() {
     if (m_initialized) {
-        log("Cleaning up bxTemplate addon");
+        this->log("Cleaning up bxTemplate addon");
         m_initialized = false;
     }
 }
@@ -68,7 +68,7 @@ void bxTemplate::setParameter(const std::string& name, float value) {
         it->second(value);
     }
     
-    log("Parameter " + name + " set to " + std::to_string(value));
+    this->log("Parameter " + name + " set to " + std::to_string(value));
 }
 
 float bxTemplate::getParameter(const std::string& name) const {

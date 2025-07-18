@@ -2,9 +2,11 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
-#include "AddonBase.h"
+#include "core/AddonBase.h"
 
-class bxTemplate : public AddonBase {
+namespace blot { class Canvas; }
+
+class bxTemplate : public blot::AddonBase {
 public:
     bxTemplate();
     ~bxTemplate();

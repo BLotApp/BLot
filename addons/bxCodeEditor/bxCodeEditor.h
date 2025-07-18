@@ -7,11 +7,11 @@
 // Forward declaration
 class TextEditor;
 
-class bxCodeEditor : public AddonBase {
+class bxCodeEditor : public blot::AddonBase {
 public:
     bxCodeEditor();
     ~bxCodeEditor();
-    std::string getName() const override { return "bxCodeEditor"; }
+    // Inherit getName() from AddonBase which already returns the addon name set via constructor.
     bool init() override { return true; }
     void setup() override {}
     void update(float) override {}

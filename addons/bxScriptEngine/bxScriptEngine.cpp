@@ -261,11 +261,11 @@ void bxScriptEngine::setOnKeyPressed(std::function<void()> callback) {
     m_onKeyPressed = callback;
 }
 
-void bxScriptEngine::setCanvas(std::shared_ptr<Canvas> canvas) {
+void bxScriptEngine::setCanvas(std::shared_ptr<blot::Canvas> canvas) {
     m_canvas = canvas;
 }
 
-void bxScriptEngine::setGraphics(std::shared_ptr<Graphics> graphics) {
+void bxScriptEngine::setGraphics(std::shared_ptr<blot::Graphics> graphics) {
     m_graphics = graphics;
 }
 

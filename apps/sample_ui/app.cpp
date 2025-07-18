@@ -29,12 +29,14 @@
 #include "ui/windows/NodeEditorWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ecs/ECSManager.h"
-#include "ui/CodeEditor.h"
+#include "ui/windows/CodeEditorWindow.h"
 #include "core/canvas/CanvasManager.h"
 #include "core/util/SettingsManager.h"
 #include "rendering/RenderingManager.h"
 #include "ui/UIManager.h"
 #include "core/BlotEngine.h"
+#include "ui/windows/AddonManagerWindow.h"
+#include "ui/windows/PropertiesWindow.h"
 
 SampleUiApp::SampleUiApp() 
     : m_window(nullptr)
@@ -44,20 +46,8 @@ SampleUiApp::SampleUiApp()
     , m_deltaTime(0.0f)
     , m_lastFrameTime(0.0f)
 {
-
-    // No need to call setup() here; the engine will call it after initialization.
-
-    try {
-        // Initialize code editor
-        auto codeEditorPtr = getAddonManager()->getAddon("bxCodeEditor");
-        auto m_codeEditor = codeEditorPtr ? dynamic_cast<bxCodeEditor*>(codeEditorPtr.get()) : nullptr;
-        if (m_codeEditor) {
-            m_codeEditor->loadDefaultTemplate();
-            spdlog::info("BlotApp: After loadDefaultTemplate");
-        }
-    } catch (const std::exception& e) {
-        spdlog::error("Exception in BlotApp constructor: {}", e.what());
-    }
+    // Code editor will be initialized during setup
+    // when the engine pointer is available.
     spdlog::info("BlotApp constructor finished");
 }
 
@@ -69,9 +59,23 @@ SampleUiApp::~SampleUiApp() {
     }
 }
 
-void SampleUiApp::setup(blot::BlotEngine*) {
+void SampleUiApp::setup(blot::BlotEngine* engine) {
+    m_engine = engine;
     // Final setup phase - everything is now initialized
     spdlog::info("Setting up application...");
+    
+    try {
+        // Initialize code editor
+        auto codeEditorPtr = getAddonManager()->getAddon("bxCodeEditor");
+        m_codeEditor = codeEditorPtr ? dynamic_cast<bxCodeEditor*>(codeEditorPtr.get()) : nullptr;
+        if (m_codeEditor) {
+            m_codeEditor->loadDefaultTemplate();
+            spdlog::info("BlotApp: After loadDefaultTemplate");
+        }
+    } catch (const std::exception& e) {
+        spdlog::error("Exception in BlotApp constructor: {}", e.what());
+    }
+    spdlog::info("BlotApp constructor finished");
     
     // Connect ECS event system to UI components
     if (getUIManager() && getECSManager()) {
@@ -117,7 +121,7 @@ void SampleUiApp::connectEventSystemToUI() {
     
     // Connect MainMenuBar to UIManager for ImGui theme
     if (mainMenuBar && getUIManager()) {
-        mainMenuBar->setUIManager(getUIManager().get());
+        mainMenuBar->setUIManager(getUIManager());
     }
     
     // Connect NodeEditorWindow to the ECS system
@@ -125,7 +129,7 @@ void SampleUiApp::connectEventSystemToUI() {
         getUIManager()->getWindowManager()->getWindow("NodeEditor"));
     if (nodeEditorWindow) {
         // Create a shared_ptr from the central ECSManager for the window
-        auto ecsSharedPtr = std::shared_ptr<ECSManager>(getECSManager(), [](ECSManager*){});
+        auto ecsSharedPtr = std::shared_ptr<blot::ECSManager>(getECSManager(), [](blot::ECSManager*){});
         nodeEditorWindow->setECSManager(ecsSharedPtr);
     }
     
@@ -134,7 +138,7 @@ void SampleUiApp::connectEventSystemToUI() {
         getUIManager()->getWindowManager()->getWindow("Properties"));
     if (propertiesWindow) {
         // Create a shared_ptr from the central ECSManager for the window
-        auto ecsSharedPtr = std::shared_ptr<ECSManager>(getECSManager(), [](ECSManager*){});
+        auto ecsSharedPtr = std::shared_ptr<blot::ECSManager>(getECSManager(), [](blot::ECSManager*){});
         propertiesWindow->setECSManager(ecsSharedPtr);
     }
     
@@ -320,7 +324,7 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     // Debug actions
     eventSystem.registerAction("set_debug_mode", std::function<void(bool)>([this](bool enabled) {
         spdlog::info("Set debug mode action triggered: {}", enabled);
-        blot::BlotEngine::setDebugMode(enabled);
+        if (m_engine) { m_engine->setDebugMode(enabled); }
     }));
     
     // Canvas management actions
@@ -413,11 +417,12 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     }));
     
     eventSystem.registerAction("get_debug_mode", std::function<bool()>([this]() -> bool {
-        return blot::BlotEngine::getDebugMode();
+        return m_engine ? m_engine->getDebugMode() : false;
     }));
 }
 
-void SampleUiApp::update() {
+void SampleUiApp::update(float deltaTime) {
+    m_deltaTime = deltaTime;
     // Update application logic
     getECSManager()->runCanvasSystems(getRenderingManager(), m_deltaTime);
     if (auto scriptEngine = getScriptEngine()) {
@@ -433,21 +438,29 @@ void SampleUiApp::update() {
     }
 } 
 
-// Implement new getter methods
-blot::ECSManager* SampleUiApp::getECSManager() { return blot::BlotEngine::getECSManager(); }
+// Getters implementation using cached engine pointer
+blot::ECSManager* SampleUiApp::getECSManager() { return m_engine ? m_engine->getECSManager() : nullptr; }
+blot::RenderingManager* SampleUiApp::getRenderingManager() { return m_engine ? m_engine->getRenderingManager() : nullptr; }
+blot::CanvasManager* SampleUiApp::getCanvasManager() { return m_engine ? m_engine->getCanvasManager() : nullptr; }
+blot::UIManager* SampleUiApp::getUIManager() { return m_engine ? m_engine->getUIManager() : nullptr; }
+blot::AddonManager* SampleUiApp::getAddonManager() { return m_engine ? m_engine->getAddonManager() : nullptr; }
+blot::SettingsManager& SampleUiApp::getSettings() { return *m_engine->getSettings(); }
+const blot::SettingsManager& SampleUiApp::getSettings() const { return *m_engine->getSettings(); }
 bxScriptEngine* SampleUiApp::getScriptEngine() {
-    auto ptr = getAddonManager()->getAddon("bxScriptEngine");
-    return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
+    if (auto manager = getAddonManager()) {
+        auto ptr = manager->getAddon("bxScriptEngine");
+        return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
+    }
+    return nullptr;
 }
-blot::RenderingManager* SampleUiApp::getRenderingManager() { return blot::BlotEngine::getRenderingManager(); }
-blot::CanvasManager* SampleUiApp::getCanvasManager() { return blot::BlotEngine::getCanvasManager(); }
-blot::UIManager* SampleUiApp::getUIManager() { return blot::BlotEngine::getUIManager(); }
-SettingsManager& SampleUiApp::getSettings() { return blot::BlotEngine::getSettings(); }
-const SettingsManager& SampleUiApp::getSettings() const { return blot::BlotEngine::getSettings(); }
-bxCodeEditor* SampleUiApp::getCodeEditor() {
-    auto ptr = getAddonManager()->getAddon("bxCodeEditor");
-    return ptr ? dynamic_cast<bxCodeEditor*>(ptr.get()) : nullptr;
-} 
+bxCodeEditor* SampleUiApp::getCodeEditor() { return m_codeEditor; }
+
+// Simple draw stub
+void SampleUiApp::draw() {
+    if (getUIManager()) {
+        getUIManager()->update();
+    }
+}
 
 void SampleUiApp::configureWindow(WindowSettings& settings) {
     settings.width = 1280;

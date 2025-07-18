@@ -121,12 +121,18 @@ file(GLOB IMGUI_NODE_EDITOR_SOURCES
     third_party/imgui-node-editor/crude_json.cpp
 )
 
+# GLOB addon source files (one .cpp per addon directory)
+file(GLOB ADDON_SOURCE_FILES
+    addons/*/*.cpp
+)
+
 add_library(blot STATIC ${BLOT_SOURCES})
 target_sources(blot PRIVATE
     ${IMGUI_SOURCES}
     ${IMGUI_BACKEND_SOURCES}
     ${IMGUI_COLOR_TEXT_EDIT_SOURCES}
     ${IMGUI_NODE_EDITOR_SOURCES}
+    ${ADDON_SOURCE_FILES}
     ${APP_PATHS_SOURCES}
 )
 
@@ -157,10 +163,12 @@ target_link_libraries(blot
         OpenGL::GL
         glfw
         blend2d::blend2d
-        EnTT::EnTT
         Freetype::Freetype
         glm::glm
 )
+
+# Expose EnTT headers to consumers
+target_link_libraries(blot PUBLIC EnTT::EnTT)
 
 # Add include directories for submodules (ImGui, etc.)
 target_include_directories(blot PRIVATE
@@ -216,9 +224,6 @@ target_include_directories(ImGuizmo PUBLIC ${IMGUIZMO_DIR})
 
 # Link ImGuizmo to your main app target (replace blot with your target name if different)
 target_link_libraries(blot PRIVATE ImGuizmo) 
-
-add_executable(blend2d_test blend2d_test.cpp)
-target_link_libraries(blend2d_test PRIVATE blend2d::blend2d) 
 
 # Organize source files into folders for Visual Studio
 source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/CanvasManager.cpp src/framework/canvas/CanvasManager.h)

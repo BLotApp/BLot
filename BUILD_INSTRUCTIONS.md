@@ -1,6 +1,6 @@
 # Build Instructions for Blot
 
-## Prerequisites
+## Manual Install
 
 ### 1. Install vcpkg
 ```bash
@@ -76,8 +76,6 @@ build/Release/
     sample_script_engine.exe
 ```
 
-`BlotApp.exe` was an earlier placeholder and no longer exists.
-
 ### How to Run a Specific App
 
 After building, navigate to the output directory and run the desired app, e.g.:
@@ -107,36 +105,6 @@ To create a new app:
    ```
 5. Rebuild the project. Your new app will be built as its own executable.
 
-## Troubleshooting
-
-### Common Issues
-
-1. **vcpkg not found**
-   - Make sure VCPKG_ROOT environment variable is set
-   - Ensure vcpkg is properly installed and bootstrapped
-
-2. **Dependencies not found**
-   - Run `vcpkg install` for all required packages
-   - Check that the vcpkg.json file is in the project root
-
-3. **CMake configuration errors**
-   - Ensure CMake 3.16+ is installed
-   - Verify the toolchain file path is correct
-
-4. **Compiler errors**
-   - Use a C++17 compatible compiler
-   - On Windows, use Visual Studio 2019 or later
-
-### Dependencies List
-
-- **GLFW3**: Window management and input handling
-- **FreeType**: Font rendering
-- **GLM**: Mathematics library
-- **GLAD**: OpenGL loading
-- **Dear ImGui**: User interface
-- **EnTT**: Entity-Component-System
-- **Blend2D**: 2D graphics rendering
-
 ### Development Setup
 
 For development, you may also want to install:
@@ -149,10 +117,8 @@ For development, you may also want to install:
 ```
 blot/
 ├── src/                    # Framework source files
-├── apps/                  # All runnable apps
+├── apps/                   # All runnable apps
 │   ├── BlotApp/            # Example app
-│   ├── sample_blend2d_gradient/
-│   ├── sample_script_engine/
 │   └── workingTemplate/    # Template for new apps
 ├── CMakeLists.txt          # Build configuration
 ├── vcpkg.json              # Dependencies

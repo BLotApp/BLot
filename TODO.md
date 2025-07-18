@@ -33,7 +33,7 @@
 - [ ] Implement to_json/from_json helpers for all custom types used in settings (e.g., glm::vec2, glm::vec3, ImVec4, etc.)
 - [ ] Refactor app-level save/load logic to gather settings from all managers using getSettings, and restore them using setSettings
 - [ ] Finish implementing save/load settings for all manager and configurable classes (see ISettings interface). Ensure all relevant variables are serialized.
-- [ ] Decide on a document format for saving settings (e.g., JSON, YAML, TOML). Consider saving settings in the output metadata for project files.
+- [ ] Save document format JSON. Consider saving settings in the output metadata for project files.
 
 ## Bug Fixes
 
@@ -48,46 +48,15 @@
 - [ ] Consider adding a custom blot::info/blot::error logging wrapper for pointer/handle safety and context
 - [ ] Consider implementing a custom fmt::formatter for pointers to automate safe pointer logging with spdlog
 
-## Documentation 
+## Test Engine 
 - [ ] Integrate ImGui Test Engine (https://github.com/ocornut/imgui_test_engine) for automated UI testing
 - [ ] Add/improve unit tests for logging and error handling 
 - [ ] Refactor NodeEditor into an addon (move NodeEditorWindow and related code to addons/bxNodeEditor, update CMake, and register as an addon) 
 
+## Managers Management
 - [ ] Consider moving all manager classes to `core/managers/` (with or without subfolders) for better discoverability and architectural clarity. This would involve:
     - Moving all manager headers and sources from their current locations (e.g., `ui/`, `rendering/`, `ecs/`, etc.) to `core/managers/`.
     - Optionally organizing by domain within `core/managers/` (e.g., `core/managers/ui/`, `core/managers/rendering/`).
     - Updating all includes throughout the codebase.
     - Ensuring no manager headers/sources remain in other folders.
     - Reviewing for any domain encapsulation concerns. 
-
-## Code TODO Markers
-
-### ECS / Rendering
-- [ ] Implement polygon drawing in ECSManager (src/ecs/ECSManager.cpp)
-- [ ] Implement star drawing in ECSManager (src/ecs/ECSManager.cpp)
-- [ ] Memory usage display in DebugPanel (src/ui/windows/DebugPanel.cpp)
-- [ ] GPU memory display in DebugPanel (src/ui/windows/DebugPanel.cpp)
-
-### Window Management
-- [ ] Serialize window manager state (src/ui/WindowManager.cpp)
-- [ ] Deserialize window manager state (src/ui/WindowManager.cpp)
-
-### Code Editor
-- [ ] Implement save functionality in CodeEditorWindow (src/ui/windows/CodeEditorWindow.cpp)
-- [ ] Implement run functionality in CodeEditorWindow (src/ui/windows/CodeEditorWindow.cpp)
-
-### Info Window
-- [ ] Pass UIManager pointer to InfoWindow instead of getInstance (src/ui/windows/InfoWindow.cpp)
-
-### Sample UI Application
-- [ ] Implement new sketch functionality (apps/sample_ui/app.cpp)
-- [ ] Implement open sketch functionality (apps/sample_ui/app.cpp)
-- [ ] Implement save sketch functionality (apps/sample_ui/app.cpp)
-- [ ] Implement ImPlot demo (apps/sample_ui/app.cpp)
-- [ ] Implement markdown demo (apps/sample_ui/app.cpp)
-- [ ] Implement markdown editor (apps/sample_ui/app.cpp)
-- [ ] Implement new canvas functionality (apps/sample_ui/app.cpp)
-- [ ] Implement save canvas functionality (apps/sample_ui/app.cpp)
-- [ ] Implement stop sketch functionality (apps/sample_ui/app.cpp)
-- [ ] Implement canvas selection (apps/sample_ui/app.cpp)
-- [ ] Implement canvas closing (apps/sample_ui/app.cpp) 
