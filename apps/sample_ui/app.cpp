@@ -449,8 +449,8 @@ const blot::SettingsManager& SampleUiApp::getSettings() const { return *m_engine
 bxScriptEngine* SampleUiApp::getScriptEngine() {
     if (auto manager = getAddonManager()) {
         auto ptr = manager->getAddon("bxScriptEngine");
-        return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
-    }
+    return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
+}
     return nullptr;
 }
 bxCodeEditor* SampleUiApp::getCodeEditor() { return m_codeEditor; }
@@ -460,7 +460,7 @@ void SampleUiApp::draw() {
     if (getUIManager()) {
         getUIManager()->update();
     }
-}
+} 
 
 void SampleUiApp::configureWindow(WindowSettings& settings) {
     settings.width = 1280;

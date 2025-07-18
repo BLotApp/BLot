@@ -173,6 +173,11 @@ for %%f in ("%OUTPUT_DIR%\*.exe") do (
     echo   %%~nxf
 )
 echo.
+echo Apps in subdirectories:
+for /r "%OUTPUT_DIR%" %%f in (*.exe) do (
+    echo   %%~nxf (%%~dpf)
+)
+echo.
 :: Keep the window open so the user can review results
 pause
 cmd /k 

@@ -1,4 +1,5 @@
 #include <glad/gl.h>
+#include <glm/glm.hpp>
 #include "core/BlotEngine.h"
 #include "core/core.h"
 #include "ui/ui.h"
@@ -62,6 +63,12 @@ void BlotEngine::run() {
     while (!glfwWindowShouldClose(m_window)) {
         float deltaTime = 1.0f / 60.0f; // Placeholder, should compute real delta
         m_app->update(deltaTime);
+
+        // Clear window with user-defined clear colour before custom drawing
+        glm::vec4 cc = m_clearColor;
+        glClearColor(cc.r, cc.g, cc.b, cc.a);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         m_app->draw();
         glfwSwapBuffers(m_window);
         glfwPollEvents();

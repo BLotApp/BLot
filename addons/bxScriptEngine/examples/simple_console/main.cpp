@@ -1,9 +1,8 @@
 #include "core/core.h"
 #include <memory>
-#include "app_entry.h"
 
 int main() {
-    auto app = createApp();
+    auto app = std::make_unique<SimpleConsoleApp>();
     blot::BlotEngine engine(std::move(app));
     engine.run();
     return 0;

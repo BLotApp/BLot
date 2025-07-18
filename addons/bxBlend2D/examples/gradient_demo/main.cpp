@@ -2,10 +2,9 @@
 #include "rendering/rendering.h"
 #include <memory>
 #include <spdlog/spdlog.h>
-#include "app_entry.h"
 
 int main() {
-    auto app = createApp();
+    auto app = std::make_unique<GradientDemoApp>();
     blot::BlotEngine engine(std::move(app));
 
     auto renderer = createRenderer(RendererType::Blend2D);

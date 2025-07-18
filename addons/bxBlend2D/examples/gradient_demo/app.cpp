@@ -1,6 +1,5 @@
 #include "app.h"
 #include "core/BlotEngine.h"
-#include "app_entry.h"
 #include <blend2d.h>
 #include <spdlog/spdlog.h>
 
@@ -15,8 +14,4 @@ void GradientDemoApp::configureWindow(WindowSettings& settings) {
     settings.height = 600;
     settings.title = "Blend2D Gradient Demo";
     settings.fullscreen = false;
-}
-
-std::unique_ptr<blot::IApp> createApp() {
-    return std::make_unique<GradientDemoApp>();
 } 
