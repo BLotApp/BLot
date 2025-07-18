@@ -1,6 +1,6 @@
 # blot
 
-![preview](screenshots/blot_0001.png)
+![preview](assets/img/blot_0001.png)
 
 Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFrameworks and DrawBot.
 
