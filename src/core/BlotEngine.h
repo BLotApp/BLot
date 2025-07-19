@@ -2,7 +2,8 @@
 #include <memory>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "core/core.h"  // Umbrella for core managers & IApp
+#include "core/core.h"
+#include "core/WindowSettings.h"
 
 // Forward declarations for all managers and IApp
 namespace blot {
@@ -47,7 +48,7 @@ private:
     std::unique_ptr<CanvasManager> m_canvasManager;
     std::unique_ptr<SettingsManager> m_settingsManager;
 
-    WindowSettings m_windowSettings;
+    blot::WindowSettings m_windowSettings;
     GLFWwindow* m_window;
     bool m_debugMode = false;
 

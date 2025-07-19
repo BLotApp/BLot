@@ -1,7 +1,10 @@
 #pragma once
 #include <string>
 
+// WindowSettings struct
+#include "core/WindowSettings.h"
 namespace blot {
+
 class BlotEngine;
 class ECSManager;
 class AddonManager;
@@ -9,16 +12,7 @@ class UIManager;
 class RenderingManager;
 class CanvasManager;
 class SettingsManager;
-}
 
-struct WindowSettings {
-    int width = 1280;
-    int height = 720;
-    std::string title = "Blot App";
-    bool fullscreen = false;
-};
-
-namespace blot {
 class IApp {
 public:
     virtual ~IApp() = default;

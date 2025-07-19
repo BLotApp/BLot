@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "core/BlotEngine.h"
 #include "core/core.h"
+#include "core/IApp.h"
 #include "ui/ui.h"
 #include "rendering/rendering.h"
 #include <chrono>

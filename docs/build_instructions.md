@@ -6,7 +6,7 @@
 * A C++17-capable compiler (MSVC ≥ 17, Clang ≥ 10, GCC ≥ 9)
 * Git (for cloning submodules)
 
-All third-party code is vendored as git submodules, so no external package manager is required.
+All third-party code is vendored as git submodules, please do not use an external package manager.
 
 ---
 

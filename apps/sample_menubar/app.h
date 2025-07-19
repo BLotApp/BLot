@@ -1,5 +1,7 @@
 #pragma once
 #include "core/BlotEngine.h"
+#include "core/IApp.h"
+#include "ui/UIManager.h"
 #include <iostream>
 
 class SampleMenubarApp : public blot::IApp {

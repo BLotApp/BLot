@@ -1,4 +1,5 @@
 #pragma once
+#include "core/IApp.h"
 #include "core/BlotEngine.h"
 #include <memory>
 #include <spdlog/spdlog.h>
