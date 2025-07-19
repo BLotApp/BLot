@@ -1,21 +1,22 @@
 #pragma once
-#include "Window.h"
 #include "../WindowManager.h"
+#include "Window.h"
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace blot {
 
 class WindowManagerPanel : public Window {
-public:
-    WindowManagerPanel(const std::string& title, WindowManager* windowManager, Flags flags = Flags::None);
+  public:
+	WindowManagerPanel(const std::string &title, WindowManager *windowManager,
+					   Flags flags = Flags::None);
 
-protected:
-    void renderContents() override;
+  protected:
+	void renderContents() override;
 
-private:
-    WindowManager* m_windowManager;
+  private:
+	WindowManager *m_windowManager;
 };
 
-} // namespace blot 
+} // namespace blot

@@ -2,9 +2,9 @@
 
 namespace blot {
 class IManager {
-public:
-    virtual ~IManager() = default;
-    virtual void init() {}
-    virtual void shutdown() {}
+  public:
+	virtual ~IManager() = default;
+	virtual void init() {}
+	virtual void shutdown() {}
 };
-} 
+} // namespace blot

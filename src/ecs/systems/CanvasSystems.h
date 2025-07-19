@@ -7,8 +7,10 @@
 namespace blot {
 namespace systems {
 
-void CanvasUpdateSystem(ECSManager& ecs, RenderingManager* renderingManager, float deltaTime);
-void CanvasRenderSystem(ECSManager& ecs, RenderingManager* renderingManager, entt::entity activeCanvasId);
+void CanvasUpdateSystem(ECSManager &ecs, RenderingManager *renderingManager,
+						float deltaTime);
+void CanvasRenderSystem(ECSManager &ecs, RenderingManager *renderingManager,
+						entt::entity activeCanvasId);
 
 } // namespace systems
-} // namespace blot 
+} // namespace blot

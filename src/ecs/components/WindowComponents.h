@@ -1,11 +1,11 @@
 #pragma once
 
+#include "windows/Window.h"
+#include <imgui.h>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
-#include <imgui.h>
-#include "windows/Window.h"
 
 namespace blot {
 
@@ -47,4 +47,4 @@ struct WindowSettingsComponent {
 	std::string category = "General";
 };
 
-} // namespace blot 
+} // namespace blot

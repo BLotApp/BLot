@@ -2,5 +2,5 @@
 #include <nlohmann/json.hpp>
 
 namespace blot {
-    using json = nlohmann::json;
-} 
+using json = nlohmann::json;
+}

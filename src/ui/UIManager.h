@@ -1,35 +1,35 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include <functional>
-#include <deque>
-#include "ui/WindowManager.h"
+#include "core/ISettings.h"
 #include "ui/ImGuiRenderer.h"
-#include "ui/windows/TextureViewerWindow.h"
-#include "ui/windows/ToolbarWindow.h"
+#include "ui/ShortcutManager.h"
+#include "ui/WindowManager.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/PropertiesWindow.h"
+#include "ui/windows/TextureViewerWindow.h"
 #include "ui/windows/ThemePanel.h"
-#include "ui/ShortcutManager.h"
-#include "core/ISettings.h"
+#include "ui/windows/ToolbarWindow.h"
+#include <deque>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 
 // Forward declarations
 struct GLFWwindow;
-#include "ui/windows/SaveWorkspaceDialog.h"
+#include "CoordinateSystem.h"
 #include "core/BlotEngine.h"
 #include "ui/windows/MainMenuBar.h"
-#include "CoordinateSystem.h"
+#include "ui/windows/SaveWorkspaceDialog.h"
 
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "ui/ui.h"
 #include <GLFW/glfw3.h>
-#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 
 // Forward declarations
 namespace blot {
-    class SaveWorkspaceDialog;
+class SaveWorkspaceDialog;
 }
 
 namespace blot {
@@ -38,135 +38,144 @@ namespace blot {
 enum class NotificationType { Info, Success, Warning, Error };
 
 struct Notification {
-    std::string message;
-    NotificationType type;
-    float timeRemaining;
+	std::string message;
+	NotificationType type;
+	float timeRemaining;
 };
 
 struct Modal {
-    std::string title;
-    std::string message;
-    NotificationType type;
-    std::function<void()> onOk;
-    bool open = true;
+	std::string title;
+	std::string message;
+	NotificationType type;
+	std::function<void()> onOk;
+	bool open = true;
 };
 
 class UIManager : public IManager, public ISettings {
-public:
-    UIManager(GLFWwindow* window);
-    ~UIManager();
-    void init() override {}
-    void shutdown() override {}
+  public:
+	UIManager(GLFWwindow *window);
+	~UIManager();
+	void init() override {}
+	void shutdown() override {}
 
-    // Main UI operations
-    void update();
-    void handleInput();
-    
-    // ImGui initialization and shutdown
-    void initImGui();
-    void shutdownImGui();
-    
-    // Window management
-    void setupDockspace();
-    void renderAllWindows();
-    
-    // Window visibility management
-    void setWindowVisibility(const std::string& windowName, bool visible);
-    void setWindowVisibilityAll(bool visible);
-    bool getWindowVisibility(const std::string& windowName) const;
-    std::vector<std::string> getAllWindowNames() const;
-    
-    // Window callback setup
-    void setupWindowCallbacks(BlotEngine* engine);
-    
-    // Workspace management (now via WindowManager)
-    bool loadWorkspace(const std::string& workspaceName);
-    bool saveWorkspace(const std::string& workspaceName);
-    bool saveWorkspaceAs(const std::string& workspaceName);
-    std::string getCurrentWorkspace() const;
-    std::vector<std::pair<std::string, std::string>> getAvailableWorkspaces() const;
-    std::vector<std::string> getAllWorkspaceNames() const;
-    void saveCurrentImGuiLayout();
-    
-    // Getters for external access
-    WindowManager* getWindowManager() { return m_windowManager.get(); }
-    ShortcutManager& getShortcutManager() { return m_shortcutManager; }
-    BlotEngine* getBlotEngine() const { return m_blotEngine; }
-   
-    // Templated window getters for type-safe access
-    template<typename T>
-    std::shared_ptr<T> getWindowAs(const std::string& name) {
-        return m_windowManager->getWindowAs<T>(name);
-    }
-    
-    template<typename T>
-    std::shared_ptr<T> getFocusedWindowAs() {
-        return m_windowManager->getFocusedWindowAs<T>();
-    }
-    
-    // Text renderer access
-    ImGuiRenderer* getImGuiRenderer() { return m_imguiRenderer.get(); }
-    
-    // Save workspace dialog access
-    SaveWorkspaceDialog* getSaveWorkspaceDialog() { return m_saveWorkspaceDialog.get(); }
+	// Main UI operations
+	void update();
+	void handleInput();
 
-    // Global ImGui theme for the entire UI
-    enum class ImGuiTheme { Dark, Light, Classic, Corporate, Dracula };
-    ImGuiTheme m_currentTheme = ImGuiTheme::Light;
-    void setImGuiTheme(ImGuiTheme theme);
-    ImGuiTheme getImGuiTheme() const { return m_currentTheme; }
-    
-    // Theme file management
-    std::string m_lastThemePath = "themes/default.json";
-    void saveCurrentTheme(const std::string& path);
-    void loadTheme(const std::string& path);
+	// ImGui initialization and shutdown
+	void initImGui();
+	void shutdownImGui();
 
-    void setupWindows(blot::BlotEngine* engine);
+	// Window management
+	void setupDockspace();
+	void renderAllWindows();
 
-    MainMenuBar* getMainMenuBar() { return m_mainMenuBar.get(); }
+	// Window visibility management
+	void setWindowVisibility(const std::string &windowName, bool visible);
+	void setWindowVisibilityAll(bool visible);
+	bool getWindowVisibility(const std::string &windowName) const;
+	std::vector<std::string> getAllWindowNames() const;
 
-    // Notification/Popup API
-    void showNotification(const std::string& message, NotificationType type = NotificationType::Info, float duration = 3.0f);
-    void showModal(const std::string& title, const std::string& message, NotificationType type = NotificationType::Info, std::function<void()> onOk = nullptr);
+	// Window callback setup
+	void setupWindowCallbacks(BlotEngine *engine);
 
-    void setBlotEngine(BlotEngine* engine) { m_blotEngine = engine; }
+	// Workspace management (now via WindowManager)
+	bool loadWorkspace(const std::string &workspaceName);
+	bool saveWorkspace(const std::string &workspaceName);
+	bool saveWorkspaceAs(const std::string &workspaceName);
+	std::string getCurrentWorkspace() const;
+	std::vector<std::pair<std::string, std::string>>
+	getAvailableWorkspaces() const;
+	std::vector<std::string> getAllWorkspaceNames() const;
+	void saveCurrentImGuiLayout();
 
-    CoordinateSystem& getCoordinateSystem() { return m_coordinateSystem; }
-    const CoordinateSystem& getCoordinateSystem() const { return m_coordinateSystem; }
+	// Getters for external access
+	WindowManager *getWindowManager() { return m_windowManager.get(); }
+	ShortcutManager &getShortcutManager() { return m_shortcutManager; }
+	BlotEngine *getBlotEngine() const { return m_blotEngine; }
 
-    // ISettings interface
-    json getSettings() const override;
-    void setSettings(const json& settings) override;
+	// Templated window getters for type-safe access
+	template <typename T>
+	std::shared_ptr<T> getWindowAs(const std::string &name) {
+		return m_windowManager->getWindowAs<T>(name);
+	}
 
-private:
-    // GLFW window reference
-    GLFWwindow* m_window;
-    
-    // Core window manager
-    std::unique_ptr<WindowManager> m_windowManager;
-    
-    // Save workspace dialog (still managed as unique_ptr, but registered with WindowManager)
-    std::unique_ptr<SaveWorkspaceDialog> m_saveWorkspaceDialog;
+	template <typename T> std::shared_ptr<T> getFocusedWindowAs() {
+		return m_windowManager->getFocusedWindowAs<T>();
+	}
 
-    // Hide all windows except menubar flag
-    bool m_bHideWindows = false;
-    bool m_bHideMainMenuBar = false;
+	// Text renderer access
+	ImGuiRenderer *getImGuiRenderer() { return m_imguiRenderer.get(); }
 
-    // Shortcut manager
-    ShortcutManager m_shortcutManager;
-    
-    // ImGui with enhanced text rendering
-    std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
-    
-    // Setup methods
-    void configureWindowSettings();
-    std::unique_ptr<MainMenuBar> m_mainMenuBar;
+	// Save workspace dialog access
+	SaveWorkspaceDialog *getSaveWorkspaceDialog() {
+		return m_saveWorkspaceDialog.get();
+	}
 
-    std::deque<Notification> m_notifications;
-    std::deque<Modal> m_modals;
+	// Global ImGui theme for the entire UI
+	enum class ImGuiTheme { Dark, Light, Classic, Corporate, Dracula };
+	ImGuiTheme m_currentTheme = ImGuiTheme::Light;
+	void setImGuiTheme(ImGuiTheme theme);
+	ImGuiTheme getImGuiTheme() const { return m_currentTheme; }
 
-    BlotEngine* m_blotEngine = nullptr;
-    CoordinateSystem m_coordinateSystem;
+	// Theme file management
+	std::string m_lastThemePath = "themes/default.json";
+	void saveCurrentTheme(const std::string &path);
+	void loadTheme(const std::string &path);
+
+	void setupWindows(blot::BlotEngine *engine);
+
+	MainMenuBar *getMainMenuBar() { return m_mainMenuBar.get(); }
+
+	// Notification/Popup API
+	void showNotification(const std::string &message,
+						  NotificationType type = NotificationType::Info,
+						  float duration = 3.0f);
+	void showModal(const std::string &title, const std::string &message,
+				   NotificationType type = NotificationType::Info,
+				   std::function<void()> onOk = nullptr);
+
+	void setBlotEngine(BlotEngine *engine) { m_blotEngine = engine; }
+
+	CoordinateSystem &getCoordinateSystem() { return m_coordinateSystem; }
+	const CoordinateSystem &getCoordinateSystem() const {
+		return m_coordinateSystem;
+	}
+
+	// ISettings interface
+	json getSettings() const override;
+	void setSettings(const json &settings) override;
+
+  private:
+	// GLFW window reference
+	GLFWwindow *m_window;
+
+	// Core window manager
+	std::unique_ptr<WindowManager> m_windowManager;
+
+	// Save workspace dialog (still managed as unique_ptr, but registered with
+	// WindowManager)
+	std::unique_ptr<SaveWorkspaceDialog> m_saveWorkspaceDialog;
+
+	// Hide all windows except menubar flag
+	bool m_bHideWindows = false;
+	bool m_bHideMainMenuBar = false;
+
+	// Shortcut manager
+	ShortcutManager m_shortcutManager;
+
+	// ImGui with enhanced text rendering
+	std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
+
+	// Setup methods
+	void configureWindowSettings();
+	std::unique_ptr<MainMenuBar> m_mainMenuBar;
+
+	std::deque<Notification> m_notifications;
+	std::deque<Modal> m_modals;
+
+	BlotEngine *m_blotEngine = nullptr;
+	CoordinateSystem m_coordinateSystem;
 };
 
-} // namespace blot 
+} // namespace blot

@@ -1,18 +1,18 @@
 #pragma once
 
 // Standard library
-#include <memory>
 #include <functional>
+#include <memory>
 
 // Project headers
-#include "rendering/rendering.h"
 #include "addons/bxBlend2D/Blend2DRenderer.h"
 #include "core/AddonBase.h"
+#include "rendering/rendering.h"
 
 namespace blot {
 
 class bxBlend2DAddon : public AddonBase {
-public:
+  public:
 	bxBlend2DAddon();
 	~bxBlend2DAddon() override;
 
@@ -25,4 +25,4 @@ public:
 	// Static registration function for the renderer factory
 	static void registerRendererFactory();
 };
-} // namespace blot 
+} // namespace blot
