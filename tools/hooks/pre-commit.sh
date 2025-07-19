@@ -14,8 +14,8 @@ staged_files=$(git diff --cached --name-only --diff-filter=ACM)
 if command_exists clang-format; then
     fmt_changed=0
     for file in $staged_files; do
-        # Skip vendored code
-        echo "$file" | grep -q "^third_party/" && continue
+        # Skip vendored code and assets
+        echo "$file" | grep -qE "^(third_party|assets)/" && continue
         case "$file" in
             *.c|*.cpp|*.h|*.hpp)
                 clang-format -i "$file"
@@ -33,7 +33,7 @@ fi
 # ---------- newline at EOF ----------
 files_fixed=0
 for file in $staged_files; do
-    echo "$file" | grep -q "^third_party/" && continue
+    echo "$file" | grep -qE "^(third_party|assets)/" && continue
     [ ! -f "$file" ] && continue
     [ ! -s "$file" ] && continue
     if [ "$(tail -c1 "$file" | wc -l)" -eq 0 ]; then
