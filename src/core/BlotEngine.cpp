@@ -29,6 +29,7 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 {
     WindowSettings ws;
     if (m_app) {
+        m_app->setEngine(this); // allow app constructor-logic
         ws = m_app->window();
     }
     if (!glfwInit()) {

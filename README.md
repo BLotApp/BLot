@@ -34,9 +34,10 @@ On Linux/macOS replace the batch script with `./build.sh` or run the usual `cmak
 ## Contributing
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+3. Read the [docs](docs/)!
+4. Make your changes
+5. Add tests if applicable
+6. Submit a pull request
 
 For code style and contribution guidelines, see [docs/contributing.md](docs/contributing.md).
 Also check our [TODO.md](./TODO.md) for things that require attention.

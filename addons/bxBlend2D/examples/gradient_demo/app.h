@@ -1,13 +1,15 @@
 #pragma once
-#include "core/IApp.h"
-#include <memory>
-
-namespace blot { class BlotEngine; class IApp; }
+#include "core/core.h"
 
 class GradientDemoApp : public blot::IApp {
 public:
-    void setup(blot::BlotEngine*) override;
+    GradientDemoApp() {
+        window().width  = 800;
+        window().height = 600;
+        window().title  = "Blend2D Gradient Demo";
+    }
+
+    void setup()  override;
     void update(float) override;
-    void draw() override;
-    void configureWindow(WindowSettings& settings) override;
+    void draw()   override;
 }; 

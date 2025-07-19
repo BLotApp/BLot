@@ -10,7 +10,7 @@
 #include "core/AddonBase.h"
 
 namespace blot {
-// bxBlend2DAddon: Registers the Blend2D renderer with the engine
+
 class bxBlend2DAddon : public AddonBase {
 public:
 	bxBlend2DAddon();

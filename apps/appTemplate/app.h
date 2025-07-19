@@ -1,10 +1,5 @@
 #pragma once
-#include "core/IApp.h"
-#include "core/BlotEngine.h"
-#include <memory>
-#include <spdlog/spdlog.h>
-
-namespace blot { class BlotEngine; class IApp; }
+#include "core/core.h"
 
 class AppTemplate : public blot::IApp {
 public:

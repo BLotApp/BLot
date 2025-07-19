@@ -1,8 +1,5 @@
 #pragma once
-#include "core/BlotEngine.h"
-#include "core/IApp.h"
-#include "ui/UIManager.h"
-#include <iostream>
+#include "core/core.h"
 
 class SampleMenubarApp : public blot::IApp {
 public:
@@ -13,9 +10,13 @@ public:
     }
 
     void setup() override {
-        std::cout << "SampleMenubarApp setup" << std::endl;
+        spdlog::info("SampleMenubarApp setup");
         if (auto eng = getEngine()) {
             eng->setClearColor(0.15f, 0.15f, 0.2f, 1.0f);
+            if (auto ui = getUIManager()) {
+                ui->setupWindows(eng);
+                ui->setupWindowCallbacks(eng);
+            }
         }
     }
     void update(float) override {}

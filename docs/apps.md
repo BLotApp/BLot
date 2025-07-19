@@ -28,7 +28,32 @@ The `apps/` directory is a collection of creative coding demos, experiments, and
 
 ## Example
 
-See `apps/sample_blend2d_gradient/` for a minimal example using Blend2D.
+Minimal skeleton for any new app:
+
+```cpp
+#include "core/core.h"
+
+class MyApp : public blot::IApp {
+public:
+    MyApp() {
+        window().title = "My Sketch";
+        window().width = 1280;
+        window().height = 720;
+    }
+
+    void setup()  override {}
+    void update(float dt) override {}
+    void draw()   override {}
+};
+
+int main() {
+    auto app = std::make_unique<MyApp>();
+    blot::BlotEngine engine(std::move(app));
+    engine.run();
+}
+```
+
+See `apps/sample_menubar/` for a UI-focused example and `apps/sample_app/` for a full-framework demo.
 
 ## Benefits
 

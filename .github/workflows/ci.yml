@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-14
+      - name: Check formatting
+        run: |
+          FILES=$(git ls-files '*.cpp' '*.h' | xargs)
+          clang-format-14 --dry-run --Werror $FILES 
