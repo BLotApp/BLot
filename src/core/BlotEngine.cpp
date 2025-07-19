@@ -26,18 +26,18 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
     , m_settingsManager(std::make_unique<SettingsManager>())
     , m_window(nullptr)
 {
+    WindowSettings ws;
     if (m_app) {
-        m_app->setEngine(this);
-        m_app->configureWindow(m_windowSettings);
+        ws = m_app->window();
     }
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
-    GLFWmonitor* monitor = m_windowSettings.fullscreen ? glfwGetPrimaryMonitor() : nullptr;
+    GLFWmonitor* monitor = ws.fullscreen ? glfwGetPrimaryMonitor() : nullptr;
     m_window = glfwCreateWindow(
-        m_windowSettings.width,
-        m_windowSettings.height,
-        m_windowSettings.title.c_str(),
+        ws.width,
+        ws.height,
+        ws.title.c_str(),
         monitor,
         nullptr
     );
@@ -55,22 +55,28 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
         throw std::runtime_error("Failed to initialize GLAD (GLES2)");
     }
 #endif
+    // store settings for later if needed
+    m_windowSettings = ws;
+
     m_uiManager = std::make_unique<UIManager>(m_window);
     m_addonManager->initDefaultAddons();
+
+    if (m_app) {
+        m_app->blotSetup(this);
+    }
 }
 
 void BlotEngine::run() {
-    m_app->setup(this);
     while (!glfwWindowShouldClose(m_window)) {
         float deltaTime = 1.0f / 60.0f; // Placeholder, should compute real delta
-        m_app->update(deltaTime);
+        m_app->blotUpdate(deltaTime);
 
         // Clear window with user-defined clear colour before custom drawing
         glm::vec4 cc = m_clearColor;
         glClearColor(cc.r, cc.g, cc.b, cc.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m_app->draw();
+        m_app->blotDraw();
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }

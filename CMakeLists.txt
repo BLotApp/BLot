@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  message(WARNING "CMAKE_TOOLCHAIN_FILE is not set! vcpkg integration may not work.")
-endif()
+# vcpkg toolchain logic removed – project now builds entirely from vendored
+# submodules and system libraries.
 
 project(Blot VERSION 1.0.0 LANGUAGES C CXX)
 
@@ -11,62 +10,20 @@ option(BUILD_ADDON_EXAMPLES "Build all addon examples" OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Auto-detect vcpkg toolchain file if not specified
-if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    # Check common vcpkg locations
-    set(VCPKG_POSSIBLE_PATHS
-        "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        "$ENV{USERPROFILE}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        "$ENV{USERPROFILE}/Documents/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    )
-    
-    foreach(VCPKG_PATH ${VCPKG_POSSIBLE_PATHS})
-        if(EXISTS ${VCPKG_PATH})
-            set(CMAKE_TOOLCHAIN_FILE ${VCPKG_PATH})
-            message(STATUS "Found vcpkg toolchain file: ${VCPKG_PATH}")
-            break()
-        endif()
-    endforeach()
-    
-    if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-        message(FATAL_ERROR 
-            "vcpkg toolchain file not found. Please install vcpkg or set CMAKE_TOOLCHAIN_FILE.\n"
-            "To install vcpkg:\n"
-            "  git clone https://github.com/Microsoft/vcpkg.git\n"
-            "  cd vcpkg\n"
-            "  ./bootstrap-vcpkg.sh  # Linux/macOS\n"
-            "  .\\bootstrap-vcpkg.bat  # Windows\n"
-            "Then set VCPKG_ROOT environment variable or use -DCMAKE_TOOLCHAIN_FILE=path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        )
-    endif()
-endif()
-
-# Find required packages with helpful error messages
+# Find required system OpenGL (minimal external dependency)
 find_package(OpenGL REQUIRED)
 
-# Prevent vcpkg or other packages from defining a GLFW target
+# Ensure our submodule GLFW is used rather than a system one
 set(GLFW3_FOUND OFF CACHE BOOL "" FORCE)
 set(GLFW_FOUND OFF CACHE BOOL "" FORCE)
-# Optionally, disable vcpkg's find_package for glfw3
 set(GLFW3_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
-
-find_package(freetype REQUIRED)
-if(NOT freetype_FOUND)
-    message(FATAL_ERROR "FreeType not found. Install with: vcpkg install freetype")
-endif()
 
 # Add GLM and EnTT from submodules
 include_directories(${CMAKE_SOURCE_DIR}/third_party/glm)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/json/single_include)
 
-# Remove vcpkg/system Blend2D
-# find_package(blend2d REQUIRED)
-# if(NOT blend2d_FOUND)
-#     message(FATAL_ERROR "Blend2D not found. Install with: vcpkg install blend2d")
-# endif()
-
+# Remove legacy vcpkg references – Blend2D is provided as a submodule
 # Add Blend2D submodule
 add_subdirectory(third_party/blend2d)
 

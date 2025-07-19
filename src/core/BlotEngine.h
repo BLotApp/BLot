@@ -2,7 +2,7 @@
 #include <memory>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "core/IApp.h"
+#include "core/core.h"  // Umbrella for core managers & IApp
 
 // Forward declarations for all managers and IApp
 namespace blot {

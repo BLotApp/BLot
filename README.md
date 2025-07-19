@@ -9,11 +9,10 @@ Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFramewor
 | Library      | Purpose                       | How Managed   | Notes                                 |
 |-------------|--------------------------------|---------------|---------------------------------------|
 | [GLFW3]     | Window/input management        | submodule     |                                       |
-| [FreeType]  | Font/text rendering            | vcpkg         |                                       |
 | [GLM]       | Math (vectors/matrices)        | submodule     | Header-only                           |
-| [GLAD]      | OpenGL loader                  | vcpkg         |                                       |
+| [GLAD]      | OpenGL loader                  | submodule     |                                       |
 | [DearImGui] | UI framework                   | submodule     |                                       |
-| [Blend2D]   | 2D vector graphics             | vcpkg         | Native/system for Pi recommended      |
+| [Blend2D]   | 2D vector graphics             | submodule     |                                       |
 | [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only                           |
 | [spdlog]    | Logging                        | submodule     | Header-only                           |
 
@@ -21,12 +20,16 @@ Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFramewor
 ### Prerequisites
 
 - CMake 3.16 or higher
-- C++17 compatible compiler
-- vcpkg for dependency management
+- C++17 compatible compiler (MSVC, clang, or gcc)
 
-### Build Instructions
+### Quick Build (Windows example)
 
-Use the build script.
+```
+git submodule update --init --recursive   # bring in third-party code
+quick_build.bat Release sample_app       # one-line configure + build
+```
+
+On Linux/macOS replace the batch script with `./build.sh` or run the usual `cmake` commands.
 
 ## Contributing
 

@@ -46,6 +46,12 @@ SampleUiApp::SampleUiApp()
     , m_deltaTime(0.0f)
     , m_lastFrameTime(0.0f)
 {
+    // Configure desired window parameters before engine creates the window
+    window().width  = m_windowWidth;
+    window().height = m_windowHeight;
+    window().title  = "Blot Sample UI";
+    window().fullscreen = false;
+
     // Code editor will be initialized during setup
     // when the engine pointer is available.
     spdlog::info("BlotApp constructor finished");
@@ -59,12 +65,14 @@ SampleUiApp::~SampleUiApp() {
     }
 }
 
-void SampleUiApp::setup(blot::BlotEngine* engine) {
+void SampleUiApp::setup() {
     // Final setup phase - everything is now initialized
     spdlog::info("Setting up application...");
     
     // Set a pleasant mid-grey clear colour so a blank canvas isn't mistaken for a crash
-    engine->setClearColor(0.2f, 0.2f, 0.25f, 1.0f);
+    if (auto eng = getEngine()) {
+        eng->setClearColor(0.2f, 0.2f, 0.25f, 1.0f);
+    }
 
     // Ensure we start with at least one canvas so the Canvas window has something to display
     if (getCanvasManager() && getECSManager()) {
@@ -463,11 +471,4 @@ void SampleUiApp::draw() {
     if (getUIManager()) {
         getUIManager()->update();
     }
-} 
-
-void SampleUiApp::configureWindow(WindowSettings& settings) {
-    settings.width = 1280;
-    settings.height = 720;
-    settings.title = "Blot Sample UI";
-    settings.fullscreen = false;
 } 

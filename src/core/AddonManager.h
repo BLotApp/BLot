@@ -5,11 +5,11 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include "core/AddonBase.h"
 #include "core/IManager.h"
 #include "core/ISettings.h"
 
 namespace blot {
+class AddonBase;
 class AddonManager : public IManager, public ISettings {
 public:
     AddonManager();

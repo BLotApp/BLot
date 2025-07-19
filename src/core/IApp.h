@@ -22,18 +22,31 @@ namespace blot {
 class IApp {
 public:
     virtual ~IApp() = default;
-    // Called before setup(), allows the app to specify window parameters
-    virtual void configureWindow(WindowSettings& settings) {}
-    virtual void setup(blot::BlotEngine* engine) = 0;
-    virtual void update(float deltaTime) = 0;
-    virtual void draw() = 0;
 
-    // Framework convenience: the engine pointer is set by BlotEngine before setup()
+    // ---------------------------------------------------------------------
+    // Framework entry points (called by BlotEngine)  – DO NOT override.
+    // ---------------------------------------------------------------------
+    void blotSetup(blot::BlotEngine* engine);
+    void blotUpdate(float deltaTime);
+    void blotDraw();
+
+    // Engine pointer helpers
     void setEngine(blot::BlotEngine* engine) { m_engine = engine; }
     blot::BlotEngine* getEngine() const { return m_engine; }
 
+    // Access window settings (can be modified in constructor before engine creation)
+    WindowSettings& window() { return settings_; }
+    const WindowSettings& window() const { return settings_; }
+
 protected:
-    // Convenience accessors for commonly-used managers. These return nullptr if the engine is not yet set.
+    // ---------------------------------------------------------------------
+    // User hooks – override these in your app (openFrameworks-style names)
+    // ---------------------------------------------------------------------
+    virtual void setup() {}
+    virtual void update(float) {}
+    virtual void draw() {}
+
+    // Convenience accessors
     blot::ECSManager* getECSManager() const;
     blot::RenderingManager* getRenderingManager() const;
     blot::CanvasManager* getCanvasManager() const;
@@ -41,6 +54,7 @@ protected:
     blot::AddonManager* getAddonManager() const;
     blot::SettingsManager* getSettingsManager() const;
 
-    blot::BlotEngine* m_engine = nullptr; // Populated automatically by the framework
+    blot::BlotEngine* m_engine = nullptr;
+    WindowSettings settings_;
 };
 } // namespace blot 

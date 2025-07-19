@@ -1,128 +1,61 @@
 # Build Instructions for Blot
 
-## Manual Install
+## Prerequisites
 
-### 1. Install vcpkg
-```bash
-# Clone vcpkg
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
+* CMake ≥ 3.16
+* A C++17-capable compiler (MSVC ≥ 17, Clang ≥ 10, GCC ≥ 9)
+* Git (for cloning submodules)
 
-# Bootstrap vcpkg
-./bootstrap-vcpkg.sh  # On Linux/macOS
-# or
-.\bootstrap-vcpkg.bat  # On Windows
+All third-party code is vendored as git submodules, so no external package manager is required.
 
-# Set environment variable (add to your shell profile)
-export VCPKG_ROOT=/path/to/vcpkg  # Linux/macOS
-set VCPKG_ROOT=C:\path\to\vcpkg   # Windows
+---
+
+## One-shot build (Windows)
+
+```powershell
+REM Clone and pull submodules
+git clone https://github.com/<you>/blot.git
+cd blot
+git submodule update --init --recursive
+
+REM Build the framework and all sample apps
+quick_build.bat Release sample_app   # or sample_menubar etc.
 ```
 
-### 2. Install Dependencies
+## One-shot build (Linux / macOS)
+
 ```bash
-# Install all dependencies
-vcpkg install glfw3 freetype glm glad imgui entt blend2d
+# Clone and pull submodules
+git clone https://github.com/<you>/blot.git
+cd blot
+git submodule update --init --recursive
+
+# Configure + build
+./build.sh Release sample_app
 ```
 
-### 3. Build the Project
+Both helper scripts run `cmake -S . -B build` on first execution and re-use the generated build folder thereafter.
 
-#### Windows
+---
+
+## Manual CMake invocation
+
 ```bash
-# Set VCPKG_ROOT environment variable
-set VCPKG_ROOT=C:\path\to\vcpkg
-
-# Run the build script
-.\build.bat
-```
-
-#### Linux/macOS
-```bash
-# Set VCPKG_ROOT environment variable
-export VCPKG_ROOT=/path/to/vcpkg
-
-# Run the build script
-./build.sh
-```
-
-#### Manual Build
-```bash
-mkdir build
+mkdir -p build
 cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=[path to vcpkg]/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
-make
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release --target sample_app
 ```
 
-## Building and Running Apps in `apps/`
+The top-level `apps/CMakeLists.txt` adds every subdirectory under `apps/` as its own executable target, so they will all be built unless you pass `--target <name>`.
 
-The Blot framework is now app-agnostic. All runnable applications are located in the `apps/` directory. Each app in `apps/` is built as a separate executable.
+---
 
-### How to Build All Apps
+## Updating submodules
 
-By default CMake now builds the framework library **and** every sample application found under `apps/`.  This is controlled by the option `BUILD_APPS` (ON by default):
+Any time you pull new commits, make sure to also update submodules:
 
 ```bash
-# turn apps off (library-only build)
-cmake -B build -DBUILD_APPS=OFF
-# turn apps on explicitly
-cmake -B build -DBUILD_APPS=ON
-```
-
-With apps enabled you will find a separate executable for each subdirectory—for example:
-
-```
-build/Release/
-    sample_ui.exe
-    sample_blend2d_gradient.exe
-    sample_script_engine.exe
-```
-
-### How to Run a Specific App
-
-After building, navigate to the output directory and run the desired app, e.g.:
-
-```bash
-cd build/Release  # Windows
-# or cd build       # Linux/macOS
-
-# UI demo
-sample_ui.exe        # Windows
-./sample_ui          # Linux/macOS
-
-# Other demos
-sample_blend2d_gradient.exe
-sample_script_engine.exe
-```
-
-## Creating a New App
-
-To create a new app:
-1. Copy the `apps/workingTemplate` directory to a new folder under `apps/` (e.g., `apps/MyNewApp`).
-2. Rename files and update the CMake target name in `CMakeLists.txt` as needed.
-3. Add your app's logic to `main.cpp` and any other files.
-4. Add a line to `apps/CMakeLists.txt`:
-   ```cmake
-   add_subdirectory(MyNewApp)
-   ```
-5. Rebuild the project. Your new app will be built as its own executable.
-
-### Development Setup
-
-For development, you may also want to install:
-- **Visual Studio Code** with C++ extensions
-- **CMake Tools** extension for VS Code
-- **clang-format** for code formatting
-
-## Project Structure
-
-```
-blot/
-├── src/                    # Framework source files
-├── apps/                   # All runnable apps
-│   ├── BlotApp/            # Example app
-│   └── workingTemplate/    # Template for new apps
-├── CMakeLists.txt          # Build configuration
-├── vcpkg.json              # Dependencies
-├── build.bat               # Windows build script
-├── build.sh                # Linux/macOS build script
-└── README.md               # Project documentation
+git pull
+git submodule update --init --recursive
 ``` 

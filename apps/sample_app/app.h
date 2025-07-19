@@ -26,10 +26,9 @@ public:
     SampleUiApp();
     ~SampleUiApp();
 
-    void setup(blot::BlotEngine* engine) override;
+    void setup() override;
     void update(float deltaTime) override;
     void draw() override;
-    void configureWindow(WindowSettings& settings) override;
 
 private:
     // Addon accessor helpers
