@@ -2,7 +2,7 @@
 
 ![preview](apps/appTemplate/img/preview.png)
 
-Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFrameworks and DrawBot.
+Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFrameworks, DrawBot and Pixile.
 It suposed to be a super light Entity Component System for creative programming, all weight should come from it's addons.
 It should run on a single-board computer like the Raspberry Pi.
 
