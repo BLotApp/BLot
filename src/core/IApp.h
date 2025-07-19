@@ -2,6 +2,7 @@
 #include <string>
 
 // WindowSettings struct
+#include "core/AppSettings.h"
 #include "core/WindowSettings.h"
 namespace blot {
 
@@ -28,10 +29,13 @@ class IApp {
 	void setEngine(blot::BlotEngine *engine) { m_engine = engine; }
 	blot::BlotEngine *getEngine() const { return m_engine; }
 
-	// Access window settings (can be modified in constructor before engine
-	// creation)
-	WindowSettings &window() { return settings_; }
-	const WindowSettings &window() const { return settings_; }
+	// Access full application settings before engine creation
+	AppSettings &settings() { return m_settings; }
+	const AppSettings &settings() const { return m_settings; }
+
+	// Convenience aliases for window settings (legacy API)
+	WindowSettings &window() { return m_settings.window; }
+	const WindowSettings &window() const { return m_settings.window; }
 
   protected:
 	// ----------------------------------------
@@ -53,6 +57,6 @@ class IApp {
 	uint64_t frameCount() const;
 
 	blot::BlotEngine *m_engine = nullptr;
-	WindowSettings settings_;
+	AppSettings m_settings;
 };
 } // namespace blot

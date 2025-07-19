@@ -2,6 +2,7 @@
 #include "rendering/gladGlfw.h"
 #include <glm/glm.hpp>
 #include <memory>
+#include "core/AppSettings.h"
 #include "core/WindowSettings.h"
 #include "core/core.h"
 
@@ -20,6 +21,7 @@ namespace blot {
 class BlotEngine {
   public:
 	BlotEngine(std::unique_ptr<IApp> app);
+	BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings);
 	~BlotEngine();
 	void init(const std::string &appName, float appVersion);
 	void run();
@@ -60,6 +62,9 @@ class BlotEngine {
   private:
 	std::string m_appName = "Blot App";
 	float m_appVersion = 0.1f;
+	uint64_t m_frameCount = 0;
+
+	AppSettings m_settings;
 	std::unique_ptr<IApp> m_app;
 	std::unique_ptr<ECSManager> m_ecsManager;
 	std::unique_ptr<AddonManager> m_addonManager;
@@ -74,8 +79,6 @@ class BlotEngine {
 	bool m_vsync = true;
 	int m_targetFps = 60;
 	int m_currentFps = 0;
-
 	glm::vec4 m_clearColor{0.4f, 0.4f, 0.4f, 1.0f};
-	uint64_t m_frameCount = 0;
 };
 } // namespace blot

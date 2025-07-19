@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "core/AddonManager.h"
+#include "core/AppSettings.h"
 #include "core/IApp.h"
 #include "core/core.h"
 #include "core/util/SettingsManager.h"
@@ -21,18 +22,27 @@ namespace blot {
 BlotEngine::~BlotEngine() = default;
 
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
-	: m_app(std::move(app)), m_addonManager(std::make_unique<AddonManager>()),
+	: BlotEngine(std::move(app), AppSettings{}) {}
+
+// New constructor with settings
+
+BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
+	: m_settings(settings), m_app(std::move(app)),
+	  m_addonManager(std::make_unique<AddonManager>()),
 	  m_ecsManager(std::make_unique<ECSManager>()),
 	  m_renderingManager(std::make_unique<RenderingManager>()),
 	  m_canvasManager(std::make_unique<CanvasManager>(this)),
 	  m_uiManager(nullptr),
 	  m_settingsManager(std::make_unique<SettingsManager>()),
 	  m_window(nullptr) {
-	WindowSettings ws;
+	// Apply settings
+	WindowSettings ws = m_settings.window;
 	if (m_app) {
-		m_app->setEngine(this); // allow app constructor-logic
-		ws = m_app->window();
+		m_app->setEngine(this);
+		// If app had modified its own settings.window before passing, merge
+		ws = m_app->settings().window;
 	}
+
 	if (!glfwInit()) {
 		throw std::runtime_error("Failed to initialize GLFW");
 	}
@@ -54,11 +64,22 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 		throw std::runtime_error("Failed to initialize GLAD (GLES2)");
 	}
 #endif
-	// store settings for later if needed
-	m_windowSettings = ws;
 
 	m_uiManager = std::make_unique<UIManager>(m_window);
 	m_addonManager->initDefaultAddons();
+
+	// store settings for later if needed
+	m_windowSettings = ws;
+
+	// Apply graphics settings
+	setVerticalSync(m_settings.graphics.vsync);
+	setTargetFrameRate(m_settings.graphics.targetFps);
+	setClearColor(
+		m_settings.graphics.clearColor.r, m_settings.graphics.clearColor.g,
+		m_settings.graphics.clearColor.b, m_settings.graphics.clearColor.a);
+	m_debugMode = m_settings.debugMode;
+	m_appName = m_settings.appName;
+	m_appVersion = m_settings.version;
 
 	if (m_app) {
 		m_app->blotSetup(this);
