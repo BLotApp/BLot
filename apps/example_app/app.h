@@ -1,35 +1,18 @@
 #pragma once
 
-#include "rendering/gladGlfw.h"
-#include <entt/entt.hpp>
-#include "core/BlotEngine.h"
-#include "core/IApp.h"
-#include "core/canvas/CanvasManager.h"
-#include "core/util/SettingsManager.h"
-#include "ecs/ECSManager.h"
-#include "rendering/RenderingManager.h"
-#include "ui/UIManager.h"
+#include "core/core.h"
 
-// Forward declarations
-class bxCodeEditor;
+// Forward declare addons
 class bxScriptEngine;
-namespace blot {
-class AddonManager;
-namespace systems {
-class EventSystem;
-}
-class MainMenuBar;
-} // namespace blot
+class bxCodeEditor;
 
-namespace blot {
-class BlotEngine;
-class IApp;
-} // namespace blot
-
-class SampleUiApp : public blot::IApp {
+class ExampleApp : public blot::IApp {
   public:
-	SampleUiApp();
-	~SampleUiApp();
+	ExampleApp() {
+		window().width = 1024;
+		window().height = 768;
+		window().title = "Example App";
+	}
 
 	void setup() override;
 	void update(float deltaTime) override;
@@ -45,9 +28,6 @@ class SampleUiApp : public blot::IApp {
 	void
 	connectAddonManagerToEventSystem(blot::systems::EventSystem &eventSystem);
 	void registerUIActions(blot::systems::EventSystem &eventSystem);
-
-	// Core window reference (from GLFW)
-	GLFWwindow *m_window;
 
 	// Application state
 	int m_windowWidth;

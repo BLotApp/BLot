@@ -6,23 +6,14 @@ class SampleMenubarApp : public blot::IApp {
 	SampleMenubarApp() {
 		window().width = 1280;
 		window().height = 720;
-		window().title = "Blot Sample Menubar";
+		window().title = "Sample Menubar";
 	}
 
-	void setup() override {
-		spdlog::info("SampleMenubarApp setup");
-		if (auto eng = getEngine()) {
-			eng->setClearColor(0.15f, 0.15f, 0.2f, 1.0f);
-			if (auto ui = getUIManager()) {
-				ui->setupWindows(eng);
-				ui->setupWindowCallbacks(eng);
-			}
-		}
-	}
+	void setup() override { getEngine()->init("Sample Menubar", 0.1f); }
+
 	void update(float) override {}
 	void draw() override {
-		if (auto ui = getUIManager()) {
-			ui->update();
-		}
+
+		// What would you like to draw today?
 	}
 };

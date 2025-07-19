@@ -4,7 +4,7 @@ namespace blot {
 class IManager {
   public:
 	virtual ~IManager() = default;
-	virtual void init() {}
-	virtual void shutdown() {}
+	virtual void init() = 0;
+	virtual void shutdown() = 0;
 };
 } // namespace blot

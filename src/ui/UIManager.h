@@ -1,6 +1,7 @@
 #pragma once
 
 #include <deque>
+#include <entt/entt.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -33,7 +34,8 @@ class MainMenuBar;
 // Forward declarations
 namespace blot {
 class SaveWorkspaceDialog;
-}
+class Window;
+} // namespace blot
 
 namespace blot {
 
@@ -58,8 +60,9 @@ class UIManager : public IManager, public ISettings {
   public:
 	UIManager(GLFWwindow *window);
 	~UIManager();
-	void init() override {}
-	void shutdown() override {}
+
+	void init() override;
+	void shutdown() override;
 
 	// Main UI operations
 	void update();
@@ -72,6 +75,9 @@ class UIManager : public IManager, public ISettings {
 	// Window management
 	void setupDockspace();
 	void renderAllWindows();
+	// Create default windows and wire their callbacks
+	void setupWindows(BlotEngine *engine);
+	void setupWindowCallbacks(BlotEngine *engine);
 
 	// Window visibility management
 	void setWindowVisibility(const std::string &windowName, bool visible);
@@ -79,8 +85,19 @@ class UIManager : public IManager, public ISettings {
 	bool getWindowVisibility(const std::string &windowName) const;
 	std::vector<std::string> getAllWindowNames() const;
 
-	// Window callback setup
-	void setupWindowCallbacks(BlotEngine *engine);
+	// Convenience wrappers around WindowManager for easier access from apps
+	std::shared_ptr<Window> getWindow(const std::string &windowName) {
+		return m_windowManager ? m_windowManager->getWindow(windowName)
+							   : nullptr;
+	}
+
+	// Register a custom window with the UI
+	entt::entity addWindow(const std::string &windowName,
+						   std::shared_ptr<Window> window) {
+		return m_windowManager
+				   ? m_windowManager->createWindow(windowName, window)
+				   : entt::null;
+	}
 
 	// Workspace management (now via WindowManager)
 	bool loadWorkspace(const std::string &workspaceName);
@@ -125,8 +142,6 @@ class UIManager : public IManager, public ISettings {
 	std::string m_lastThemePath = "themes/default.json";
 	void saveCurrentTheme(const std::string &path);
 	void loadTheme(const std::string &path);
-
-	void setupWindows(blot::BlotEngine *engine);
 
 	MainMenuBar *getMainMenuBar() { return m_mainMenuBar.get(); }
 

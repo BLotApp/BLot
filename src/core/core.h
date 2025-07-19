@@ -1,4 +1,5 @@
 #pragma once
+#include <entt/entt.hpp>
 #include <spdlog/spdlog.h>
 #include "core/AddonBase.h"
 #include "core/AddonManager.h"

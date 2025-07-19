@@ -7,6 +7,7 @@ class AppTemplate : public blot::IApp {
 		window().width = 1024;
 		window().height = 768;
 		window().title = "App Template";
+		// window().fullscreen = true;
 	}
 	void setup() override {
 		spdlog::info("App Template setup!");
@@ -15,5 +16,7 @@ class AppTemplate : public blot::IApp {
 		}
 	}
 	void update(float) override {}
-	void draw() override {}
+	void draw() override {
+		// What would you like to draw today?
+	}
 };

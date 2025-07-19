@@ -65,10 +65,29 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 	}
 }
 
+void BlotEngine::init(const std::string &appName, float appVersion) {
+	m_appName = appName;
+	m_appVersion = appVersion;
+	if (m_uiManager) {
+		m_uiManager->init();
+	}
+}
+
 void BlotEngine::run() {
+
+	using clock = std::chrono::high_resolution_clock;
+	auto lastTime = clock::now();
+
 	while (!glfwWindowShouldClose(m_window)) {
+		auto frameStart = clock::now();
 		float deltaTime =
-			1.0f / 60.0f; // Placeholder, should compute real delta
+			std::chrono::duration<float>(frameStart - lastTime).count();
+		if (deltaTime > 0.0f) {
+			m_currentFps = static_cast<int>(1.0f / deltaTime);
+		}
+		lastTime = frameStart;
+
+		++m_frameCount;
 		m_app->blotUpdate(deltaTime);
 
 		// Clear window with user-defined clear colour before custom drawing
@@ -79,9 +98,37 @@ void BlotEngine::run() {
 		m_app->blotDraw();
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
+
+		// Frame rate limiting (if VSync disabled or monitor faster than target)
+		if (m_targetFps > 0) {
+			float targetFrame = 1.0f / static_cast<float>(m_targetFps);
+			auto frameEnd = clock::now();
+			float frameDuration =
+				std::chrono::duration<float>(frameEnd - frameStart).count();
+			if (frameDuration < targetFrame) {
+				std::this_thread::sleep_for(
+					std::chrono::duration<float>(targetFrame - frameDuration));
+			}
+		}
 	}
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
+}
+
+// -------------------- VSync & Frame Rate -----------------
+
+void BlotEngine::setVerticalSync(bool enabled) {
+	m_vsync = enabled;
+	glfwMakeContextCurrent(m_window);
+	glfwSwapInterval(enabled ? 1 : 0);
+}
+
+void BlotEngine::setTargetFrameRate(int fps) {
+	if (fps <= 0) {
+		m_targetFps = 0; // uncapped
+	} else {
+		m_targetFps = fps;
+	}
 }
 
 } // namespace blot

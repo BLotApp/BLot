@@ -17,9 +17,9 @@ class IApp {
   public:
 	virtual ~IApp() = default;
 
-	// ---------------------------------------------------------------------
-	// Framework entry points (called by BlotEngine)  – DO NOT override.
-	// ---------------------------------------------------------------------
+	// ----------------------------------------
+	// Framework entry points DO NOT override.
+	// ----------------------------------------
 	void blotSetup(blot::BlotEngine *engine);
 	void blotUpdate(float deltaTime);
 	void blotDraw();
@@ -34,9 +34,9 @@ class IApp {
 	const WindowSettings &window() const { return settings_; }
 
   protected:
-	// ---------------------------------------------------------------------
-	// User hooks – override these in your app (openFrameworks-style names)
-	// ---------------------------------------------------------------------
+	// ----------------------------------------
+	// User hooks – override these in your app
+	// ----------------------------------------
 	virtual void setup() {}
 	virtual void update(float) {}
 	virtual void draw() {}
@@ -48,6 +48,9 @@ class IApp {
 	blot::UIManager *getUIManager() const;
 	blot::AddonManager *getAddonManager() const;
 	blot::SettingsManager *getSettingsManager() const;
+
+	// Convenience: access engine frame counter
+	uint64_t frameCount() const;
 
 	blot::BlotEngine *m_engine = nullptr;
 	WindowSettings settings_;

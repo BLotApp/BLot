@@ -82,6 +82,8 @@ UIManager::UIManager(GLFWwindow *window) : m_window(window) {
 
 UIManager::~UIManager() { shutdownImGui(); }
 
+void UIManager::init() { initImGui(); }
+
 void UIManager::initImGui() {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -130,6 +132,8 @@ void UIManager::initImGui() {
 	// Initialize enhanced text renderer
 	m_imguiRenderer = std::make_unique<ImGuiRenderer>();
 }
+
+void UIManager::shutdown() { shutdownImGui(); }
 
 void UIManager::shutdownImGui() {
 	// Shutdown ImGui implementation

@@ -1,7 +1,6 @@
-#include <iostream>
 #include <memory>
 #include "app.h"
-#include "core/core.h"
+#include "core/BlotEngine.h"
 
 int main(int argc, char *argv[]) {
 	auto appInstance = std::make_unique<AppTemplate>();

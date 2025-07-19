@@ -38,40 +38,16 @@
 #include "ui/windows/NodeEditorWindow.h"
 #include "ui/windows/PropertiesWindow.h"
 
-SampleUiApp::SampleUiApp()
-	: m_window(nullptr), m_windowWidth(1280), m_windowHeight(720),
-	  m_running(true), m_deltaTime(0.0f), m_lastFrameTime(0.0f) {
-	// Configure desired window parameters before engine creates the window
-	window().width = m_windowWidth;
-	window().height = m_windowHeight;
-	window().title = "Blot Sample UI";
-	window().fullscreen = false;
+void ExampleApp::setup() {
+	spdlog::info("Setting up example application...");
+	getEngine()->init("Example App", 0.1f);
 
-	// Code editor will be initialized during setup
-	// when the engine pointer is available.
-	spdlog::info("BlotApp constructor finished");
-}
+	// Which window do you want to show?
+	getUIManager()->setWindowVisibility("Info", true);
+	getUIManager()->setWindowVisibility("Canvas", true);
 
-SampleUiApp::~SampleUiApp() {
-	spdlog::info("BlotApp destructor called");
-	// Save current ImGui layout
-	if (getUIManager()) {
-		getUIManager()->saveCurrentImGuiLayout();
-	}
-}
-
-void SampleUiApp::setup() {
-	// Final setup phase - everything is now initialized
-	spdlog::info("Setting up application...");
-
-	// Set a pleasant mid-grey clear colour so a blank canvas isn't mistaken for
-	// a crash
-	if (auto eng = getEngine()) {
-		eng->setClearColor(0.2f, 0.2f, 0.25f, 1.0f);
-	}
-
-	// Ensure we start with at least one canvas so the Canvas window has
-	// something to display
+	// Create a canvas
+	// We should already have one? 
 	if (getCanvasManager() && getECSManager()) {
 		m_activeCanvasId = getCanvasManager()->createCanvas(
 			*getECSManager(), m_windowWidth, m_windowHeight);
@@ -109,7 +85,7 @@ void SampleUiApp::setup() {
 	spdlog::info("Application setup complete");
 }
 
-void SampleUiApp::connectEventSystemToUI() {
+void ExampleApp::connectEventSystemToUI() {
 	// Get the ECS event system
 	auto &eventSystem = getECSManager()->getEventSystem();
 
@@ -192,7 +168,7 @@ void SampleUiApp::connectEventSystemToUI() {
 	registerUIActions(eventSystem);
 }
 
-void SampleUiApp::connectAddonManagerToEventSystem(
+void ExampleApp::connectAddonManagerToEventSystem(
 	blot::systems::EventSystem &eventSystem) {
 	// Register addon-related events with the ECS event system
 	eventSystem.registerEvent(
@@ -225,7 +201,7 @@ void SampleUiApp::connectAddonManagerToEventSystem(
 		});
 }
 
-void SampleUiApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
+void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 	spdlog::info("[BlotApp] registerUIActions eventSystem ptr: 0x{:X}",
 				 reinterpret_cast<uintptr_t>(&eventSystem));
 	// File menu actions
@@ -509,7 +485,7 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 							   }));
 }
 
-void SampleUiApp::update(float deltaTime) {
+void ExampleApp::update(float deltaTime) {
 	m_deltaTime = deltaTime;
 	// Update application logic
 	getECSManager()->runCanvasSystems(getRenderingManager(), m_deltaTime);
@@ -527,7 +503,7 @@ void SampleUiApp::update(float deltaTime) {
 }
 
 // Getters implementation using cached engine pointer
-bxScriptEngine *SampleUiApp::getScriptEngine() {
+bxScriptEngine *ExampleApp::getScriptEngine() {
 	if (auto manager = getAddonManager()) {
 		auto ptr = manager->getAddon("bxScriptEngine");
 		return ptr ? dynamic_cast<bxScriptEngine *>(ptr.get()) : nullptr;
@@ -535,10 +511,10 @@ bxScriptEngine *SampleUiApp::getScriptEngine() {
 	return nullptr;
 }
 
-bxCodeEditor *SampleUiApp::getCodeEditor() { return m_codeEditor; }
+bxCodeEditor *ExampleApp::getCodeEditor() { return m_codeEditor; }
 
 // Simple draw stub
-void SampleUiApp::draw() {
+void ExampleApp::draw() {
 	if (getUIManager()) {
 		getUIManager()->update();
 	}

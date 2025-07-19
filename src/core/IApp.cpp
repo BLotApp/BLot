@@ -32,24 +32,36 @@ SettingsManager *IApp::getSettingsManager() const {
 // -----------------------------------------------------------------------------
 
 void IApp::blotSetup(BlotEngine *engine) {
-	// Store engine pointer (redundant if already set by BlotEngine, but
-	// harmless)
+	// Store engine pointer
+	// (redundant if already set by BlotEngine, butharmless)
 	setEngine(engine);
 
-	// Framework-level initialisation could live here (profiling, default
-	// canvas, etc.)
+	// Framework-level initialisation
+	if (auto ui = getUIManager()) {
+		ui->setBlotEngine(engine);
+	}
 
 	setup();
 }
 
 void IApp::blotUpdate(float deltaTime) {
-	// Framework-level per-frame work could go here
+	// Framework-level update
+	if (auto ui = getUIManager()) {
+		ui->update();
+	}
+
+	// User-level update
 	update(deltaTime);
 }
 
-void IApp::blotDraw() {
-	// Framework-level pre/post draw code could go here
-	draw();
+void IApp::blotDraw() { draw(); }
+
+// -----------------------------------------------------------------------------
+// Convenience helpers
+// -----------------------------------------------------------------------------
+
+uint64_t IApp::frameCount() const {
+	return m_engine ? m_engine->getFrameCount() : 0;
 }
 
 } // namespace blot
