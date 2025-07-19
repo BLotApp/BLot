@@ -25,9 +25,8 @@ class ExampleApp : public blot::IApp {
 
 	// Internal helper methods
 	void connectEventSystemToUI();
-	void
-	connectAddonManagerToEventSystem(blot::systems::EventSystem &eventSystem);
-	void registerUIActions(blot::systems::EventSystem &eventSystem);
+	void connectAddonManagerToEventSystem(blot::ecs::SEvent &eventSystem);
+	void registerUIActions(blot::ecs::SEvent &eventSystem);
 
 	// Application state
 	int m_windowWidth;

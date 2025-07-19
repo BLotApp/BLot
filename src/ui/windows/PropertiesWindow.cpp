@@ -1,25 +1,23 @@
 #include "ui/windows/PropertiesWindow.h"
 #include <array>
 #include <imgui.h>
-#include "ecs/ECSManager.h"
-#include "ecs/components/CanvasComponent.h"
-#include "ecs/components/DraggableComponent.h"
-#include "ecs/components/NodeComponent.h"
-#include "ecs/components/SelectableComponent.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
-#include "ecs/components/TextureComponent.h"
-#include "ecs/components/TransformComponent.h"
+#include "ecs/MEcs.h"
+#include "ecs/components/CCanvas.h"
+#include "ecs/components/CDraggable.h"
+#include "ecs/components/CDrawStyle.h"
+#include "ecs/components/CNode.h"
+#include "ecs/components/CSelectable.h"
+#include "ecs/components/CShape.h"
+#include "ecs/components/CTexture.h"
+#include "ecs/components/CTransform.h"
 
 namespace blot {
-using namespace components;
+using namespace ecs;
 
 PropertiesWindow::PropertiesWindow(const std::string &title, Flags flags)
 	: Window(title, flags) {}
 
-void PropertiesWindow::setECSManager(std::shared_ptr<ECSManager> ecs) {
-	m_ecs = ecs;
-}
+void PropertiesWindow::setECSManager(std::shared_ptr<MEcs> ecs) { m_ecs = ecs; }
 
 void PropertiesWindow::setSelectedEntity(uint32_t entity) {
 	m_selectedEntity = entity;
@@ -56,7 +54,7 @@ void PropertiesWindow::renderEntityList() {
 		return;
 	ImGui::Text("Entities:");
 	ImGui::BeginChild("EntityList", ImVec2(0, 100), true);
-	auto view = m_ecs->view<components::Transform>();
+	auto view = m_ecs->view<ecs::CTransform>();
 	for (auto entity : view) {
 		char label[64];
 		snprintf(label, sizeof(label), "Entity %u", (unsigned int)entity);
@@ -72,7 +70,7 @@ void PropertiesWindow::renderEntityList() {
 // --- New generic property rendering ---
 
 template <typename Component>
-void RenderComponentProperties(entt::entity entity, ECSManager *ecs,
+void RenderComponentProperties(entt::entity entity, MEcs *ecs,
 							   const char *headerName) {
 	if (ecs->hasComponent<Component>(entity)) {
 		auto &comp = ecs->getComponent<Component>(entity);
@@ -135,18 +133,15 @@ void RenderComponentProperties(entt::entity entity, ECSManager *ecs,
 
 void PropertiesWindow::renderAllComponentProperties() {
 	entt::entity entity = static_cast<entt::entity>(m_selectedEntity);
-	ECSManager *ecs = m_ecs.get();
-	RenderComponentProperties<components::Transform>(entity, ecs, "Transform");
-	RenderComponentProperties<components::Shape>(entity, ecs, "Shape");
-	RenderComponentProperties<components::Style>(entity, ecs, "Style");
-	RenderComponentProperties<components::DraggableComponent>(entity, ecs,
-															  "Draggable");
-	RenderComponentProperties<components::SelectableComponent>(entity, ecs,
-															   "Selectable");
-	RenderComponentProperties<components::TextureComponent>(entity, ecs,
-															"Texture");
-	RenderComponentProperties<components::CanvasComponent>(entity, ecs,
-														   "Canvas");
+	MEcs *ecs = m_ecs.get();
+	RenderComponentProperties<ecs::CTransform>(entity, ecs, "Transform");
+	RenderComponentProperties<ecs::CShape>(entity, ecs, "Shape");
+	RenderComponentProperties<ecs::CDrawStyle>(entity, ecs, "Style");
+	RenderComponentProperties<ecs::CDraggable>(entity, ecs, "Draggable");
+	RenderComponentProperties<ecs::CSelectableComponent>(entity, ecs,
+														 "Selectable");
+	RenderComponentProperties<ecs::CTexture>(entity, ecs, "Texture");
+	RenderComponentProperties<ecs::CCanvas>(entity, ecs, "Canvas");
 	// Add more as needed
 }
 

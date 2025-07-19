@@ -4,9 +4,9 @@
 
 To simplify includes and improve modularity, the codebase uses umbrella headers for all major modules:
 
-- `core/core.h` — includes all major core headers (AddonManager, BlotEngine, IApp, etc.)
-- `ui/ui.h` — includes all major UI headers (UIManager, ImGuiRenderer, TextRenderer, etc.)
-- `rendering/rendering.h` — includes all major rendering headers (Renderer, RenderingManager, RendererRegistry, etc.)
+- `core/core.h` — includes all major core headers (MAddon, BlotEngine, IApp, etc.)
+- `ui/ui.h` — includes all major UI headers (UI Manager, ImGuiRenderer, TextRenderer, etc.)
+- `rendering/rendering.h` — includes all major rendering headers (Renderer, MRendering, RendererRegistry, etc.)
 - `ecs/ecs.h` — includes all ECS types and managers
 
 **Usage:**
@@ -37,7 +37,7 @@ target_include_directories(blot PUBLIC
 )
 ```
 
-This allows you to always use project-root-relative includes (e.g., `#include "core/AddonManager.h"`) from anywhere in the codebase.
+This allows you to always use project-root-relative includes (e.g., `#include "core/MAddon.h"`) from anywhere in the codebase.
 
 ## Best Practices
 - Add new public headers to the appropriate umbrella header.

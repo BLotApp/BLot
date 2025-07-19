@@ -3,7 +3,7 @@
 #include <string>
 
 namespace blot {
-class ECSManager;
+class MEcs;
 }
 #include <imgui.h>
 #include "Window.h"
@@ -17,13 +17,13 @@ class DebugPanel : public Window {
 	virtual ~DebugPanel() = default;
 
 	// Debug functionality
-	void setECSManager(ECSManager *ecs) { m_ecs = ecs; }
+	void setECSManager(MEcs *ecs) { m_ecs = ecs; }
 	void setDeltaTime(float deltaTime) { m_deltaTime = deltaTime; }
 
 	void renderContents() override;
 
   private:
-	ECSManager *m_ecs = nullptr;
+	MEcs *m_ecs = nullptr;
 	float m_deltaTime = 0.0f;
 
 	// Debug methods

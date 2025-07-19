@@ -4,24 +4,19 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../../ecs/systems/EventSystem.h"
 #include "Window.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
-#include "core/canvas/CanvasManager.h"
-// Forward declaration to avoid circular include
-namespace blot {
-class UIManager;
-}
-
-// Forward declarations
-class ECSManager;
+#include "core/canvas/MCanvas.h"
+#include "ecs/components/CEvent.h"
+#include "ecs/systems/SEvent.h"
 
 namespace blot {
 
-// Forward declarations
+class MEcs;
+class Mui;
 class CodeEditorWindow;
-class UIManager;
+class Mui;
 
 class MainMenuBar {
   public:
@@ -29,7 +24,7 @@ class MainMenuBar {
 	~MainMenuBar() = default;
 
 	// Set the event system
-	void setEventSystem(systems::EventSystem *eventSystem);
+	void setEventSystem(blot::ecs::SEvent *eventSystem);
 
 	// Set CodeEditorWindow reference for theme state
 	void setCodeEditorWindow(std::shared_ptr<blot::CodeEditorWindow> window) {
@@ -39,13 +34,13 @@ class MainMenuBar {
 	// Set Canvas reference for renderer state
 	void setCanvas(std::shared_ptr<Canvas> canvas) { m_canvas = canvas; }
 
-	// Set CanvasManager reference for canvas operations
-	void setCanvasManager(blot::CanvasManager *canvasManager) {
+	// Set Canvas Manager reference for canvas operations
+	void setCanvasManager(blot::MCanvas *canvasManager) {
 		m_canvasManager = canvasManager;
 	}
 
-	// Set UIManager reference for ImGui theme
-	void setUIManager(UIManager *uiManager) { m_uiManager = uiManager; }
+	// Set UI Manager reference for ImGui theme
+	void setUIManager(Mui *uiManager) { m_uiManager = uiManager; }
 
 	// State setters (for menu state)
 	void setActiveCanvasId(uint32_t id) { m_activeCanvasId = id; }
@@ -59,7 +54,7 @@ class MainMenuBar {
   private:
 	std::string m_title;
 	// Event system reference
-	systems::EventSystem *m_eventSystem = nullptr;
+	blot::ecs::SEvent *m_eventSystem = nullptr;
 
 	// CodeEditorWindow reference for theme state
 	std::shared_ptr<blot::CodeEditorWindow> m_codeEditorWindow;
@@ -67,11 +62,11 @@ class MainMenuBar {
 	// Canvas reference for renderer state
 	std::shared_ptr<Canvas> m_canvas;
 
-	// CanvasManager reference for canvas operations
-	blot::CanvasManager *m_canvasManager = nullptr;
+	// Canvas Manager reference for canvas operations
+	blot::MCanvas *m_canvasManager = nullptr;
 
-	// UIManager reference for ImGui theme
-	UIManager *m_uiManager = nullptr;
+	// UI Manager reference for ImGui theme
+	Mui *m_uiManager = nullptr;
 
 	// State variables
 	uint32_t m_activeCanvasId = 0;

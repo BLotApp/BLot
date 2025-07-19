@@ -8,13 +8,13 @@
 #include <iostream>
 #include <thread>
 
-#include "core/AddonManager.h"
 #include "core/AppSettings.h"
 #include "core/IApp.h"
+#include "core/MAddon.h"
 #include "core/core.h"
-#include "core/util/SettingsManager.h"
+#include "core/util/MSettings.h"
 #include "rendering/rendering.h"
-#include "ui/UIManager.h"
+#include "ui/Mui.h"
 #include "ui/ui.h"
 
 namespace blot {
@@ -28,13 +28,11 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	: m_settings(settings), m_app(std::move(app)),
-	  m_addonManager(std::make_unique<AddonManager>()),
-	  m_ecsManager(std::make_unique<ECSManager>()),
-	  m_renderingManager(std::make_unique<RenderingManager>()),
-	  m_canvasManager(std::make_unique<CanvasManager>(this)),
-	  m_uiManager(nullptr),
-	  m_settingsManager(std::make_unique<SettingsManager>()),
-	  m_window(nullptr) {
+	  m_addonManager(std::make_unique<MAddon>()),
+	  m_ecsManager(std::make_unique<MEcs>()),
+	  m_renderingManager(std::make_unique<MRendering>()),
+	  m_canvasManager(std::make_unique<MCanvas>(this)), m_uiManager(nullptr),
+	  m_settingsManager(std::make_unique<MSettings>()), m_window(nullptr) {
 	// Apply settings
 	WindowSettings ws = m_settings.window;
 	if (m_app) {
@@ -65,7 +63,7 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	}
 #endif
 
-	m_uiManager = std::make_unique<UIManager>(m_window);
+	m_uiManager = std::make_unique<Mui>(m_window);
 	m_addonManager->initDefaultAddons();
 
 	// store settings for later if needed

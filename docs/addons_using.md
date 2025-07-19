@@ -8,11 +8,11 @@ Addons can interact with the core ECS system to create, modify, or observe entit
 
 ### Accessing the ECS Manager
 
-The core application exposes an `ECSManager` instance. Your addon can receive a pointer or reference to this manager (e.g., via dependency injection, a service locator, or a registration callback).
+The core application exposes an `MEcs` instance. Your addon can receive a pointer or reference to this manager (e.g., via dependency injection, a service locator, or a registration callback).
 
 ```cpp
-// Example: storing a pointer to ECSManager in your addon
-void MyAddon::setECSManager(blot::ECSManager* ecs) {
+// Example: storing a pointer to ECS Manager in your addon
+void MyAddon::setECSManager(blot::MEcs* ecs) {
     m_ecs = ecs;
 }
 ```
@@ -49,4 +49,4 @@ If your component implements `GetProperties()`, it will be automatically support
 
 ---
 
-For more details, see the code in `addons/` and the `AddonManager` and `ECSManager` classes. 
+For more details, see the code in `addons/` and the `MAddon` and `MEcs` classes. 

@@ -3,27 +3,27 @@
 
 namespace blot {
 
-ECSManager *IApp::getECSManager() const {
+MEcs *IApp::getECSManager() const {
 	return m_engine ? m_engine->getECSManager() : nullptr;
 }
 
-RenderingManager *IApp::getRenderingManager() const {
+MRendering *IApp::getRenderingManager() const {
 	return m_engine ? m_engine->getRenderingManager() : nullptr;
 }
 
-CanvasManager *IApp::getCanvasManager() const {
+MCanvas *IApp::getCanvasManager() const {
 	return m_engine ? m_engine->getCanvasManager() : nullptr;
 }
 
-UIManager *IApp::getUIManager() const {
+Mui *IApp::getUIManager() const {
 	return m_engine ? m_engine->getUIManager() : nullptr;
 }
 
-AddonManager *IApp::getAddonManager() const {
+MAddon *IApp::getAddonManager() const {
 	return m_engine ? m_engine->getAddonManager() : nullptr;
 }
 
-SettingsManager *IApp::getSettingsManager() const {
+MSettings *IApp::getSettingsManager() const {
 	return m_engine ? m_engine->getSettings() : nullptr;
 }
 

@@ -171,8 +171,8 @@ target_include_directories(ImGuizmo PUBLIC ${IMGUIZMO_DIR})
 target_link_libraries(blot PRIVATE ImGuizmo) 
 
 # Organize source files into folders for Visual Studio
-source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/CanvasManager.cpp src/framework/canvas/CanvasManager.h)
-source_group("Rendering" FILES src/rendering/Graphics.cpp src/rendering/Renderer.cpp)
+source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/MCanvas.cpp src/framework/canvas/MCanvas.h)
+source_group("Rendering" FILES src/rendering/Graphics.cpp)
 source_group("CodeEditor" FILES addons/bxCodeEditor/bxCodeEditor.cpp addons/bxCodeEditor/bxCodeEditor.h)
 source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)
 source_group("ThirdParty\\ImGui" FILES
@@ -214,8 +214,8 @@ file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
 source_group("Scripting" FILES ${SCRIPTING_SOURCES})
 
 # Use the globbed files in the source group and target sources
-source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/UIManager.cpp src/ui/UIManager.h)
-source_group("ECS" FILES src/ecs/ECSManager.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/EventSystem.cpp)
+source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/Mui.cpp)
+source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
 source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
 

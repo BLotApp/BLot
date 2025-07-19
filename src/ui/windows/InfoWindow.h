@@ -5,7 +5,7 @@
 #include "Window.h"
 
 namespace blot {
-class UIManager;
+class Mui;
 
 class InfoWindow : public Window {
   public:

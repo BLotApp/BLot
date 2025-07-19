@@ -1,6 +1,6 @@
-# Notification & Popup System in UIManager
+# Notification & Popup System in Mui
 
-This document describes how to use the notification (toast) and modal popup system in the Blot UIManager. This system provides a consistent, user-friendly way to display alerts, errors, and information to users.
+This document describes how to use the notification (toast) and modal popup system in the Blot Mui. This system provides a consistent, user-friendly way to display alerts, errors, and information to users.
 
 ---
 
@@ -8,7 +8,7 @@ This document describes how to use the notification (toast) and modal popup syst
 - **Toasts:** Non-blocking notifications that appear in the top-right corner and fade out after a few seconds.
 - **Modals:** Blocking popups that require user acknowledgment (OK button), centered on the screen.
 - **Notification Types:** Info, Success, Warning, Error — each with a FontAwesome icon and color.
-- **Consistent API:** All notifications and popups are managed by `UIManager`.
+- **Consistent API:** All notifications and popups are managed by `Mui`.
 
 ---
 
@@ -68,4 +68,4 @@ if (!fileLoaded) {
 
 ---
 
-For further customization or to add new notification types, see `UIManager.h` and `UIManager.cpp`. 
+For further customization or to add new notification types, see `Mui.h` and `Mui.cpp`. 

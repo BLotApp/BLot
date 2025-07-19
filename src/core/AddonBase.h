@@ -101,7 +101,7 @@ class AddonBase {
 
 // Template implementation
 template <typename T> T *AddonBase::getAddon(const std::string &name) {
-	// This would be implemented by the AddonManager
+	// This would be implemented by the Addon Manager
 	// For now, return nullptr
 	return nullptr;
 }

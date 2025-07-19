@@ -66,4 +66,4 @@ See `addons/bxBlend2D/` for a full example of a renderer addon that registers a 
 - Document your addon in its own README
 
 ## Loading and Enabling Addons
-Addons are discovered and loaded by the `AddonManager`. You can enable/disable addons via config or at runtime. 
+Addons are discovered and loaded by the `MAddon`. You can enable/disable addons via config or at runtime. 

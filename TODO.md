@@ -29,7 +29,7 @@
     - [ ] Warn in logs if a component does not implement GetProperties() (already implemented)
 
 ## App State Save/Load & Settings Serialization
-- [ ] Add getSettings/setSettings methods to each manager (UIManager, ECSManager, CanvasManager, etc.) for modular settings serialization/deserialization
+- [ ] Add getSettings/setSettings methods to each manager (Mui, ECS Manager, MCanvas, etc.) for modular settings serialization/deserialization
 - [ ] Implement to_json/from_json helpers for all custom types used in settings (e.g., glm::vec2, glm::vec3, ImVec4, etc.)
 - [ ] Refactor app-level save/load logic to gather settings from all managers using getSettings, and restore them using setSettings
 - [ ] Finish implementing save/load settings for all manager and configurable classes (see ISettings interface). Ensure all relevant variables are serialized.
@@ -61,4 +61,4 @@
     - Ensuring no manager headers/sources remain in other folders.
     - Reviewing for any domain encapsulation concerns. 
 
-- [ ] Consider moving UI subsystem (ImGui/UIManager) into an optional addon for lighter core builds 
+- [ ] Consider moving UI subsystem (ImGui/Mui) into an optional addon for lighter core builds 

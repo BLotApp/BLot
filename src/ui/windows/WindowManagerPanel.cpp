@@ -4,8 +4,7 @@
 namespace blot {
 
 WindowManagerPanel::WindowManagerPanel(const std::string &title,
-									   WindowManager *windowManager,
-									   Flags flags)
+									   MWindow *windowManager, Flags flags)
 	: Window(title, flags), m_windowManager(windowManager) {}
 
 void WindowManagerPanel::renderContents() {

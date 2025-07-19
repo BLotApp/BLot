@@ -16,7 +16,7 @@ public:
 ```
 
 ## Saving Settings
-To save the settings of an object (e.g., a Canvas or ECSManager), call `getSettings()` and write the resulting JSON to disk:
+To save the settings of an object (e.g., a Canvas or MEcs), call `getSettings()` and write the resulting JSON to disk:
 
 ```cpp
 blot::json canvasJson = canvas->getSettings();

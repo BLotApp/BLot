@@ -6,12 +6,12 @@
 #include <spdlog/spdlog.h>
 #include "ImGuiWindow.h"
 #include "core/canvas/Canvas.h"
-#include "ecs/ECSManager.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
-#include "ecs/components/TransformComponent.h"
+#include "ecs/MEcs.h"
+#include "ecs/components/CDrawStyle.h"
+#include "ecs/components/CShape.h"
+#include "ecs/components/CTransform.h"
 #include "rendering/Graphics.h"
-#include "rendering/RenderingManager.h"
+#include "rendering/MRendering.h"
 
 namespace blot {
 
@@ -20,11 +20,11 @@ CanvasWindow::CanvasWindow(const std::string &title, Flags flags)
 	// Note: Window size and position are handled by ImGui automatically
 }
 
-void CanvasWindow::setRenderingManager(RenderingManager *renderingManager) {
+void CanvasWindow::setRenderingManager(MRendering *renderingManager) {
 	m_renderingManager = renderingManager;
 }
 
-void CanvasWindow::setECSManager(blot::ECSManager *ecs) { m_ecs = ecs; }
+void CanvasWindow::setECSManager(blot::MEcs *ecs) { m_ecs = ecs; }
 
 void CanvasWindow::setActiveCanvasId(entt::entity canvasId) {
 	m_activeCanvasId = canvasId;
@@ -172,24 +172,24 @@ void CanvasWindow::createShape(const ImVec2 &start, const ImVec2 &end) {
 	entt::entity shapeEntity = m_ecs->createEntity();
 
 	// Add Transform component
-	blot::components::Transform transform;
+	blot::ecs::CTransform transform;
 	transform.position.x = 0.0f;
 	transform.position.y = 0.0f;
 	transform.scale.x = 1.0f;
 	transform.scale.y = 1.0f;
-	m_ecs->addComponent<blot::components::Transform>(shapeEntity, transform);
+	m_ecs->addComponent<blot::ecs::CTransform>(shapeEntity, transform);
 
 	// Add Shape component
-	blot::components::Shape shape;
-	shape.type = blot::components::Shape::Type::Rectangle;
+	blot::ecs::CShape shape;
+	shape.type = blot::ecs::CShape::Type::Rectangle;
 	shape.x1 = x1;
 	shape.y1 = y1;
 	shape.x2 = x2;
 	shape.y2 = y2;
-	m_ecs->addComponent<blot::components::Shape>(shapeEntity, shape);
+	m_ecs->addComponent<blot::ecs::CShape>(shapeEntity, shape);
 
-	// Add Style component
-	blot::components::Style style;
+	// Add CDrawStyle component
+	blot::ecs::CDrawStyle style;
 	style.setFillColor(m_fillColor.x, m_fillColor.y, m_fillColor.z,
 					   m_fillColor.w);
 	style.setStrokeColor(m_strokeColor.x, m_strokeColor.y, m_strokeColor.z,
@@ -197,7 +197,7 @@ void CanvasWindow::createShape(const ImVec2 &start, const ImVec2 &end) {
 	style.setStrokeWidth(m_strokeWidth);
 	style.hasFill = true;
 	style.hasStroke = true;
-	m_ecs->addComponent<blot::components::Style>(shapeEntity, style);
+	m_ecs->addComponent<blot::ecs::CDrawStyle>(shapeEntity, style);
 
 	spdlog::debug("[CanvasWindow] Created shape entity: {}",
 				  static_cast<unsigned int>(shapeEntity));

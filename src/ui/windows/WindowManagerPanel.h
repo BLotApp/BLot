@@ -2,21 +2,21 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../WindowManager.h"
+#include "../MWindow.h"
 #include "Window.h"
 
 namespace blot {
 
 class WindowManagerPanel : public Window {
   public:
-	WindowManagerPanel(const std::string &title, WindowManager *windowManager,
+	WindowManagerPanel(const std::string &title, MWindow *windowManager,
 					   Flags flags = Flags::None);
 
   protected:
 	void renderContents() override;
 
   private:
-	WindowManager *m_windowManager;
+	MWindow *m_windowManager;
 };
 
 } // namespace blot

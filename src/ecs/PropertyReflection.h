@@ -14,6 +14,7 @@ enum propTypes {
 	EPT_DOUBLE,
 	EPT_STRING,
 	EPT_IMVEC4,
+	EPT_IMVEC2,
 	EPT_COUNT
 };
 

@@ -9,12 +9,12 @@
 // Forward declarations for all managers and IApp
 namespace blot {
 class IApp;
-class ECSManager;
-class AddonManager;
-class UIManager;
-class RenderingManager;
-class CanvasManager;
-class SettingsManager;
+class MEcs;
+class MAddon;
+class Mui;
+class MRendering;
+class MCanvas;
+class MSettings;
 } // namespace blot
 
 namespace blot {
@@ -30,12 +30,12 @@ class BlotEngine {
 	const std::string &getAppName() const { return m_appName; }
 	float getAppVersion() const { return m_appVersion; }
 
-	ECSManager *getECSManager() { return m_ecsManager.get(); }
-	AddonManager *getAddonManager() { return m_addonManager.get(); }
-	UIManager *getUIManager() { return m_uiManager.get(); }
-	RenderingManager *getRenderingManager() { return m_renderingManager.get(); }
-	CanvasManager *getCanvasManager() { return m_canvasManager.get(); }
-	SettingsManager *getSettings() { return m_settingsManager.get(); }
+	MEcs *getECSManager() { return m_ecsManager.get(); }
+	MAddon *getAddonManager() { return m_addonManager.get(); }
+	Mui *getUIManager() { return m_uiManager.get(); }
+	MRendering *getRenderingManager() { return m_renderingManager.get(); }
+	MCanvas *getCanvasManager() { return m_canvasManager.get(); }
+	MSettings *getSettings() { return m_settingsManager.get(); }
 
 	void setDebugMode(bool enabled) { m_debugMode = enabled; }
 	bool getDebugMode() const { return m_debugMode; }
@@ -66,12 +66,12 @@ class BlotEngine {
 
 	AppSettings m_settings;
 	std::unique_ptr<IApp> m_app;
-	std::unique_ptr<ECSManager> m_ecsManager;
-	std::unique_ptr<AddonManager> m_addonManager;
-	std::unique_ptr<UIManager> m_uiManager;
-	std::unique_ptr<RenderingManager> m_renderingManager;
-	std::unique_ptr<CanvasManager> m_canvasManager;
-	std::unique_ptr<SettingsManager> m_settingsManager;
+	std::unique_ptr<MEcs> m_ecsManager;
+	std::unique_ptr<MAddon> m_addonManager;
+	std::unique_ptr<Mui> m_uiManager;
+	std::unique_ptr<MRendering> m_renderingManager;
+	std::unique_ptr<MCanvas> m_canvasManager;
+	std::unique_ptr<MSettings> m_settingsManager;
 
 	blot::WindowSettings m_windowSettings;
 	GLFWwindow *m_window;

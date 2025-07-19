@@ -24,13 +24,14 @@
 #include "addons/bxScriptEngine/bxScriptEngine.h"
 #include "app.h"
 #include "core/BlotEngine.h"
-#include "core/canvas/CanvasManager.h"
+#include "core/canvas/MCanvas.h"
 #include "core/core.h"
-#include "core/util/SettingsManager.h"
-#include "ecs/ECSManager.h"
-#include "rendering/RenderingManager.h"
+#include "core/util/MSettings.h"
+#include "ecs/MEcs.h"
+#include "ecs/components/CEvent.h"
+#include "rendering/MRendering.h"
 #include "rendering/rendering.h"
-#include "ui/UIManager.h"
+#include "ui/Mui.h"
 #include "ui/ui.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
@@ -47,7 +48,7 @@ void ExampleApp::setup() {
 	getUIManager()->setWindowVisibility("Canvas", true);
 
 	// Create a canvas
-	// We should already have one? 
+	// We should already have one?
 	if (getCanvasManager() && getECSManager()) {
 		m_activeCanvasId = getCanvasManager()->createCanvas(
 			*getECSManager(), m_windowWidth, m_windowHeight);
@@ -106,7 +107,7 @@ void ExampleApp::connectEventSystemToUI() {
 			mainMenuBar->setCodeEditorWindow(codeEditorWindow);
 		}
 
-		// Connect MainMenuBar to CanvasManager for canvas operations
+		// Connect MainMenuBar to MCanvas for canvas operations
 		if (getCanvasManager()) {
 			auto activeCanvas = getCanvasManager()->getActiveCanvas();
 			if (activeCanvas) {
@@ -116,7 +117,7 @@ void ExampleApp::connectEventSystemToUI() {
 		}
 	}
 
-	// Connect MainMenuBar to UIManager for ImGui theme
+	// Connect MainMenuBar to UI Manager for ImGui theme
 	if (mainMenuBar && getUIManager()) {
 		mainMenuBar->setUIManager(getUIManager());
 	}
@@ -125,9 +126,9 @@ void ExampleApp::connectEventSystemToUI() {
 	auto nodeEditorWindow = std::dynamic_pointer_cast<blot::NodeEditorWindow>(
 		getUIManager()->getWindowManager()->getWindow("NodeEditor"));
 	if (nodeEditorWindow) {
-		// Create a shared_ptr from the central ECSManager for the window
-		auto ecsSharedPtr = std::shared_ptr<blot::ECSManager>(
-			getECSManager(), [](blot::ECSManager *) {});
+		// Create a shared_ptr from the central ECS Manager for the window
+		auto ecsSharedPtr =
+			std::shared_ptr<blot::MEcs>(getECSManager(), [](blot::MEcs *) {});
 		nodeEditorWindow->setECSManager(ecsSharedPtr);
 	}
 
@@ -135,9 +136,9 @@ void ExampleApp::connectEventSystemToUI() {
 	auto propertiesWindow = std::dynamic_pointer_cast<blot::PropertiesWindow>(
 		getUIManager()->getWindowManager()->getWindow("Properties"));
 	if (propertiesWindow) {
-		// Create a shared_ptr from the central ECSManager for the window
-		auto ecsSharedPtr = std::shared_ptr<blot::ECSManager>(
-			getECSManager(), [](blot::ECSManager *) {});
+		// Create a shared_ptr from the central ECS Manager for the window
+		auto ecsSharedPtr =
+			std::shared_ptr<blot::MEcs>(getECSManager(), [](blot::MEcs *) {});
 		propertiesWindow->setECSManager(ecsSharedPtr);
 	}
 
@@ -150,10 +151,10 @@ void ExampleApp::connectEventSystemToUI() {
 		canvasWindow->setActiveCanvasId(m_activeCanvasId);
 	}
 
-	// Connect AddonManagerWindow to the AddonManager
+	// Connect AddonManagerWindow to the Addon Manager
 	auto addonManagerWindow =
 		std::dynamic_pointer_cast<blot::AddonManagerWindow>(
-			getUIManager()->getWindowManager()->getWindow("AddonManager"));
+			getUIManager()->getWindowManager()->getWindow("Addon Manager"));
 
 	// Connect CodeEditorWindow to the theme system
 	auto codeEditorWindow = std::dynamic_pointer_cast<blot::CodeEditorWindow>(
@@ -169,39 +170,39 @@ void ExampleApp::connectEventSystemToUI() {
 }
 
 void ExampleApp::connectAddonManagerToEventSystem(
-	blot::systems::EventSystem &eventSystem) {
+	blot::ecs::SEvent &eventSystem) {
 	// Register addon-related events with the ECS event system
 	eventSystem.registerEvent(
-		"addon_loaded", [this](const blot::systems::Event &event) {
+		"addon_loaded", [this](const blot::ecs::CEvent &event) {
 			spdlog::info("Addon loaded event: {}", event.actionId);
 			// Trigger addon manager's global event
-			// The AddonManager is now managed by BlotEngine, so we don't need
+			// The Addon Manager is now managed by BlotEngine, so we don't need
 			// to trigger global events here.
 		});
 
 	eventSystem.registerEvent(
-		"addon_unloaded", [this](const blot::systems::Event &event) {
+		"addon_unloaded", [this](const blot::ecs::CEvent &event) {
 			spdlog::info("Addon unloaded event: {}", event.actionId);
-			// The AddonManager is now managed by BlotEngine, so we don't need
+			// The Addon Manager is now managed by BlotEngine, so we don't need
 			// to trigger global events here.
 		});
 
 	eventSystem.registerEvent(
-		"addon_enabled", [this](const blot::systems::Event &event) {
+		"addon_enabled", [this](const blot::ecs::CEvent &event) {
 			spdlog::info("Addon enabled event: {}", event.actionId);
-			// The AddonManager is now managed by BlotEngine, so we don't need
+			// The Addon Manager is now managed by BlotEngine, so we don't need
 			// to trigger global events here.
 		});
 
 	eventSystem.registerEvent(
-		"addon_disabled", [this](const blot::systems::Event &event) {
+		"addon_disabled", [this](const blot::ecs::CEvent &event) {
 			spdlog::info("Addon disabled event: {}", event.actionId);
-			// The AddonManager is now managed by BlotEngine, so we don't need
+			// The Addon Manager is now managed by BlotEngine, so we don't need
 			// to trigger global events here.
 		});
 }
 
-void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
+void ExampleApp::registerUIActions(blot::ecs::SEvent &eventSystem) {
 	spdlog::info("[BlotApp] registerUIActions eventSystem ptr: 0x{:X}",
 				 reinterpret_cast<uintptr_t>(&eventSystem));
 	// File menu actions
@@ -229,7 +230,7 @@ void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 	eventSystem.registerAction("addon_manager", [this]() {
 		spdlog::info("Addon manager action triggered");
 		auto addonManagerWindow =
-			getUIManager()->getWindowManager()->getWindow("AddonManager");
+			getUIManager()->getWindowManager()->getWindow("Addon Manager");
 		if (addonManagerWindow) {
 			addonManagerWindow->show();
 		}
@@ -237,7 +238,7 @@ void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 
 	eventSystem.registerAction("reload_addons", [this]() {
 		spdlog::info("Reload addons action triggered");
-		// The AddonManager is now managed by BlotApp, so we don't need to
+		// The Addon Manager is now managed by BlotApp, so we don't need to
 		// reload here.
 	});
 
@@ -315,7 +316,7 @@ void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 			spdlog::info("Switch theme action triggered: {}", theme);
 			if (getUIManager()) {
 				getUIManager()->setImGuiTheme(
-					static_cast<blot::UIManager::ImGuiTheme>(theme));
+					static_cast<blot::Mui::ImGuiTheme>(theme));
 
 				// Update CodeEditorWindow theme state
 				auto codeEditorWindow =
@@ -368,7 +369,7 @@ void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 			// TODO: Implement canvas closing
 		}));
 
-	// Canvas management actions using CanvasManager
+	// Canvas management actions
 	eventSystem.registerAction(
 		"new_canvas", std::function<void()>([this]() {
 			spdlog::info("New canvas action triggered");
@@ -446,7 +447,7 @@ void ExampleApp::registerUIActions(blot::systems::EventSystem &eventSystem) {
 	spdlog::info("[BlotApp] Registered get_available_workspaces: {}",
 				 eventSystem.hasAction("get_available_workspaces"));
 
-	spdlog::info("[EventSystem] Registering load_workspace action");
+	spdlog::info("[SEvent] Registering load_workspace action");
 	eventSystem.registerAction("load_workspace",
 							   std::function<void(const std::string &)>(
 								   [this](const std::string &workspaceName) {

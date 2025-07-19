@@ -7,12 +7,12 @@
 namespace blot {
 
 class BlotEngine;
-class ECSManager;
-class AddonManager;
-class UIManager;
-class RenderingManager;
-class CanvasManager;
-class SettingsManager;
+class MEcs;
+class MAddon;
+class Mui;
+class MRendering;
+class MCanvas;
+class MSettings;
 
 class IApp {
   public:
@@ -46,12 +46,12 @@ class IApp {
 	virtual void draw() {}
 
 	// Convenience accessors
-	blot::ECSManager *getECSManager() const;
-	blot::RenderingManager *getRenderingManager() const;
-	blot::CanvasManager *getCanvasManager() const;
-	blot::UIManager *getUIManager() const;
-	blot::AddonManager *getAddonManager() const;
-	blot::SettingsManager *getSettingsManager() const;
+	blot::MEcs *getECSManager() const;
+	blot::MRendering *getRenderingManager() const;
+	blot::MCanvas *getCanvasManager() const;
+	blot::Mui *getUIManager() const;
+	blot::MAddon *getAddonManager() const;
+	blot::MSettings *getSettingsManager() const;
 
 	// Convenience: access engine frame counter
 	uint64_t frameCount() const;

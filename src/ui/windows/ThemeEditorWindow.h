@@ -6,7 +6,7 @@
 
 // Forward declarations
 namespace blot {
-class UIManager;
+class Mui;
 }
 
 namespace blot {
@@ -17,11 +17,11 @@ class ThemeEditorWindow : public Window {
 					  Flags flags = Flags::None);
 	virtual ~ThemeEditorWindow() = default;
 
-	void setUIManager(UIManager *uiManager);
+	void setUIManager(Mui *uiManager);
 	void renderContents() override;
 
   private:
-	UIManager *m_uiManager = nullptr;
+	Mui *m_uiManager = nullptr;
 	void renderThemeEditor();
 };
 

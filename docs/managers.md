@@ -8,12 +8,12 @@ This document outlines the main manager classes in the Blot framework, their res
 
 ```cpp
 blot::BlotEngine* engine = ...;
-blot::ECSManager* ecs = engine->getECSManager();
-blot::AddonManager* addons = engine->getAddonManager();
-blot::UIManager* ui = engine->getUIManager();
-blot::RenderingManager* rendering = engine->getRenderingManager();
-blot::CanvasManager* canvas = engine->getCanvasManager();
-blot::SettingsManager* settings = engine->getSettingsManager();
+blot::MEcs* ecs = engine->getECSManager();
+blot::MAddon* addons = engine->getAddonManager();
+blot::Mui* ui = engine->getUIManager();
+blot::MRendering* rendering = engine->getRenderingManager();
+blot::MCanvas* canvas = engine->getCanvasManager();
+blot::MSettings* settings = engine->getSettingsManager();
 ```
 
 ### Inside `blot::IApp` subclasses
@@ -38,28 +38,28 @@ Outside of an `IApp` subclass (e.g. in standalone utilities or engine components
 
 ## Manager List
 
-### ECSManager
+### ECS Manager
 - **Purpose:** Entity-Component-System (ECS) registry and logic.
 - **Access:** `engine->getECSManager()`
 
-### AddonManager
+### Addon Manager
 - **Purpose:** Manages discovery, loading, and lifecycle of addons.
 - **Access:** `engine->getAddonManager()`
 
-### UIManager
+### UI Manager
 - **Purpose:** Handles UI logic, ImGui integration, and window management.
 - **Access:** `engine->getUIManager()`
 
-### CanvasManager
+### Canvas Manager (MCanvas)
 - **Purpose:** Manages canvases, their creation, and switching.
 - **Access:** `engine->getCanvasManager()`
-- **Note:** Internally uses `RenderingManager` for rendering operations.
+- **Note:** Internally uses `MRendering` for rendering operations.
 
-### RenderingManager
-- **Purpose:** Manages renderers, graphics, and low-level rendering logic. Used by `CanvasManager` and available for advanced use cases.
+### Rendering Manager
+- **Purpose:** Manages renderers, graphics, and low-level rendering logic. Used by `MCanvas` and available for advanced use cases.
 - **Access:** `engine->getRenderingManager()`
 
-### SettingsManager
+### Settings Manager
 - **Purpose:** Handles application settings (load/save/configuration).
 - **Access:** `engine->getSettingsManager()`
 

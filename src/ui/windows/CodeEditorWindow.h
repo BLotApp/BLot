@@ -25,7 +25,7 @@ class CodeEditorWindow : public Window {
 	void setEditorTheme(int theme) { m_editorTheme = theme; }
 	int getEditorTheme() const { return m_editorTheme; }
 
-	// Global theme state (for synchronization with UIManager)
+	// Global theme state (for synchronization with Mui)
 	void setCurrentTheme(int theme) { m_currentTheme = theme; }
 	int getCurrentTheme() const { return m_currentTheme; }
 

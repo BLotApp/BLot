@@ -4,12 +4,12 @@
 #include <memory>
 #include "Window.h"
 #include "core/canvas/Canvas.h"
-#include "ecs/ECSManager.h"
-#include "rendering/RenderingManager.h"
+#include "ecs/MEcs.h"
+#include "rendering/MRendering.h"
 
 namespace blot {
 
-class ECSManager;
+class MEcs;
 
 class CanvasWindow : public Window {
   public:
@@ -18,8 +18,8 @@ class CanvasWindow : public Window {
 	virtual ~CanvasWindow() = default;
 
 	// Canvas-specific methods
-	void setRenderingManager(RenderingManager *renderingManager);
-	void setECSManager(blot::ECSManager *ecs);
+	void setRenderingManager(MRendering *renderingManager);
+	void setECSManager(blot::MEcs *ecs);
 	void setActiveCanvasId(entt::entity canvasId);
 	void setCurrentTool(int toolType);
 	void setToolStartPos(const ImVec2 &pos);
@@ -37,8 +37,8 @@ class CanvasWindow : public Window {
 
   private:
 	// Canvas state
-	RenderingManager *m_renderingManager = nullptr;
-	blot::ECSManager *m_ecs = nullptr;
+	MRendering *m_renderingManager = nullptr;
+	blot::MEcs *m_ecs = nullptr;
 	entt::entity m_activeCanvasId = entt::null;
 
 	// Tool state
@@ -46,7 +46,7 @@ class CanvasWindow : public Window {
 	ImVec2 m_toolStartPos = ImVec2(0, 0);
 	bool m_toolActive = false;
 
-	// Style state
+	// CDrawStyle state
 	ImVec4 m_fillColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 	ImVec4 m_strokeColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 	float m_strokeWidth = 2.0f;

@@ -23,7 +23,7 @@ This document explains the organization of the application's folders and their p
 |     `core/`                 | Core engine logic, interfaces, and main app/engine classes       |
 |     `framework/`            | Addon base classes, managers, and shared framework code          |
 |     `rendering/`            | Rendering backends, renderer interfaces, and managers            |
-|     `ui/`                   | UI system, ImGui integration, windows, and UIManager             |
+|     `ui/`                   | UI system, ImGui integration, windows, and UI Manager             |
 |     `ecs/`                  | Entity-Component-System (ECS) implementation and components      |
 |     `resources/`            | Shaders, vertex buffers, and resource management                 |
 |     `scripting/`            | Scripting engine and related code                                |

@@ -1,14 +1,14 @@
 #include "AddonManagerWindow.h"
 #include <imgui.h>
 #include "core/AddonBase.h"
-#include "core/AddonManager.h"
+#include "core/MAddon.h"
 
 namespace blot {
 
 AddonManagerWindow::AddonManagerWindow(const std::string &title, Flags flags)
 	: Window(title, flags) {}
 
-void AddonManagerWindow::setAddonManager(blot::AddonManager *addonManager) {
+void AddonManagerWindow::setAddonManager(blot::MAddon *addonManager) {
 	m_addonManager = addonManager;
 }
 

@@ -4,7 +4,7 @@
 #include "CodeEditorWindow.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
-#include "ui/UIManager.h"
+#include "ui/Mui.h"
 
 namespace blot {
 
@@ -16,7 +16,7 @@ void MainMenuBar::triggerAction(const std::string &actionId) {
 	}
 }
 
-void MainMenuBar::setEventSystem(systems::EventSystem *eventSystem) {
+void MainMenuBar::setEventSystem(ecs::SEvent *eventSystem) {
 	m_eventSystem = eventSystem;
 	std::cout << "[MainMenuBar] setEventSystem ptr: " << eventSystem
 			  << std::endl;
@@ -85,7 +85,7 @@ void MainMenuBar::render() {
 			// Theme submenu
 			if (ImGui::BeginMenu("Theme")) {
 				if (hasAction("switch_theme")) {
-					// Get current theme from UIManager (global ImGui theme)
+					// Get current theme from UI Manager (global ImGui theme)
 					int currentTheme = 0; // Default to Dark
 					if (m_uiManager) {
 						currentTheme =
@@ -143,7 +143,7 @@ void MainMenuBar::render() {
 			}
 			ImGui::Separator();
 
-			// Canvas list using CanvasManager
+			// List canvases using Canvas Manager
 			if (m_canvasManager) {
 				auto canvasInfo = m_canvasManager->getAllCanvasInfo();
 				size_t activeIndex = m_canvasManager->getActiveCanvasIndex();
@@ -284,5 +284,4 @@ void MainMenuBar::render() {
 		ImGui::EndMainMenuBar();
 	}
 }
-
 } // namespace blot

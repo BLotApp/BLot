@@ -3,15 +3,15 @@
 #include <imgui_node_editor.h>
 #include <iostream>
 #include <unordered_map>
-#include "ecs/ECSManager.h"
-#include "ecs/components/NodeComponent.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
+#include "ecs/MEcs.h"
+#include "ecs/components/CDrawStyle.h"
+#include "ecs/components/CNode.h"
+#include "ecs/components/CShape.h"
 
 namespace ed = ax::NodeEditor;
 
 namespace blot {
-using namespace components;
+using namespace ecs;
 
 NodeEditorWindow::NodeEditorWindow(const std::string &title, Flags flags)
 	: Window(title, flags), m_editorContext(nullptr) {
@@ -35,9 +35,7 @@ void NodeEditorWindow::cleanupNodeEditor() {
 	}
 }
 
-void NodeEditorWindow::setECSManager(std::shared_ptr<ECSManager> ecs) {
-	m_ecs = ecs;
-}
+void NodeEditorWindow::setECSManager(std::shared_ptr<MEcs> ecs) { m_ecs = ecs; }
 
 void NodeEditorWindow::renderContents() {
 	if (!m_ecs || !m_editorContext)
@@ -59,63 +57,61 @@ void NodeEditorWindow::renderNodeCreationButtons() {
 	if (ImGui::Button("Add Circle Node")) {
 		auto entity = m_ecs->createEntity("CircleNode");
 
-		// Add NodeComponent
-		auto nodeComp =
-			components::NodeComponent(components::NodeType::Circle, "Circle");
+		// Add CNodeComponent
+		auto nodeComp = ecs::CNodeComponent(ecs::CNodeType::Circle, "Circle");
 		nodeComp.nodeId = m_nextNodeId++;
-		m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
+		m_ecs->addComponent<ecs::CNodeComponent>(entity, nodeComp);
 
 		// Add ShapeComponent
-		auto shapeComp = components::Shape();
-		shapeComp.type = components::Shape::Type::Ellipse;
+		auto shapeComp = ecs::CShape();
+		shapeComp.type = ecs::CShape::Type::Ellipse;
 		shapeComp.x1 = 100.0f;
 		shapeComp.y1 = 100.0f;
 		shapeComp.x2 = 150.0f;
 		shapeComp.y2 = 150.0f;
-		m_ecs->addComponent<components::Shape>(entity, shapeComp);
+		m_ecs->addComponent<ecs::CShape>(entity, shapeComp);
 
 		// Add StyleComponent
-		auto styleComp = components::Style();
+		auto styleComp = ecs::CDrawStyle();
 		styleComp.fillR = 1.0f;
 		styleComp.fillG = 0.0f;
 		styleComp.fillB = 0.0f;
 		styleComp.fillA = 1.0f;
-		m_ecs->addComponent<components::Style>(entity, styleComp);
+		m_ecs->addComponent<ecs::CDrawStyle>(entity, styleComp);
 	}
 
 	ImGui::SameLine();
 	if (ImGui::Button("Add Rectangle Node")) {
 		auto entity = m_ecs->createEntity("RectangleNode");
 
-		auto nodeComp = components::NodeComponent(
-			components::NodeType::Rectangle, "Rectangle");
+		auto nodeComp =
+			ecs::CNodeComponent(ecs::CNodeType::Rectangle, "Rectangle");
 		nodeComp.nodeId = m_nextNodeId++;
-		m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
+		m_ecs->addComponent<ecs::CNodeComponent>(entity, nodeComp);
 
-		auto shapeComp = components::Shape();
-		shapeComp.type = components::Shape::Type::Rectangle;
+		auto shapeComp = ecs::CShape();
+		shapeComp.type = ecs::CShape::Type::Rectangle;
 		shapeComp.x1 = 100.0f;
 		shapeComp.y1 = 100.0f;
 		shapeComp.x2 = 200.0f;
 		shapeComp.y2 = 150.0f;
-		m_ecs->addComponent<components::Shape>(entity, shapeComp);
+		m_ecs->addComponent<ecs::CShape>(entity, shapeComp);
 
-		auto styleComp = components::Style();
+		auto styleComp = ecs::CDrawStyle();
 		styleComp.fillR = 0.0f;
 		styleComp.fillG = 1.0f;
 		styleComp.fillB = 0.0f;
 		styleComp.fillA = 1.0f;
-		m_ecs->addComponent<components::Style>(entity, styleComp);
+		m_ecs->addComponent<ecs::CDrawStyle>(entity, styleComp);
 	}
 
 	ImGui::SameLine();
 	if (ImGui::Button("Add Math Node")) {
 		auto entity = m_ecs->createEntity("MathNode");
 
-		auto nodeComp =
-			components::NodeComponent(components::NodeType::Add, "Add");
+		auto nodeComp = ecs::CNodeComponent(ecs::CNodeType::Add, "Add");
 		nodeComp.nodeId = m_nextNodeId++;
-		m_ecs->addComponent<components::NodeComponent>(entity, nodeComp);
+		m_ecs->addComponent<ecs::CNodeComponent>(entity, nodeComp);
 	}
 }
 
@@ -123,10 +119,10 @@ void NodeEditorWindow::renderNodes() {
 	if (!m_ecs)
 		return;
 
-	auto view = m_ecs->view<components::NodeComponent>();
+	auto view = m_ecs->view<ecs::CNodeComponent>();
 
 	for (auto entity : view) {
-		auto &nodeComp = view.get<components::NodeComponent>(entity);
+		auto &nodeComp = view.get<ecs::CNodeComponent>(entity);
 
 		// Safety check for valid node ID
 		if (nodeComp.nodeId <= 0)
@@ -175,10 +171,10 @@ void NodeEditorWindow::renderConnections() {
 	if (!m_ecs)
 		return;
 
-	auto view = m_ecs->view<components::NodeComponent>();
+	auto view = m_ecs->view<ecs::CNodeComponent>();
 
 	for (auto entity : view) {
-		auto &nodeComp = view.get<components::NodeComponent>(entity);
+		auto &nodeComp = view.get<ecs::CNodeComponent>(entity);
 
 		for (const auto &conn : nodeComp.connections) {
 			// Safety checks for valid connection data
@@ -229,10 +225,9 @@ void NodeEditorWindow::handleConnections() {
 				std::string fromPin, toPin;
 				bool fromIsOutput = false, toIsInput = false;
 
-				auto view = m_ecs->view<components::NodeComponent>();
+				auto view = m_ecs->view<ecs::CNodeComponent>();
 				for (auto entity : view) {
-					auto &nodeComp =
-						view.get<components::NodeComponent>(entity);
+					auto &nodeComp = view.get<ecs::CNodeComponent>(entity);
 
 					if (nodeComp.nodeId == fromNode) {
 						for (auto &pin : nodeComp.pins) {
@@ -266,10 +261,9 @@ void NodeEditorWindow::handleConnections() {
 					!toPin.empty()) {
 					// Add connection to target node
 					for (auto entity : view) {
-						auto &nodeComp =
-							view.get<components::NodeComponent>(entity);
+						auto &nodeComp = view.get<ecs::CNodeComponent>(entity);
 						if (nodeComp.nodeId == toNode) {
-							components::NodeConnection conn;
+							ecs::CNodeConnection conn;
 							conn.fromNodeId = fromNode;
 							conn.fromPin = fromPin;
 							conn.toNodeId = toNode;
@@ -302,9 +296,9 @@ void NodeEditorWindow::handleNodeDeletion() {
 		ed::NodeId nodeId;
 		while (ed::QueryDeletedNode(&nodeId)) {
 			// Find and remove the node from ECS
-			auto view = m_ecs->view<components::NodeComponent>();
+			auto view = m_ecs->view<ecs::CNodeComponent>();
 			for (auto entity : view) {
-				auto &nodeComp = view.get<components::NodeComponent>(entity);
+				auto &nodeComp = view.get<ecs::CNodeComponent>(entity);
 				if (nodeComp.nodeId == static_cast<int>(nodeId.Get())) {
 					// Remove the entity from ECS
 					m_ecs->destroyEntity(entity);

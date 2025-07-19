@@ -7,16 +7,16 @@ This document explains the namespace organization used in the Blot codebase and 
 - This helps avoid name collisions and makes it clear which code belongs to the engine.
 
 ## Common Sub-Namespaces
-- `blot::components` — ECS component definitions
-- `blot::systems` — ECS systems and related functions
+- `blot::ecs` — ECS component definitions
+- `blot::ecs` — ECS systems and related functions
 - `blot::ui` — UI-related classes and functions
 - `blot::rendering` — Rendering-related classes and functions
 - (Add more as needed for new subsystems)
 
 ## Guidelines for Contributors
 - Place new code in the most appropriate namespace.
-- If your code is a new ECS component, use `blot::components`.
-- If your code is a new ECS system, use `blot::systems`.
+- If your code is a new ECS component, use `blot::ecs`.
+- If your code is a new ECS system, use `blot::ecs`.
 - For UI or rendering code, use the corresponding sub-namespace.
 - Avoid polluting the global namespace.
 - If you need a new sub-namespace, document it here for consistency.
@@ -24,11 +24,11 @@ This document explains the namespace organization used in the Blot codebase and 
 ## Example
 ```cpp
 namespace blot {
-namespace systems {
-    void ShapeRenderingSystem(...);
+namespace ecs {
+    void SShapeRendering(...);
 }
-namespace components {
-    struct Transform { ... };
+namespace ecs {
+    struct CTransform { ... };
 }
 }
 ```

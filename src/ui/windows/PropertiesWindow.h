@@ -4,10 +4,10 @@
 #include <imgui.h>
 #include <memory>
 #include "Window.h"
-#include "ecs/ECSManager.h"
+#include "ecs/MEcs.h"
 
 // Forward declarations
-class ECSManager;
+class MEcs;
 
 namespace blot {
 
@@ -18,7 +18,7 @@ class PropertiesWindow : public Window {
 	virtual ~PropertiesWindow() = default;
 
 	// Properties management
-	void setECSManager(std::shared_ptr<ECSManager> ecs);
+	void setECSManager(std::shared_ptr<MEcs> ecs);
 	void setSelectedEntity(uint32_t entity);
 	uint32_t getSelectedEntity() const;
 
@@ -29,7 +29,7 @@ class PropertiesWindow : public Window {
 			callback);
 
   private:
-	std::shared_ptr<ECSManager> m_ecs;
+	std::shared_ptr<MEcs> m_ecs;
 	uint32_t m_selectedEntity = 0;
 
 	// Callbacks

@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 #include "Window.h"
-#include "ecs/ECSManager.h"
+#include "ecs/MEcs.h"
 
 namespace blot {
 
@@ -18,11 +18,11 @@ class NodeEditorWindow : public Window {
 					 Flags flags = Flags::None);
 	virtual ~NodeEditorWindow();
 
-	void setECSManager(std::shared_ptr<ECSManager> ecs);
+	void setECSManager(std::shared_ptr<MEcs> ecs);
 	void renderContents() override;
 
   private:
-	std::shared_ptr<ECSManager> m_ecs;
+	std::shared_ptr<MEcs> m_ecs;
 
 	// NodeEditor context
 	ax::NodeEditor::EditorContext *m_editorContext;

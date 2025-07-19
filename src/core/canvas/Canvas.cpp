@@ -7,14 +7,14 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
-#include "core/AddonManager.h"
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
+#include "core/MAddon.h"
 #include "core/json.h"
-#include "ecs/ECSManager.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
-#include "ecs/components/TransformComponent.h"
+#include "ecs/MEcs.h"
+#include "ecs/components/CDrawStyle.h"
+#include "ecs/components/CShape.h"
+#include "ecs/components/CTransform.h"
 #include "rendering/Graphics.h"
 #include "rendering/IRenderer.h"
 
@@ -231,8 +231,8 @@ void Canvas::renderECSShapes() {
 	}
 
 	// Get all entities with Transform, Shape, and Style components
-	auto view = m_ecs->view<blot::components::Transform,
-							blot::components::Shape, blot::components::Style>();
+	auto view = m_ecs->view<blot::ecs::CTransform, blot::ecs::CShape,
+							blot::ecs::CDrawStyle>();
 
 	spdlog::debug(
 		"[Canvas] renderECSShapes: Checking for entities with shapes...");
@@ -243,18 +243,17 @@ void Canvas::renderECSShapes() {
 	auto allEntities = m_ecs->getAllEntities();
 	spdlog::debug("[Canvas] All entities: {}", allEntities.size());
 	for (auto entity : allEntities) {
-		bool hasTransform =
-			m_ecs->hasComponent<blot::components::Transform>(entity);
-		bool hasShape = m_ecs->hasComponent<blot::components::Shape>(entity);
-		bool hasStyle = m_ecs->hasComponent<blot::components::Style>(entity);
-		spdlog::debug("[Canvas] Entity {}: Transform={}, Shape={}, Style={}",
+		bool hasTransform = m_ecs->hasComponent<blot::ecs::CTransform>(entity);
+		bool hasShape = m_ecs->hasComponent<blot::ecs::CShape>(entity);
+		bool hasStyle = m_ecs->hasComponent<blot::ecs::CDrawStyle>(entity);
+		spdlog::debug("[Canvas] Entity {}: CTransform={}, Shape={}, Style={}",
 					  (unsigned int)entity, hasTransform, hasShape, hasStyle);
 	}
 
 	for (auto entity : view) {
-		auto &transform = view.get<blot::components::Transform>(entity);
-		auto &shape = view.get<blot::components::Shape>(entity);
-		auto &style = view.get<blot::components::Style>(entity);
+		auto &transform = view.get<blot::ecs::CTransform>(entity);
+		auto &shape = view.get<blot::ecs::CShape>(entity);
+		auto &style = view.get<blot::ecs::CDrawStyle>(entity);
 
 		// Set fill and stroke colors
 		if (style.hasFill) {
@@ -295,7 +294,7 @@ void Canvas::renderECSShapes() {
 					  style.hasStroke);
 
 		switch (shape.type) {
-		case blot::components::Shape::Type::Rectangle:
+		case blot::ecs::CShape::Type::Rectangle:
 			if (style.hasFill) {
 				spdlog::debug("[Canvas] Drawing filled rectangle");
 				m_graphics->drawRect(x, y, width, height);
@@ -306,7 +305,7 @@ void Canvas::renderECSShapes() {
 			}
 			break;
 
-		case blot::components::Shape::Type::Ellipse:
+		case blot::ecs::CShape::Type::Ellipse:
 			if (style.hasFill)
 				m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f,
 										width * 0.5f, height * 0.5f);
@@ -315,7 +314,7 @@ void Canvas::renderECSShapes() {
 										width * 0.5f, height * 0.5f);
 			break;
 
-		case blot::components::Shape::Type::Line:
+		case blot::ecs::CShape::Type::Line:
 			if (style.hasStroke) {
 				float x2 = transform.position.x + shape.x2;
 				float y2 = transform.position.y + shape.y2;
@@ -325,7 +324,7 @@ void Canvas::renderECSShapes() {
 			}
 			break;
 
-		case blot::components::Shape::Type::Polygon:
+		case blot::ecs::CShape::Type::Polygon:
 			// For now, render as circle - can be enhanced later
 			if (style.hasFill)
 				m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f,
@@ -335,7 +334,7 @@ void Canvas::renderECSShapes() {
 										width * 0.5f, height * 0.5f);
 			break;
 
-		case blot::components::Shape::Type::Star:
+		case blot::ecs::CShape::Type::Star:
 			// For now, render as circle - can be enhanced later
 			if (style.hasFill)
 				m_graphics->drawEllipse(x + width * 0.5f, y + height * 0.5f,

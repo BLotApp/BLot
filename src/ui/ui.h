@@ -1,6 +1,6 @@
 #pragma once
 #include "ui/ImGuiRenderer.h"
-#include "ui/ShortcutManager.h"
-#include "ui/UIManager.h"
-#include "ui/WindowManager.h"
+#include "ui/MShortcut.h"
+#include "ui/MWindow.h"
+#include "ui/Mui.h"
 // Add other UI headers as needed

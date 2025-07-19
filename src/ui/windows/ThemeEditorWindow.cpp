@@ -1,7 +1,7 @@
 #include "ThemeEditorWindow.h"
 #include <fstream>
 #include <imgui.h>
-#include "../UIManager.h"
+#include "../Mui.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "core/json.h"
 
@@ -10,7 +10,7 @@ namespace blot {
 ThemeEditorWindow::ThemeEditorWindow(const std::string &title, Flags flags)
 	: Window(title, flags) {}
 
-void ThemeEditorWindow::setUIManager(UIManager *uiManager) {
+void ThemeEditorWindow::setUIManager(Mui *uiManager) {
 	m_uiManager = uiManager;
 }
 
@@ -28,10 +28,9 @@ void ThemeEditorWindow::renderThemeEditor() {
 	const char *themes[] = {"Dark", "Light", "Classic", "Corporate", "Dracula"};
 	int currentTheme = static_cast<int>(m_uiManager->m_currentTheme);
 	if (ImGui::Combo("Theme", &currentTheme, themes, IM_ARRAYSIZE(themes))) {
-		m_uiManager->setImGuiTheme(
-			static_cast<UIManager::ImGuiTheme>(currentTheme));
+		m_uiManager->setImGuiTheme(static_cast<Mui::ImGuiTheme>(currentTheme));
 		m_uiManager->m_currentTheme =
-			static_cast<UIManager::ImGuiTheme>(currentTheme);
+			static_cast<Mui::ImGuiTheme>(currentTheme);
 	}
 
 	ImGui::Spacing();
@@ -41,18 +40,18 @@ void ThemeEditorWindow::renderThemeEditor() {
 	ImGui::Separator();
 
 	if (ImGui::Button(ICON_FA_MOON " Dark Theme")) {
-		m_uiManager->setImGuiTheme(UIManager::ImGuiTheme::Dark);
-		m_uiManager->m_currentTheme = UIManager::ImGuiTheme::Dark;
+		m_uiManager->setImGuiTheme(Mui::ImGuiTheme::Dark);
+		m_uiManager->m_currentTheme = Mui::ImGuiTheme::Dark;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button(ICON_FA_SUN " Light Theme")) {
-		m_uiManager->setImGuiTheme(UIManager::ImGuiTheme::Light);
-		m_uiManager->m_currentTheme = UIManager::ImGuiTheme::Light;
+		m_uiManager->setImGuiTheme(Mui::ImGuiTheme::Light);
+		m_uiManager->m_currentTheme = Mui::ImGuiTheme::Light;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button(ICON_FA_PAINT_BRUSH " Classic Theme")) {
-		m_uiManager->setImGuiTheme(UIManager::ImGuiTheme::Classic);
-		m_uiManager->m_currentTheme = UIManager::ImGuiTheme::Classic;
+		m_uiManager->setImGuiTheme(Mui::ImGuiTheme::Classic);
+		m_uiManager->m_currentTheme = Mui::ImGuiTheme::Classic;
 	}
 
 	ImGui::Spacing();

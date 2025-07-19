@@ -5,7 +5,7 @@
 
 namespace blot {
 
-class AddonManager;
+class MAddon;
 
 class AddonManagerWindow : public Window {
   public:
@@ -13,11 +13,11 @@ class AddonManagerWindow : public Window {
 					   Flags flags = Flags::None);
 	virtual ~AddonManagerWindow() = default;
 
-	void setAddonManager(blot::AddonManager *addonManager);
+	void setAddonManager(blot::MAddon *addonManager);
 	void renderContents() override;
 
   private:
-	blot::AddonManager *m_addonManager = nullptr;
+	blot::MAddon *m_addonManager = nullptr;
 	void renderAddonManager();
 };
 

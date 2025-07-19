@@ -18,7 +18,7 @@ namespace blot {
 // Forward declarations
 class BlotEngine;
 class Graphics;
-class ECSManager;
+class MEcs;
 
 /**
  * @brief Settings/configuration for Canvas creation.
@@ -75,8 +75,8 @@ class Canvas : public ISettings {
 	void exportSVG(const std::string &filename);
 
 	// ECS integration
-	void setECSManager(ECSManager *ecs) { m_ecs = ecs; }
-	ECSManager *getECSManager() const { return m_ecs; }
+	void setECSManager(MEcs *ecs) { m_ecs = ecs; }
+	MEcs *getECSManager() const { return m_ecs; }
 	void renderECSShapes();
 
 	// Engine access
@@ -135,7 +135,7 @@ class Canvas : public ISettings {
 	int m_frameCount;
 
 	// ECS
-	ECSManager *m_ecs = nullptr;
+	MEcs *m_ecs = nullptr;
 
 	// Engine
 	BlotEngine *m_engine = nullptr;
