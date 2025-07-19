@@ -1,8 +1,8 @@
 #pragma once
 
-#include "imgui.h"
 #include <memory>
 #include <string>
+#include "imgui.h"
 
 class ImGuiRenderer {
   public:

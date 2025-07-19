@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Window.h"
-#include "ecs/ECSManager.h"
 #include <functional>
 #include <imgui.h>
 #include <imgui_node_editor.h>
@@ -9,6 +7,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "Window.h"
+#include "ecs/ECSManager.h"
 
 namespace blot {
 

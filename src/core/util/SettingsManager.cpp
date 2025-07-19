@@ -1,9 +1,9 @@
 #include "core/util/SettingsManager.h"
+#include <fstream>
+#include <spdlog/spdlog.h>
 #include "core/ISettings.h"
 #include "core/json.h"
 #include "core/util/AppPaths.h"
-#include <fstream>
-#include <spdlog/spdlog.h>
 
 namespace blot {
 

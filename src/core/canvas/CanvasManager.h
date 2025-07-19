@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Canvas.h"
-#include "core/IManager.h"
-#include "core/ISettings.h"
 #include <entt/entt.hpp> // Added for ECS integration
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+#include "Canvas.h"
+#include "core/IManager.h"
+#include "core/ISettings.h"
 
 namespace blot {
 

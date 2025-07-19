@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Window.h"
 #include <blend2d.h>
 #include <functional>
 #include <imgui.h>
 #include <string>
 #include <vector>
+#include "Window.h"
 
 class StrokeWindow : public blot::Window {
   public:

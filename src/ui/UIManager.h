@@ -1,5 +1,10 @@
 #pragma once
 
+#include <deque>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 #include "core/ISettings.h"
 #include "ui/ImGuiRenderer.h"
 #include "ui/ShortcutManager.h"
@@ -10,11 +15,6 @@
 #include "ui/windows/TextureViewerWindow.h"
 #include "ui/windows/ThemePanel.h"
 #include "ui/windows/ToolbarWindow.h"
-#include <deque>
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
 
 // Forward declarations
 struct GLFWwindow;
@@ -26,9 +26,9 @@ namespace blot {
 class MainMenuBar;
 }
 
+#include "rendering/gladGlfw.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "ui/ui.h"
-#include "rendering/gladGlfw.h"
 
 // Forward declarations
 namespace blot {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Window.h"
 #include <functional>
 #include <string>
+#include "Window.h"
 
 namespace blot {
 

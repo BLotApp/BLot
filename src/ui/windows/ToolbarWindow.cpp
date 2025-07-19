@@ -1,9 +1,9 @@
 #include "ToolbarWindow.h"
-#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "core/json.h"
 #include <fstream>
 #include <imgui.h>
 #include <iostream>
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
+#include "core/json.h"
 
 namespace blot {
 

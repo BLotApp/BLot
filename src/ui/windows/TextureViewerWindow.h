@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ImGuiWindow.h"
 #include <imgui.h>
 #include <string>
+#include "ImGuiWindow.h"
 
 namespace blot {
 

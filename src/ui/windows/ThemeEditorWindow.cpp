@@ -1,9 +1,9 @@
 #include "ThemeEditorWindow.h"
+#include <fstream>
+#include <imgui.h>
 #include "../UIManager.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "core/json.h"
-#include <fstream>
-#include <imgui.h>
 
 namespace blot {
 

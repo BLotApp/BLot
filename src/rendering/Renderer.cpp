@@ -1,7 +1,7 @@
-#include "rendering/rendering.h"
 #include <memory>
 #include <string>
 #include <vector>
+#include "rendering/rendering.h"
 
 std::shared_ptr<IRenderer> createRenderer(RendererType type) {
 	return RendererRegistry::instance().create(type);

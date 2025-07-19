@@ -1,8 +1,8 @@
 #pragma once
 
+#include <entt/entity/entity.hpp>
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
-#include <entt/entity/entity.hpp>
 
 namespace blot {
 namespace systems {

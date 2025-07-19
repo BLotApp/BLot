@@ -1,3 +1,12 @@
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <iostream>
+#include <set>
+#include <spdlog/spdlog.h>
 #include "../assets/fonts/fontRobotoRegular.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "core/BlotEngine.h"
@@ -11,6 +20,7 @@
 #include "ui/windows/CodeEditorWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/LogWindow.h"
+#include "ui/windows/MainMenuBar.h"
 #include "ui/windows/NodeEditorWindow.h"
 #include "ui/windows/PropertiesWindow.h"
 #include "ui/windows/SaveWorkspaceDialog.h"
@@ -20,16 +30,6 @@
 #include "ui/windows/ThemePanel.h"
 #include "ui/windows/ToolbarWindow.h"
 #include "ui/windows/WindowManagerPanel.h"
-#include "ui/windows/MainMenuBar.h"
-#include <algorithm>
-#include <filesystem>
-#include <fstream>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <iostream>
-#include <set>
-#include <spdlog/spdlog.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

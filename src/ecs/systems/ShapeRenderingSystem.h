@@ -1,13 +1,13 @@
 #pragma once
 
+#include <glm/glm.hpp>
+#include <imgui.h>
+#include <memory>
 #include "ecs/ECSManager.h"
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
 #include "ecs/components/TransformComponent.h"
 #include "rendering/IRenderer.h"
-#include <glm/glm.hpp>
-#include <imgui.h>
-#include <memory>
 
 namespace blot {
 namespace systems {

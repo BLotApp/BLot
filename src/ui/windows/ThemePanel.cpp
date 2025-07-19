@@ -1,8 +1,8 @@
 #include "ThemePanel.h"
-#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "ToolbarWindow.h"
 #include <cstdlib>
 #include <imgui.h>
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
+#include "ToolbarWindow.h"
 
 namespace blot {
 

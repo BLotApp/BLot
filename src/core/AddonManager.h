@@ -1,12 +1,12 @@
 #pragma once
 
-#include "core/IManager.h"
-#include "core/ISettings.h"
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "core/IManager.h"
+#include "core/ISettings.h"
 
 namespace blot {
 class AddonBase;

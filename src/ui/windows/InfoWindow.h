@@ -1,8 +1,8 @@
 #pragma once
 
+#include <imgui.h>
 #include "../CoordinateSystem.h"
 #include "Window.h"
-#include <imgui.h>
 
 namespace blot {
 class UIManager;

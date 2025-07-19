@@ -2,6 +2,8 @@
 #define NOMINMAX
 #endif
 #include "CanvasWindow.h"
+#include <imgui.h>
+#include <spdlog/spdlog.h>
 #include "ImGuiWindow.h"
 #include "core/canvas/Canvas.h"
 #include "ecs/ECSManager.h"
@@ -10,8 +12,6 @@
 #include "ecs/components/TransformComponent.h"
 #include "rendering/Graphics.h"
 #include "rendering/RenderingManager.h"
-#include <imgui.h>
-#include <spdlog/spdlog.h>
 
 namespace blot {
 

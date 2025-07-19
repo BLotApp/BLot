@@ -1,14 +1,14 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 #include "../../ecs/systems/EventSystem.h"
 #include "Window.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
 #include "core/canvas/CanvasManager.h"
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
 // Forward declaration to avoid circular include
 namespace blot {
 class UIManager;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "rendering/IRenderer.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <vector>
+#include "rendering/IRenderer.h"
 
 namespace blot {
 

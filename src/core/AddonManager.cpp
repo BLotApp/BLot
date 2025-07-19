@@ -1,13 +1,13 @@
 #include "core/AddonManager.h"
-#include "core/AddonBase.h"
-#include "core/ISettings.h"
-#include "core/json.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
+#include "core/AddonBase.h"
+#include "core/ISettings.h"
+#include "core/json.h"
 
 blot::AddonManager::AddonManager() : m_addonDirectory("addons") {}
 

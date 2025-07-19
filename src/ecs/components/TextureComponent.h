@@ -1,7 +1,7 @@
 #pragma once
-#include "../PropertyReflection.h"
 #include <glm/glm.hpp>
 #include <vector>
+#include "../PropertyReflection.h"
 
 namespace blot {
 namespace components {

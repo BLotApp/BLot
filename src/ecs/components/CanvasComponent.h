@@ -1,6 +1,6 @@
 #pragma once
-#include "../PropertyReflection.h"
 #include <string>
+#include "../PropertyReflection.h"
 
 namespace blot {
 namespace components {

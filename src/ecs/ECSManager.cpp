@@ -1,4 +1,7 @@
 #include "ecs/ECSManager.h"
+#include <algorithm>
+#include <entt/entt.hpp>
+#include <iostream>
 #include "core/ISettings.h"
 #include "ecs/components/AnimationComponent.h"
 #include "ecs/components/DrawingComponent.h"
@@ -11,9 +14,6 @@
 #include "ecs/components/TransformComponent.h"
 #include "ecs/systems/CanvasSystems.h"
 #include "ecs/systems/ShapeRenderingSystem.h"
-#include <algorithm>
-#include <entt/entt.hpp>
-#include <iostream>
 
 namespace blot {
 

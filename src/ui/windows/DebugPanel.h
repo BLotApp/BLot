@@ -5,8 +5,8 @@
 namespace blot {
 class ECSManager;
 }
-#include "Window.h"
 #include <imgui.h>
+#include "Window.h"
 
 namespace blot {
 

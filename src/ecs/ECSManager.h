@@ -1,15 +1,15 @@
 #pragma once
 
-#include "core/IManager.h"
-#include "core/ISettings.h"
-#include "ecs/systems/EventSystem.h"
-#include "imgui.h"
-#include "rendering/IRenderer.h"
 #include <entt/entt.hpp>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "core/IManager.h"
+#include "core/ISettings.h"
+#include "ecs/systems/EventSystem.h"
+#include "imgui.h"
+#include "rendering/IRenderer.h"
 
 // Forward declarations
 class bxScriptEngine;

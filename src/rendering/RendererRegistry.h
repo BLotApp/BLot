@@ -1,8 +1,8 @@
 #pragma once
-#include "rendering/rendering.h"
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include "rendering/rendering.h"
 
 class RendererRegistry {
   public:

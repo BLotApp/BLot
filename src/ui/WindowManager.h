@@ -1,11 +1,11 @@
 #pragma once
 
-#include "core/ISettings.h"
-#include "windows/Window.h"
 #include <entt/entt.hpp>
 #include <memory>
 #include <string>
 #include <vector>
+#include "core/ISettings.h"
+#include "windows/Window.h"
 
 namespace blot {
 

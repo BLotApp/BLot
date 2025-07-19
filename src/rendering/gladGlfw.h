@@ -9,4 +9,4 @@
 
 // Now both GLAD and GLFW are available
 // GLAD provides OpenGL function pointers
-// GLFW provides window management and input handling 
+// GLFW provides window management and input handling

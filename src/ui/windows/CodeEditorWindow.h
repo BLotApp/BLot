@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Window.h"
 #include <functional>
 #include <memory>
 #include <string>
+#include "Window.h"
 
 // Forward declaration
 class TextEditor;

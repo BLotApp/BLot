@@ -1,15 +1,15 @@
 #include "WindowManager.h"
-#include "core/json.h"
-#include "core/util/AppPaths.h"
-#include "ecs/components/TransformComponent.h"
-#include "ecs/components/WindowComponents.h"
-#include "imgui.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <sstream>
+#include "core/json.h"
+#include "core/util/AppPaths.h"
+#include "ecs/components/TransformComponent.h"
+#include "ecs/components/WindowComponents.h"
+#include "imgui.h"
 
 namespace blot {
 

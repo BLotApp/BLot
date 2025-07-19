@@ -1,12 +1,12 @@
 #include "NodeEditorWindow.h"
-#include "ecs/ECSManager.h"
-#include "ecs/components/NodeComponent.h"
-#include "ecs/components/ShapeComponent.h"
-#include "ecs/components/StyleComponent.h"
 #include <imgui.h>
 #include <imgui_node_editor.h>
 #include <iostream>
 #include <unordered_map>
+#include "ecs/ECSManager.h"
+#include "ecs/components/NodeComponent.h"
+#include "ecs/components/ShapeComponent.h"
+#include "ecs/components/StyleComponent.h"
 
 namespace ed = ax::NodeEditor;
 

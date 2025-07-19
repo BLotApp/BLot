@@ -1,11 +1,11 @@
 #pragma once
 
+#include <entt/entt.hpp>
+#include <memory>
 #include "Window.h"
 #include "core/canvas/Canvas.h"
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
-#include <entt/entt.hpp>
-#include <memory>
 
 namespace blot {
 

@@ -1,13 +1,13 @@
 #pragma once
 
+#include <entt/entt.hpp>
+#include <memory>
+#include <unordered_map>
 #include "core/IManager.h"
 #include "core/ISettings.h"
 #include "core/canvas/Canvas.h"
 #include "rendering/Graphics.h"
 #include "rendering/IRenderer.h"
-#include <entt/entt.hpp>
-#include <memory>
-#include <unordered_map>
 
 /**
  * RenderingManager is the sole owner/manager of all engine-level IRenderer

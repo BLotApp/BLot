@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ToolbarWindow.h"
-#include "Window.h"
 #include <imgui.h>
 #include <memory>
+#include "ToolbarWindow.h"
+#include "Window.h"
 
 namespace blot {
 

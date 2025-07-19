@@ -1,7 +1,7 @@
 #include "core/AddonBase.h"
-#include "core/BlotEngine.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include "core/BlotEngine.h"
 
 namespace blot {
 

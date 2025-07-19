@@ -1,8 +1,8 @@
+#include <iostream>
+#include <memory>
 #include "app.h"
 #include "core/BlotEngine.h"
 #include "core/core.h"
-#include <iostream>
-#include <memory>
 
 int main(int argc, char *argv[]) {
 	auto appInstance = std::make_unique<SampleUiApp>();

@@ -1,12 +1,12 @@
 #pragma once
+#include <spdlog/spdlog.h>
 #include "core/AddonBase.h"
 #include "core/AddonManager.h"
+#include "core/IApp.h"
 #include "core/WindowSettings.h"
 #include "core/canvas/CanvasManager.h"
 #include "core/util/SettingsManager.h"
-#include <spdlog/spdlog.h>
-#include "core/IApp.h"
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
 #include "ui/UIManager.h"
-#include "ui/windows/MainMenuBar.h" 
+#include "ui/windows/MainMenuBar.h"

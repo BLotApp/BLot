@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Window.h"
 #include <functional>
 #include <imgui.h>
 #include <string>
 #include <vector>
+#include "Window.h"
 
 namespace blot {
 

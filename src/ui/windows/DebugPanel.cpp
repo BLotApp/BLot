@@ -1,10 +1,10 @@
 #include "DebugPanel.h"
+#include <imgui.h>
+#include <spdlog/spdlog.h>
 #include "ecs/ECSManager.h"
 #include "ecs/components/ShapeComponent.h"
 #include "ecs/components/StyleComponent.h"
 #include "ecs/components/TransformComponent.h"
-#include <imgui.h>
-#include <spdlog/spdlog.h>
 
 namespace blot {
 

@@ -1,10 +1,10 @@
 #include "ui/windows/MainMenuBar.h"
+#include <imgui.h>
+#include <iostream>
 #include "CodeEditorWindow.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
 #include "ui/UIManager.h"
-#include <imgui.h>
-#include <iostream>
 
 namespace blot {
 

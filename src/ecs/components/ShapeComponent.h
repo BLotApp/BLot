@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../PropertyReflection.h"
 #include <string>
 #include <vector>
+#include "../PropertyReflection.h"
 
 namespace blot {
 namespace components {

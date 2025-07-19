@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Window.h"
 #include <functional>
+#include "Window.h"
 
 namespace blot {
 

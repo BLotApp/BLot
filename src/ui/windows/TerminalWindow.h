@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Window.h"
 #include <imgui.h>
 #include <string>
 #include <vector>
+#include "Window.h"
 
 namespace blot {
 

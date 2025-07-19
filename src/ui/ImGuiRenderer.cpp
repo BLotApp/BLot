@@ -1,6 +1,6 @@
 #include "ui/ImGuiRenderer.h"
-#include "imgui_impl_opengl3.h"
 #include <iostream>
+#include "imgui_impl_opengl3.h"
 
 ImGuiRenderer::ImGuiRenderer()
 	: m_useCustomFont(false), m_customFontSize(16), m_customImGuiFont(nullptr),

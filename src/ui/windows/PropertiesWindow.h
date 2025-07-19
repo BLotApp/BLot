@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Window.h"
-#include "ecs/ECSManager.h"
 #include <functional>
 #include <imgui.h>
 #include <memory>
+#include "Window.h"
+#include "ecs/ECSManager.h"
 
 // Forward declarations
 class ECSManager;

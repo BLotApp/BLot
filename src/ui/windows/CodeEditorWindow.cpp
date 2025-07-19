@@ -1,7 +1,7 @@
 #include "CodeEditorWindow.h"
+#include <functional>
 #include "../../third_party/ImGuiColorTextEdit/TextEditor.h"
 #include "imgui.h"
-#include <functional>
 
 namespace blot {
 

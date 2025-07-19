@@ -1,4 +1,6 @@
 #include "ui/windows/PropertiesWindow.h"
+#include <array>
+#include <imgui.h>
 #include "ecs/ECSManager.h"
 #include "ecs/components/CanvasComponent.h"
 #include "ecs/components/DraggableComponent.h"
@@ -8,8 +10,6 @@
 #include "ecs/components/StyleComponent.h"
 #include "ecs/components/TextureComponent.h"
 #include "ecs/components/TransformComponent.h"
-#include <array>
-#include <imgui.h>
 
 namespace blot {
 using namespace components;

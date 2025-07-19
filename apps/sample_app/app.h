@@ -1,5 +1,7 @@
 #pragma once
 
+#include "rendering/gladGlfw.h"
+#include <entt/entity/entity.hpp>
 #include "core/BlotEngine.h"
 #include "core/IApp.h"
 #include "core/canvas/CanvasManager.h"
@@ -7,8 +9,6 @@
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
 #include "ui/UIManager.h"
-#include "rendering/gladGlfw.h"
-#include <entt/entity/entity.hpp>
 
 // Forward declarations
 class bxCodeEditor;

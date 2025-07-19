@@ -1,11 +1,11 @@
 #include "core/canvas/CanvasManager.h"
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
 #include "core/ISettings.h"
 #include "ecs/ECSManager.h"
 #include "ecs/components/CanvasComponent.h"
 #include "ecs/components/TextureComponent.h"
-#include <algorithm>
-#include <iostream>
-#include <stdexcept>
 
 namespace blot {
 
