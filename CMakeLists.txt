@@ -21,6 +21,7 @@ set(GLFW3_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 # Add GLM and EnTT from submodules
 include_directories(${CMAKE_SOURCE_DIR}/third_party/glm)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/src)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/json/single_include)
 
 # Remove legacy vcpkg references – Blend2D is provided as a submodule
@@ -106,26 +107,14 @@ elseif(UNIX AND NOT APPLE)
     endif()
 endif()
 
-# Modern dependency management: use imported targets (except glad)
 find_package(OpenGL REQUIRED)
-find_package(blend2d CONFIG REQUIRED)
-find_package(EnTT CONFIG REQUIRED)
-find_package(Freetype REQUIRED)
-find_package(glm CONFIG REQUIRED)
 
-# Link all dependencies using imported targets
-# (OpenGL::GL is provided by find_package(OpenGL))
 target_link_libraries(blot
     PRIVATE
         OpenGL::GL
         glfw
-        blend2d::blend2d
-        Freetype::Freetype
-        glm::glm
+        blend2d
 )
-
-# Expose EnTT headers to consumers
-target_link_libraries(blot PUBLIC EnTT::EnTT)
 
 # Add include directories for submodules (ImGui, etc.)
 target_include_directories(blot PRIVATE

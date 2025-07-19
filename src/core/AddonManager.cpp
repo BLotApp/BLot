@@ -1,4 +1,5 @@
 #include "core/AddonManager.h"
+#include "core/AddonBase.h"
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
