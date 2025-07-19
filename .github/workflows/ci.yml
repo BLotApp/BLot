@@ -16,9 +16,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang-format-14
       - name: Check formatting
         run: |
-          FILES=$(git ls-files '*.cpp' '*.h' '*.c' '*.hpp' | grep -vE '^(third_party|assets|addons)/' | xargs)
+          git fetch origin main --depth=1
+          BASE=$(git merge-base origin/main HEAD)
+          FILES=$(git diff --name-only $BASE HEAD -- '*.cpp' '*.h' '*.c' '*.hpp' | grep -vE '^(third_party|assets|addons)/' | xargs)
           if [ -n "$FILES" ]; then
+            echo "Checking clang-format on changed files:" $FILES
             clang-format-14 --dry-run --Werror $FILES
           else
-            echo "No source files to check."
+            echo "No source files changed. Skipping clang-format check."
           fi 
