@@ -95,7 +95,7 @@ target_sources(blot PRIVATE
 )
 
 # Use local glad (not vcpkg or submodule target)
-target_include_directories(blot PRIVATE ${CMAKE_SOURCE_DIR}/third_party/glad/include)
+target_include_directories(blot PUBLIC ${CMAKE_SOURCE_DIR}/third_party/glad/include)
 
 if(WIN32)
     target_sources(blot PRIVATE third_party/glad/src/gl.c)
@@ -117,7 +117,7 @@ target_link_libraries(blot
 )
 
 # Add include directories for submodules (ImGui, etc.)
-target_include_directories(blot PRIVATE
+target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/third_party/imgui
     ${CMAKE_SOURCE_DIR}/third_party/imgui/backends

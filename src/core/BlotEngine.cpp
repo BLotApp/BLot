@@ -1,4 +1,13 @@
 #include "core/BlotEngine.h"
+
+#include "rendering/gladGlfw.h"
+
+#include <glm/glm.hpp>
+
+#include <chrono>
+#include <iostream>
+#include <thread>
+
 #include "core/AddonManager.h"
 #include "core/IApp.h"
 #include "core/core.h"
@@ -6,12 +15,6 @@
 #include "rendering/rendering.h"
 #include "ui/UIManager.h"
 #include "ui/ui.h"
-#include <GLFW/glfw3.h>
-#include <chrono>
-#include <glad/gl.h>
-#include <glm/glm.hpp>
-#include <iostream>
-#include <thread>
 
 namespace blot {
 

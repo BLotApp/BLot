@@ -7,7 +7,7 @@
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
 #include "ui/UIManager.h"
-#include <GLFW/glfw3.h>
+#include "rendering/gladGlfw.h"
 #include <entt/entity/entity.hpp>
 
 // Forward declarations

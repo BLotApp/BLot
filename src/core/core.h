@@ -5,3 +5,8 @@
 #include "core/canvas/CanvasManager.h"
 #include "core/util/SettingsManager.h"
 #include <spdlog/spdlog.h>
+#include "core/IApp.h"
+#include "ecs/ECSManager.h"
+#include "rendering/RenderingManager.h"
+#include "ui/UIManager.h"
+#include "ui/windows/MainMenuBar.h" 

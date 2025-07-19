@@ -20,6 +20,7 @@
 #include "ui/windows/ThemePanel.h"
 #include "ui/windows/ToolbarWindow.h"
 #include "ui/windows/WindowManagerPanel.h"
+#include "ui/windows/MainMenuBar.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -29,7 +30,10 @@
 #include <iostream>
 #include <set>
 #include <spdlog/spdlog.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 namespace blot {
 // Helper for icon and color

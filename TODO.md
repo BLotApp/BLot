@@ -60,3 +60,5 @@
     - Updating all includes throughout the codebase.
     - Ensuring no manager headers/sources remain in other folders.
     - Reviewing for any domain encapsulation concerns. 
+
+- [ ] Consider moving UI subsystem (ImGui/UIManager) into an optional addon for lighter core builds 

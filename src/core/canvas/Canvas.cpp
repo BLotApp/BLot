@@ -1,9 +1,15 @@
-#include <glad/gl.h>
-#define GLFW_INCLUDE_NONE
+#include "core/canvas/Canvas.h"
+
+#include "rendering/gladGlfw.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <filesystem>
+#include <spdlog/spdlog.h>
+
 #include "core/AddonManager.h"
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
-#include "core/canvas/Canvas.h"
 #include "core/json.h"
 #include "ecs/ECSManager.h"
 #include "ecs/components/ShapeComponent.h"
@@ -11,9 +17,6 @@
 #include "ecs/components/TransformComponent.h"
 #include "rendering/Graphics.h"
 #include "rendering/IRenderer.h"
-#include <filesystem>
-#include <glm/gtc/matrix_transform.hpp>
-#include <spdlog/spdlog.h>
 
 namespace blot {
 

@@ -37,6 +37,30 @@
 - Always keep class names and file names consistent.
 - See [file_naming.md](file_naming.md) for more details.
 
+## Git hooks (auto-format & newline)
+
+To keep the codebase consistent we provide an **optional** Git pre-commit hook that:
+
+1. runs `clang-format` on every staged `*.c`, `*.cpp`, `*.h`, `*.hpp` file,
+2. guarantees every file ends with a single newline.
+
+The hook lives under version-control at
+`tools/hooks/pre-commit.sh` so you can inspect or modify it.
+
+Install it once per clone:
+
+```bash
+# from the repository root
+./tools/install-hooks.sh
+```
+
+The script copies the hook to `.git/hooks/pre-commit` and makes it
+executable.  If `clang-format` isn’t on your PATH the formatting step is
+skipped, but the newline check still runs.
+
+Feel free to opt-out: simply remove or rename `.git/hooks/pre-commit` in
+your local checkout.
+
 ---
 
 *This contributing guide is enforced for all contributions to the BLot codebase.* 

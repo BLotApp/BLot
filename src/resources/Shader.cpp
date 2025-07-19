@@ -1,5 +1,6 @@
 #include "resources/Shader.h"
-#include <glad/gl.h>
+
+#include "rendering/gladGlfw.h"
 
 Shader::Shader() {}
 Shader::~Shader() {}

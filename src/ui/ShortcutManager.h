@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "rendering/gladGlfw.h"
 #include <functional>
 #include <imgui.h>
 #include <string>

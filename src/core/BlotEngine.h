@@ -1,7 +1,7 @@
 #pragma once
 #include "core/WindowSettings.h"
 #include "core/core.h"
-#include <GLFW/glfw3.h>
+#include "rendering/gladGlfw.h"
 #include <glm/glm.hpp>
 #include <memory>
 

@@ -1,12 +1,13 @@
 #define _USE_MATH_DEFINES
-#include <algorithm>
-#include <cmath>
-#include <glad/gl.h>
-#define GLFW_INCLUDE_NONE
 #include "rendering/Graphics.h"
-#include <GLFW/glfw3.h>
+
+#include "rendering/gladGlfw.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <algorithm>
+#include <cmath>
 
 namespace blot {
 

@@ -1,20 +1,22 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include <glad/gl.h>
+#include "rendering/gladGlfw.h"
 
-#include "addons/bxBlend2D/Blend2DRenderer.h"
-#include <algorithm>
-#include <blend2d.h>
-#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
+
+#include <algorithm>
+#include <blend2d.h>
+#include <cstdint>
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
+
+#include "addons/bxBlend2D/Blend2DRenderer.h"
 
 // Shader sources
 const char *vertexShaderSrc = R"(

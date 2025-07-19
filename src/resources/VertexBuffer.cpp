@@ -1,5 +1,6 @@
 #include "resources/VertexBuffer.h"
-#include <glad/gl.h>
+
+#include "rendering/gladGlfw.h"
 
 VertexBuffer::VertexBuffer() {
 	glGenVertexArrays(1, &m_vao);

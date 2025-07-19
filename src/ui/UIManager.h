@@ -20,12 +20,15 @@
 struct GLFWwindow;
 #include "CoordinateSystem.h"
 #include "core/BlotEngine.h"
-#include "ui/windows/MainMenuBar.h"
 #include "ui/windows/SaveWorkspaceDialog.h"
+
+namespace blot {
+class MainMenuBar;
+}
 
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "ui/ui.h"
-#include <GLFW/glfw3.h>
+#include "rendering/gladGlfw.h"
 
 // Forward declarations
 namespace blot {

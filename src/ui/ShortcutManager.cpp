@@ -1,5 +1,5 @@
 #include "ShortcutManager.h"
-#include <GLFW/glfw3.h>
+#include "rendering/gladGlfw.h"
 #include <imgui.h>
 
 void ShortcutManager::registerShortcut(ImGuiKey key, int modifiers,
