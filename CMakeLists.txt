@@ -21,7 +21,6 @@ set(GLFW3_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 # Add GLM and EnTT from submodules
 include_directories(${CMAKE_SOURCE_DIR}/third_party/glm)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/src)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/json/single_include)
 
 # Remove legacy vcpkg references – Blend2D is provided as a submodule

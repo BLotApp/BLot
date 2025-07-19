@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt/entity/entity.hpp>
+#include <entt/entt.hpp>
 #include "ecs/ECSManager.h"
 #include "rendering/RenderingManager.h"
 

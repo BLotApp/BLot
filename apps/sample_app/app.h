@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rendering/gladGlfw.h"
-#include <entt/entity/entity.hpp>
+#include <entt/entt.hpp>
 #include "core/BlotEngine.h"
 #include "core/IApp.h"
 #include "core/canvas/CanvasManager.h"
