@@ -27,9 +27,9 @@ namespace blot {
 class MainMenuBar;
 }
 
-#include "rendering/gladGlfw.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "ui/ui.h"
+#include "rendering/U_gladGlfw.h"
+#include "ui/U_ui.h"
 
 // Forward declarations
 namespace blot {

@@ -2,7 +2,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
-#include "rendering/rendering.h"
+#include "rendering/U_rendering.h"
 
 class RendererRegistry {
   public:

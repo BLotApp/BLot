@@ -31,7 +31,7 @@ The `apps/` directory is a collection of creative coding demos, experiments, and
 Minimal skeleton for any new app:
 
 ```cpp
-#include "core/core.h"
+#include "core/U_core.h"
 
 class MyApp : public blot::IApp {
 public:
@@ -90,7 +90,7 @@ Each app in the `apps/` directory is a self-contained project that uses the shar
 - See the sample app for an example of ECS, rendering, and addon usage.
 
 ## Umbrella Headers and Modular Structure
-- Apps should use umbrella headers (e.g., `#include "core/core.h"`, `#include "ui/ui.h"`) for framework access.
+- Apps should use umbrella headers (e.g., `#include "core/U_core.h"`, `#include "ui/U_ui.h"`) for framework access.
 - This keeps includes clean and ensures modularity across all apps.
 
 ---

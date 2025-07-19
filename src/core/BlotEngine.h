@@ -1,10 +1,10 @@
 #pragma once
-#include "rendering/gladGlfw.h"
 #include <glm/glm.hpp>
 #include <memory>
 #include "core/AppSettings.h"
+#include "core/U_core.h"
 #include "core/WindowSettings.h"
-#include "core/core.h"
+#include "rendering/U_gladGlfw.h"
 
 // Forward declarations for all managers and IApp
 namespace blot {

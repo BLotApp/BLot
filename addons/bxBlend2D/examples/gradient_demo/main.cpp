@@ -1,7 +1,7 @@
-#include "core/core.h"
-#include "rendering/rendering.h"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include "core/U_core.h"
+#include "rendering/U_rendering.h"
 
 int main() {
 	auto app = std::make_unique<GradientDemoApp>();

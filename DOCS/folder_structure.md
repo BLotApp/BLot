@@ -34,6 +34,6 @@ This document explains the organization of the application's folders and their p
 ---
 
 ## Umbrella Headers and Modularity
-- Major modules provide umbrella headers (e.g., `core/core.h`, `ui/ui.h`, `rendering/rendering.h`, `ecs/ecs.h`) to simplify includes and improve modularity.
-- Always use project-root-relative includes (e.g., `#include "core/core.h"`).
+- Major modules provide umbrella headers (e.g., `core/U_core.h`, `ui/U_ui.h`, `rendering/U_rendering.h`, `ecs/ecs.h`) to simplify includes and improve modularity.
+- Always use project-root-relative includes (e.g., `#include "core/U_core.h"`).
 - See `DOCS/includes.md` for more details on include conventions.

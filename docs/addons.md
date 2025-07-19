@@ -55,7 +55,7 @@ If your addon provides a renderer, input system, etc., register it with the appr
 See `addons/bxBlend2D/` for a full example of a renderer addon that registers a new renderer with the framework via the registry.
 
 ## CMake and Include Paths
-- All addons should use umbrella headers (e.g., `#include "core/core.h"`, `#include "rendering/rendering.h"`) for framework access.
+- All addons should use umbrella headers (e.g., `#include "core/U_core.h"`, `#include "rendering/U_rendering.h"`) for framework access.
 - The top-level `CMakeLists.txt` adds all major `src` subdirectories to the include path, so you can use project-root-relative includes everywhere.
 - Avoid direct includes of other addons; use the registry or manager interfaces for integration.
 

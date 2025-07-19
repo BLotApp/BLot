@@ -7,7 +7,7 @@
 // Project headers
 #include "addons/bxBlend2D/Blend2DRenderer.h"
 #include "core/AddonBase.h"
-#include "rendering/rendering.h"
+#include "rendering/U_rendering.h"
 
 namespace blot {
 

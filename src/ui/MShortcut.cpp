@@ -1,10 +1,10 @@
 #include "MShortcut.h"
-#include "rendering/gladGlfw.h"
 #include <imgui.h>
+#include "rendering/U_gladGlfw.h"
 
 void MShortcut::registerShortcut(ImGuiKey key, int modifiers,
-									   std::function<void()> callback,
-									   const std::string &description) {
+								 std::function<void()> callback,
+								 const std::string &description) {
 	m_shortcuts.push_back({key, modifiers, std::move(callback), description});
 }
 

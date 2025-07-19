@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "rendering/Graphics.h"
 
-#include "rendering/gladGlfw.h"
+#include "rendering/U_gladGlfw.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

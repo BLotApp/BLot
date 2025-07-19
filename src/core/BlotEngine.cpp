@@ -1,6 +1,6 @@
 #include "core/BlotEngine.h"
 
-#include "rendering/gladGlfw.h"
+#include "rendering/U_gladGlfw.h"
 
 #include <glm/glm.hpp>
 
@@ -11,11 +11,11 @@
 #include "core/AppSettings.h"
 #include "core/IApp.h"
 #include "core/MAddon.h"
-#include "core/core.h"
+#include "core/U_core.h"
 #include "core/util/MSettings.h"
-#include "rendering/rendering.h"
+#include "rendering/U_rendering.h"
 #include "ui/Mui.h"
-#include "ui/ui.h"
+#include "ui/U_ui.h"
 
 namespace blot {
 

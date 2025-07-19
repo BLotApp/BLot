@@ -14,7 +14,7 @@
 #include "core/json.h"
 #include "ui/ImGuiRenderer.h"
 #include "ui/MWindow.h"
-#include "ui/ui.h"
+#include "ui/U_ui.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/CodeEditorWindow.h"
@@ -362,9 +362,8 @@ void Mui::setupWindows(BlotEngine *app) {
 	m_windowManager->createWindow(toolbarWindow->getTitle(), toolbarWindow);
 
 	// Connect theme panel to toolbar window
-	if (m_windowManager->getWindow(
-			"ThemePanel")) { // Assuming ThemePanel is registered with
-							 // MWindow
+	if (m_windowManager->getWindow("ThemePanel")) { // Assuming ThemePanel is
+													// registered with MWindow
 		auto themePanel = std::dynamic_pointer_cast<ThemePanel>(
 			m_windowManager->getWindow("ThemePanel"));
 		if (themePanel) {
@@ -591,8 +590,7 @@ void Mui::loadTheme(const std::string &path) {
 	}
 }
 
-void Mui::setWindowVisibility(const std::string &windowName,
-									bool visible) {
+void Mui::setWindowVisibility(const std::string &windowName, bool visible) {
 	if (m_windowManager) {
 		m_windowManager->setWindowVisibility(windowName, visible);
 	}
@@ -760,12 +758,12 @@ void Mui::saveCurrentImGuiLayout() {
 	}
 }
 
-void Mui::showNotification(const std::string &message,
-								 NotificationType type, float duration) {
+void Mui::showNotification(const std::string &message, NotificationType type,
+						   float duration) {
 	m_notifications.push_back({message, type, duration});
 }
 void Mui::showModal(const std::string &title, const std::string &message,
-						  NotificationType type, std::function<void()> onOk) {
+					NotificationType type, std::function<void()> onOk) {
 	m_modals.push_back({title, message, type, onOk, true});
 }
 

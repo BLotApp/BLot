@@ -1,5 +1,5 @@
 #pragma once
-#include "core/core.h"
+#include "core/U_core.h"
 
 class GradientDemoApp : public blot::IApp {
   public:

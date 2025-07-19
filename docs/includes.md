@@ -4,18 +4,18 @@
 
 To simplify includes and improve modularity, the codebase uses umbrella headers for all major modules:
 
-- `core/core.h` — includes all major core headers (MAddon, BlotEngine, IApp, etc.)
-- `ui/ui.h` — includes all major UI headers (UI Manager, ImGuiRenderer, TextRenderer, etc.)
-- `rendering/rendering.h` — includes all major rendering headers (Renderer, MRendering, RendererRegistry, etc.)
+- `core/U_core.h` — includes all major core headers (MAddon, BlotEngine, IApp, etc.)
+- `ui/U_ui.h` — includes all major UI headers (UI Manager, ImGuiRenderer, TextRenderer, etc.)
+- `rendering/U_rendering.h` — includes all major rendering headers (Renderer, MRendering, RendererRegistry, etc.)
 - `ecs/ecs.h` — includes all ECS types and managers
 
 **Usage:**
 Instead of including multiple headers from a module, just include the umbrella header:
 
 ```cpp
-#include "core/core.h"
-#include "ui/ui.h"
-#include "rendering/rendering.h"
+#include "core/U_core.h"
+#include "ui/U_ui.h"
+#include "rendering/U_rendering.h"
 #include "ecs/ecs.h"
 ```
 

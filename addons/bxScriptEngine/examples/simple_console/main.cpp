@@ -1,5 +1,5 @@
-#include "core/core.h"
 #include <memory>
+#include "core/U_core.h"
 
 int main() {
 	auto app = std::make_unique<SimpleConsoleApp>();

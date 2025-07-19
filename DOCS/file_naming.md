@@ -31,7 +31,8 @@ This document describes the file naming conventions used throughout the project 
 ## Prefixes
 - Interface classes should use an 'I' prefix (e.g., IRenderer) and the file should match (e.g., IRenderer.h)
 - Manager classes should use an 'M' prefix. (e.g. MWindow, MCanvas)
-- Concrete classes like components use the 'C' prefix (e.g. CDraggable, CNode)
+- Components use the 'C' prefix (e.g. CDraggable, CNode)
+- `U_` For Umbrella headers (e.g. U_Core, U_MyRenderer).
 - 'S' for systems (e.g. SEvent, SCanvas).
 - **Singletons ('S') is discouraged.**
 - Use descriptive names for all other classes (e.g., Shader, Canvas).
