@@ -60,10 +60,18 @@ SampleUiApp::~SampleUiApp() {
 }
 
 void SampleUiApp::setup(blot::BlotEngine* engine) {
-    m_engine = engine;
     // Final setup phase - everything is now initialized
     spdlog::info("Setting up application...");
     
+    // Set a pleasant mid-grey clear colour so a blank canvas isn't mistaken for a crash
+    engine->setClearColor(0.2f, 0.2f, 0.25f, 1.0f);
+
+    // Ensure we start with at least one canvas so the Canvas window has something to display
+    if (getCanvasManager() && getECSManager()) {
+        m_activeCanvasId = getCanvasManager()->createCanvas(*getECSManager(), m_windowWidth, m_windowHeight);
+        spdlog::info("Created default canvas entity: {}", (uint32_t)m_activeCanvasId);
+    }
+
     try {
         // Initialize code editor
         auto codeEditorPtr = getAddonManager()->getAddon("bxCodeEditor");
@@ -324,7 +332,7 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     // Debug actions
     eventSystem.registerAction("set_debug_mode", std::function<void(bool)>([this](bool enabled) {
         spdlog::info("Set debug mode action triggered: {}", enabled);
-        if (m_engine) { m_engine->setDebugMode(enabled); }
+        if (auto engine = getEngine()) { engine->setDebugMode(enabled); }
     }));
     
     // Canvas management actions
@@ -417,7 +425,8 @@ void SampleUiApp::registerUIActions(blot::systems::EventSystem& eventSystem) {
     }));
     
     eventSystem.registerAction("get_debug_mode", std::function<bool()>([this]() -> bool {
-        return m_engine ? m_engine->getDebugMode() : false;
+        if (auto engine = getEngine()) { return engine->getDebugMode(); }
+        return false;
     }));
 }
 
@@ -439,20 +448,14 @@ void SampleUiApp::update(float deltaTime) {
 } 
 
 // Getters implementation using cached engine pointer
-blot::ECSManager* SampleUiApp::getECSManager() { return m_engine ? m_engine->getECSManager() : nullptr; }
-blot::RenderingManager* SampleUiApp::getRenderingManager() { return m_engine ? m_engine->getRenderingManager() : nullptr; }
-blot::CanvasManager* SampleUiApp::getCanvasManager() { return m_engine ? m_engine->getCanvasManager() : nullptr; }
-blot::UIManager* SampleUiApp::getUIManager() { return m_engine ? m_engine->getUIManager() : nullptr; }
-blot::AddonManager* SampleUiApp::getAddonManager() { return m_engine ? m_engine->getAddonManager() : nullptr; }
-blot::SettingsManager& SampleUiApp::getSettings() { return *m_engine->getSettings(); }
-const blot::SettingsManager& SampleUiApp::getSettings() const { return *m_engine->getSettings(); }
 bxScriptEngine* SampleUiApp::getScriptEngine() {
     if (auto manager = getAddonManager()) {
         auto ptr = manager->getAddon("bxScriptEngine");
-    return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
-}
+        return ptr ? dynamic_cast<bxScriptEngine*>(ptr.get()) : nullptr;
+    }
     return nullptr;
 }
+
 bxCodeEditor* SampleUiApp::getCodeEditor() { return m_codeEditor; }
 
 // Simple draw stub

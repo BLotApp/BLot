@@ -16,6 +16,26 @@ blot::CanvasManager* canvas = engine->getCanvasManager();
 blot::SettingsManager* settings = engine->getSettingsManager();
 ```
 
+### Inside `blot::IApp` subclasses
+When you derive from `blot::IApp`, the framework automatically injects an engine pointer before `setup()` is called.  The base `IApp` class then exposes convenience accessors so you can use the same managers without boiler-plate:
+
+```cpp
+class MyCoolApp : public blot::IApp {
+    void setup(blot::BlotEngine* engine) override {
+        // No need to cache the engine – the base class already did.
+        auto* ecs       = getECSManager();
+        auto* ui        = getUIManager();
+        auto* rendering = getRenderingManager();
+        // ...
+    }
+    // ...
+};
+```
+
+These helpers (`getECSManager()`, `getAddonManager()`, etc.) are protected members of `IApp`, keeping the public surface of your app class clean while still granting easy access to core managers.
+
+Outside of an `IApp` subclass (e.g. in standalone utilities or engine components), continue to obtain managers through an explicit `blot::BlotEngine*` pointer as shown above.
+
 ## Manager List
 
 ### ECSManager

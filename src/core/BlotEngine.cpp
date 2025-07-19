@@ -27,6 +27,7 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
     , m_window(nullptr)
 {
     if (m_app) {
+        m_app->setEngine(this);
         m_app->configureWindow(m_windowSettings);
     }
     if (!glfwInit()) {

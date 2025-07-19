@@ -51,7 +51,6 @@ private:
     GLFWwindow* m_window;
     bool m_debugMode = false;
 
-    // Default mid-grey so user immediately sees rendering
     glm::vec4 m_clearColor{0.4f, 0.4f, 0.4f, 1.0f};
 };
 } // namespace blot

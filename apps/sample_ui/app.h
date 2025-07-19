@@ -31,25 +31,15 @@ public:
     void draw() override;
     void configureWindow(WindowSettings& settings) override;
 
-    // Accessors to core managers and utilities
-    blot::ECSManager* getECSManager();
-    blot::RenderingManager* getRenderingManager();
-    blot::CanvasManager* getCanvasManager();
-    blot::UIManager* getUIManager();
-    blot::AddonManager* getAddonManager();
+private:
+    // Addon accessor helpers
     bxScriptEngine* getScriptEngine();
-    blot::SettingsManager& getSettings();
-    const blot::SettingsManager& getSettings() const;
     bxCodeEditor* getCodeEditor();
 
-private:
     // Internal helper methods
     void connectEventSystemToUI();
     void connectAddonManagerToEventSystem(blot::systems::EventSystem& eventSystem);
     void registerUIActions(blot::systems::EventSystem& eventSystem);
-
-    // Cached engine pointer populated in setup()
-    blot::BlotEngine* m_engine = nullptr;
 
     // Core window reference (from GLFW)
     GLFWwindow* m_window;
