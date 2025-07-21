@@ -4,9 +4,9 @@
 #include "ui/Mui.h"
 
 namespace blot {
-class bxMui : public AddonBase {
+class bxImGui : public AddonBase {
   public:
-	bxMui();
+	bxImGui();
 	bool init() override;
 	void setup() override {}
 	void update(float dt) override;

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
-#include "addons/bxMui/bxMui.h"
+#include "addons/bxImGui/bxImGui.h"
 #include "core/AddonBase.h"
 #include "core/ISettings.h"
 #include "core/json.h"
@@ -140,7 +140,7 @@ void blot::MAddon::loadDefaultAddons() {
 	// registerAddon(oscAddon);
 
 	// Example: Register MUI addon
-	auto muiAddon = std::make_shared<bxMui>();
+	auto muiAddon = std::make_shared<bxImGui>();
 	registerAddon(muiAddon);
 }
 

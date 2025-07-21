@@ -40,7 +40,7 @@ For detailed build instructions, see the [Build Documentation](./docs/build_inst
 
 ## Known Addons
 
-- [ ] **bxMui** - Material Design UI components
+- [ ] **bxImGui** - ImGui-based UI components
 - [ ] **bxBlend2D** - 2D vector graphics rendering
 - [ ] **bxCodeEditor** - Code editing capabilities
 - [ ] **bxOsc** - Open Sound Control support
