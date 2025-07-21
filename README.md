@@ -61,13 +61,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Development Credits
 This project was developed with assistance from Claude Sonnet 4 and OpenAI ChatGPT-o3.
-It was heavily inspired by [Openframeworks](openframeworks.cc) which I would recommend you use.
+It was heavily inspired by [OpenFrameworks] which I would recommend you use.
 Unless you want, like me, an Entity–component–system type of framework.
 Which might, or might not be, a good idea.
 But as a creative, composition over inherritence makes a lot of sense.
 
-[OpenFrameworks](https://openframeworks.cc/)
-[DrawBot](https://drawbot.com/)
+[OpenFrameworks]: https://openframeworks.cc/
+[DrawBot]: https://drawbot.com/
 [GLFW3]: https://github.com/glfw/glfw
 [FreeType]: https://gitlab.freedesktop.org/freetype/freetype
 [GLM]: https://github.com/g-truc/glm
