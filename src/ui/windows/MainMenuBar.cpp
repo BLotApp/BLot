@@ -2,9 +2,9 @@
 #include <imgui.h>
 #include <iostream>
 #include "CodeEditorWindow.h"
+#include "Mui.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
-#include "ui/Mui.h"
 
 namespace blot {
 
@@ -283,5 +283,4 @@ void MainMenuBar::render() {
 
 		ImGui::EndMainMenuBar();
 	}
-}
 } // namespace blot

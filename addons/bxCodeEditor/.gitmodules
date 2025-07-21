@@ -1,3 +1,4 @@
 [submodule "third_party/ImGuiColorTextEdit"]
 	path = third_party/ImGuiColorTextEdit
 	url = https://github.com/BLotApp/ImGuiColorTextEdit.git
+	branch = master

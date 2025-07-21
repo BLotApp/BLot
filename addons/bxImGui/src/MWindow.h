@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Window.h"
 #include "core/ISettings.h"
-#include "windows/Window.h"
 
 namespace blot {
 

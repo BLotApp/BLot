@@ -1,5 +1,8 @@
 # TODO
 
+- [ ] Make sure all imGui headers are gone, only allowed in bxImGui.
+- [ ] Move windows to the right location. (Not everything to bxImGui)
+- [ ] Check coordinate system, got moved to bxImGui but half is GLFW
 - [ ] Make sure all adons use our own forks. We don't like unexpected changed but love update cycles.
 
 - [ ] Learn more about Continuous Integration (CI) for C++ projects

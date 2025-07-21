@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <memory>
+#include "Mui.h"
 #include "core/AppSettings.h"
 #include "core/Iui.h"
 #include "core/U_core.h"
@@ -13,7 +14,7 @@ class IApp;
 class MEcs;
 class MAddon;
 class Iui;
-class Mui; // forward until refactor complete
+class Mui; // forward declaration
 class MRendering;
 class MCanvas;
 class MSettings;
@@ -34,7 +35,9 @@ class BlotEngine {
 
 	MEcs *getECSManager() { return m_ecsManager.get(); }
 	MAddon *getAddonManager() { return m_addonManager.get(); }
-	Mui *getUIManager() { return static_cast<Mui *>(m_uiManager.get()); }
+	Mui *getUIManager() {
+		return m_uiManager ? static_cast<Mui *>(m_uiManager.get()) : nullptr;
+	}
 	Iui *getUiManager() { return m_uiManager.get(); }
 	MRendering *getRenderingManager() { return m_renderingManager.get(); }
 	MCanvas *getCanvasManager() { return m_canvasManager.get(); }

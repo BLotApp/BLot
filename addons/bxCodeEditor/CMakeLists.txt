@@ -1,32 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
 
-# ------------------------------------------------------------------
-# Resolve dependencies
-# ------------------------------------------------------------------
-include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
+set(ADDON_NAME "bxCodeEditor")
 
-CPMAddPackage(
-    NAME bxImGui
-    GITHUB_REPOSITORY BLotApp/bxImGui
-    GIT_TAG main
+# Collect sources from src/
+file(GLOB BXCODEEDITOR_SRC
+    src/*.cpp
+    src/*.h
 )
 
-CPMAddPackage(
-    NAME bxScriptEngine
-    GITHUB_REPOSITORY BLotApp/bxScriptEngine
-    GIT_TAG main
-)
+add_library(${ADDON_NAME} STATIC ${BXCODEEDITOR_SRC})
 
-add_library(bxCodeEditor STATIC
-    bxCodeEditor.cpp
-    bxCodeEditor.h
-)
+# Depend on blot core and bxImGui (already fetched via addons.cmake)
+target_link_libraries(${ADDON_NAME} PUBLIC blot bxImGui bxScriptEngine)
 
-target_link_libraries(bxCodeEditor PUBLIC blot bxImGui bxScriptEngine)
-
-target_include_directories(bxCodeEditor PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
-    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
-)
-
-message(STATUS "Configured addon: bxCodeEditor (auto-fetches bxImGui, bxScriptEngine)") 
+# Include directories
+ target_include_directories(${ADDON_NAME} PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/third_party/ImGuiColorTextEdit>
+ )

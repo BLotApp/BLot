@@ -1,7 +1,7 @@
 #pragma once
 
 #include <imgui.h>
-#include "../CoordinateSystem.h"
+#include "CoordinateSystem.h"
 #include "Window.h"
 
 namespace blot {

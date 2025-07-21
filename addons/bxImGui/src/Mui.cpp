@@ -9,15 +9,14 @@
 #include <spdlog/spdlog.h>
 #include "../assets/fonts/fontRobotoRegular.h"
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "core/BlotEngine.h"
-#include "core/ISettings.h"
-#include "core/json.h"
 #include "ImGuiRenderer.h"
 #include "MWindow.h"
 #include "U_ui.h"
+#include "core/BlotEngine.h"
+#include "core/ISettings.h"
+#include "core/json.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
-#include "ui/windows/CodeEditorWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/LogWindow.h"
 #include "ui/windows/MainMenuBar.h"
@@ -221,7 +220,7 @@ void Mui::handleInput() {
 // -----------------------------------------------------------------------------
 
 void Mui::render() {
-    // Rendering is integrated inside update(); nothing required here for now.
+	// Rendering is integrated inside update(); nothing required here for now.
 }
 
 void Mui::setupDockspace() {

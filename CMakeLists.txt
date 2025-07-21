@@ -62,24 +62,10 @@ file(GLOB_RECURSE BLOT_SOURCES
 # Exclude third_party sources if needed
 list(FILTER BLOT_SOURCES EXCLUDE REGEX "third_party/")
 
-# GLOB ImGui core sources
-file(GLOB IMGUI_SOURCES
-    addons/bxImGui/imgui/imgui.cpp
-    addons/bxImGui/imgui/imgui_draw.cpp
-    addons/bxImGui/imgui/imgui_tables.cpp
-    addons/bxImGui/imgui/imgui_widgets.cpp
-    addons/bxImGui/imgui/imgui_demo.cpp
-)
-# GLOB ImGui backends (only the ones you use)
-file(GLOB IMGUI_BACKEND_SOURCES
-    addons/bxImGui/imgui/backends/imgui_impl_glfw.cpp
-    addons/bxImGui/imgui/backends/imgui_impl_opengl3.cpp
-)
-# GLOB ImGuiColorTextEdit
-file(GLOB IMGUI_COLOR_TEXT_EDIT_SOURCES
-    third_party/ImGuiColorTextEdit/TextEditor.cpp
-)
-# imgui-node-editor is now provided by the bxNodeEditor addon.
+# ImGui, backends, and ImGuiColorTextEdit are now compiled inside bxImGui / bxCodeEditor addons.
+set(IMGUI_SOURCES)
+set(IMGUI_BACKEND_SOURCES)
+set(IMGUI_COLOR_TEXT_EDIT_SOURCES ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit/TextEditor.cpp)
 
 # ----------------- Addon hybrid build -------------------
 
@@ -90,12 +76,8 @@ file(GLOB IMGUI_COLOR_TEXT_EDIT_SOURCES
 
 
 add_library(blot STATIC ${BLOT_SOURCES})
-target_sources(blot PRIVATE
-    ${IMGUI_SOURCES}
-    ${IMGUI_BACKEND_SOURCES}
-    ${IMGUI_COLOR_TEXT_EDIT_SOURCES}
-    ${APP_PATHS_SOURCES}
-)
+# ImGui sources removed from core target
+target_sources(blot PRIVATE ${APP_PATHS_SOURCES})
 
 # Use local glad (not vcpkg or submodule target)
 target_include_directories(blot PUBLIC ${CMAKE_SOURCE_DIR}/third_party/glad/include)
@@ -201,6 +183,14 @@ target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/glfw/include
     ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
+    # ImGui include (local submodule or fetched via CPM)
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui>
+    $<BUILD_INTERFACE:${imgui_SOURCE_DIR}>
+    # Blend2D include for StrokeWindow
+    ${CMAKE_SOURCE_DIR}/third_party/blend2d
+    ${CMAKE_SOURCE_DIR}/third_party/blend2d/src
+    # ImGuiColorTextEdit header-only include
+    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
 )
 
 # add_subdirectory(works)  # Removed: directory no longer exists
@@ -215,5 +205,25 @@ target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}/src/ecs
     ${CMAKE_SOURCE_DIR}/src/core/canvas
     ${CMAKE_SOURCE_DIR}/addons/bxImGui/src
+    ${CMAKE_SOURCE_DIR}/addons/bxCodeEditor/src
     # ...add others as needed
 ) 
+
+# TODO: This is a hack to ensure the core has ImGui headers available (used by MEcs, etc.)  
+# PLEASE FIX THIS simply search the headers and remove implement properly through registers
+# Ensure core has ImGui headers available (used by MEcs, etc.)
+set(IMGUI_LOCAL_DIR "${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui")
+if (NOT EXISTS "${IMGUI_LOCAL_DIR}/imgui.h")
+    CPMAddPackage(
+        NAME imgui_core
+        GITHUB_REPOSITORY ocornut/imgui
+        GIT_TAG docking
+    )
+    set(IMGUI_INCLUDE_DIR ${imgui_core_SOURCE_DIR})
+else()
+    set(IMGUI_INCLUDE_DIR ${IMGUI_LOCAL_DIR})
+endif() 
+
+# Add the ImGui include dir so blot's sources can find imgui.h
+target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR}) 
+

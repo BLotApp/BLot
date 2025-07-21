@@ -1,6 +1,6 @@
 #include "CodeEditorWindow.h"
 #include <functional>
-#include "../../third_party/ImGuiColorTextEdit/TextEditor.h"
+#include "TextEditor.h"
 #include "imgui.h"
 
 namespace blot {

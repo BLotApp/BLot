@@ -20,6 +20,7 @@
 #include <spdlog/spdlog.h>
 
 // Project includes
+#include "CodeEditorWindow.h"
 #include "Mui.h"
 #include "U_ui.h"
 #include "app.h"
@@ -36,9 +37,8 @@
 #include "rendering/U_rendering.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
-#include "ui/windows/CodeEditorWindow.h"
-#include "ui/windows/NodeEditorWindow.h"
 #include "ui/windows/PropertiesWindow.h"
+#include "windows/NodeEditorWindow.h"
 
 void ExampleApp::setup() {
 	spdlog::info("Setting up example application...");
