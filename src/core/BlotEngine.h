@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "core/AppSettings.h"
+#include "core/Iui.h"
 #include "core/U_core.h"
 #include "core/WindowSettings.h"
 #include "rendering/U_gladGlfw.h"
@@ -11,7 +12,8 @@ namespace blot {
 class IApp;
 class MEcs;
 class MAddon;
-class Mui;
+class Iui;
+class Mui; // forward until refactor complete
 class MRendering;
 class MCanvas;
 class MSettings;
@@ -32,7 +34,8 @@ class BlotEngine {
 
 	MEcs *getECSManager() { return m_ecsManager.get(); }
 	MAddon *getAddonManager() { return m_addonManager.get(); }
-	Mui *getUIManager() { return m_uiManager.get(); }
+	Mui *getUIManager() { return static_cast<Mui *>(m_uiManager.get()); }
+	Iui *getUiManager() { return m_uiManager.get(); }
 	MRendering *getRenderingManager() { return m_renderingManager.get(); }
 	MCanvas *getCanvasManager() { return m_canvasManager.get(); }
 	MSettings *getSettings() { return m_settingsManager.get(); }
@@ -60,7 +63,11 @@ class BlotEngine {
 	GLFWwindow *getWindow() const { return m_window; }
 
 	// Attach/detach UI manager (implemented in .cpp to avoid circular include)
-	void attachUIManager(std::unique_ptr<Mui> ui);
+	void attachUiManager(std::unique_ptr<Iui> ui);
+	// Temporary wrapper for backward compatibility
+	void attachUIManager(std::unique_ptr<Mui> ui) {
+		attachUiManager(std::unique_ptr<Iui>(ui.release()));
+	}
 	void detachUIManager();
 
 	void setUiInitialised(bool v) { m_uiInitialised = v; }
@@ -75,7 +82,7 @@ class BlotEngine {
 	std::unique_ptr<IApp> m_app;
 	std::unique_ptr<MEcs> m_ecsManager;
 	std::unique_ptr<MAddon> m_addonManager;
-	std::unique_ptr<Mui> m_uiManager;
+	std::unique_ptr<Iui> m_uiManager;
 	std::unique_ptr<MRendering> m_renderingManager;
 	std::unique_ptr<MCanvas> m_canvasManager;
 	std::unique_ptr<MSettings> m_settingsManager;

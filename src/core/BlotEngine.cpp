@@ -10,11 +10,11 @@
 
 #include "core/AppSettings.h"
 #include "core/IApp.h"
+#include "core/Iui.h"
 #include "core/MAddon.h"
 #include "core/U_core.h"
 #include "core/util/MSettings.h"
 #include "rendering/U_rendering.h"
-#include "ui/Mui.h"
 #include "ui/U_ui.h"
 
 namespace blot {
@@ -154,7 +154,7 @@ void BlotEngine::setTargetFrameRate(int fps) {
 
 // -------------- UI Manager attach/detach ----------------
 
-void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+void BlotEngine::attachUiManager(std::unique_ptr<Iui> ui) {
 	m_uiManager = std::move(ui);
 	if (m_uiManager) {
 		m_uiManager->setBlotEngine(this);

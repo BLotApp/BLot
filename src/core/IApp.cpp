@@ -1,5 +1,6 @@
 #include "core/IApp.h"
 #include "core/BlotEngine.h"
+#include "core/Iui.h"
 
 namespace blot {
 
@@ -17,6 +18,10 @@ MCanvas *IApp::getCanvasManager() const {
 
 Mui *IApp::getUIManager() const {
 	return m_engine ? m_engine->getUIManager() : nullptr;
+}
+
+Iui *IApp::getUiManager() const {
+	return m_engine ? m_engine->getUiManager() : nullptr;
 }
 
 MAddon *IApp::getAddonManager() const {

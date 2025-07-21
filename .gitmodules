@@ -10,10 +10,6 @@
 	path = third_party/entt
 	url = https://github.com/skypjack/entt.git
 	branch = master
-[submodule "third_party/imgui-node-editor"]
-	path = third_party/imgui-node-editor
-	url = https://github.com/BLotApp/imgui-node-editor
-	branch = master
 [submodule "third_party/blend2d"]
 	path = third_party/blend2d
 	url = https://github.com/blend2d/blend2d.git

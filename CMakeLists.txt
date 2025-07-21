@@ -46,7 +46,6 @@ add_subdirectory(third_party/blend2d)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui)
 include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui/backends)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui_markdown)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit)
@@ -85,13 +84,7 @@ file(GLOB IMGUI_BACKEND_SOURCES
 file(GLOB IMGUI_COLOR_TEXT_EDIT_SOURCES
     third_party/ImGuiColorTextEdit/TextEditor.cpp
 )
-# GLOB imgui-node-editor sources
-file(GLOB IMGUI_NODE_EDITOR_SOURCES
-    third_party/imgui-node-editor/imgui_node_editor.cpp
-    third_party/imgui-node-editor/imgui_node_editor_api.cpp
-    third_party/imgui-node-editor/imgui_canvas.cpp
-    third_party/imgui-node-editor/crude_json.cpp
-)
+# imgui-node-editor is now provided by the bxNodeEditor addon.
 
 # ----------------- Addon hybrid build -------------------
 
@@ -106,7 +99,6 @@ target_sources(blot PRIVATE
     ${IMGUI_SOURCES}
     ${IMGUI_BACKEND_SOURCES}
     ${IMGUI_COLOR_TEXT_EDIT_SOURCES}
-    ${IMGUI_NODE_EDITOR_SOURCES}
     ${APP_PATHS_SOURCES}
 )
 
@@ -208,8 +200,7 @@ file(GLOB ECS_SOURCES src/ecs/*.cpp src/ecs/*.h src/ecs/systems/*.cpp src/ecs/sy
 source_group("ECS" FILES ${ECS_SOURCES})
 
 # GLOB all Node sources and headers
-file(GLOB NODE_SOURCES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
-source_group("Node" FILES ${NODE_SOURCES})
+source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 
 # GLOB all Scripting sources and headers
 file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)

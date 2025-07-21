@@ -13,6 +13,7 @@ class Mui;
 class MRendering;
 class MCanvas;
 class MSettings;
+class Iui;
 
 class IApp {
   public:
@@ -50,6 +51,7 @@ class IApp {
 	blot::MRendering *getRenderingManager() const;
 	blot::MCanvas *getCanvasManager() const;
 	blot::Mui *getUIManager() const;
+	blot::Iui *getUiManager() const;
 	blot::MAddon *getAddonManager() const;
 	blot::MSettings *getSettingsManager() const;
 
