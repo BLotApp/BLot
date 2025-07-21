@@ -1,17 +1,15 @@
-add_library(bxCodeEditor
+cmake_minimum_required(VERSION 3.10)
+
+add_library(bxCodeEditor STATIC
     bxCodeEditor.cpp
     bxCodeEditor.h
 )
+
+target_link_libraries(bxCodeEditor PUBLIC blot)
+
 target_include_directories(bxCodeEditor PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/core
-    ${CMAKE_SOURCE_DIR}/src/ui
-    ${CMAKE_SOURCE_DIR}/src/rendering
-    ${CMAKE_SOURCE_DIR}/src/ecs
-    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
-    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
-    ${CMAKE_SOURCE_DIR}/third_party/glad/include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
     ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
-) 
+)
+
+message(STATUS "Configured addon: bxCodeEditor") 

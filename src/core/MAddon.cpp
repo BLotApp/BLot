@@ -5,7 +5,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
-#include "addons/bxImGui/bxImGui.h"
+// Removed direct bxImGui include; addons are now registered by applications.
 #include "core/AddonBase.h"
 #include "core/ISettings.h"
 #include "core/json.h"
@@ -111,13 +111,9 @@ void blot::MAddon::cleanupAll() {
 }
 
 void blot::MAddon::initDefaultAddons() {
-	spdlog::info("Initializing default addons...");
+	spdlog::info("Initializing default addons (compile-time list)...");
 
-	// Set up addon directory
-	setAddonDirectory("addons");
-	scanAddonDirectory("addons");
-
-	// Load default addons
+	// Directly register built-in addons; runtime directory scanning removed.
 	loadDefaultAddons();
 
 	// Initialize all addons
@@ -139,9 +135,7 @@ void blot::MAddon::loadDefaultAddons() {
 	// auto oscAddon = std::make_shared<bxOsc>();
 	// registerAddon(oscAddon);
 
-	// Example: Register MUI addon
-	auto muiAddon = std::make_shared<bxImGui>();
-	registerAddon(muiAddon);
+	// No builtin addons registered here; applications register what they need.
 }
 
 // Helper struct for metadata

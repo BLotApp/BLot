@@ -5,6 +5,21 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Blot VERSION 1.0.0 LANGUAGES C CXX)
 
+# ----------------------------------------------------
+# CPM.cmake – lightweight CMake package manager
+# This lets each application fetch only the addons it needs
+# ----------------------------------------------------
+set(CPM_DOWNLOAD_VERSION "0.38.2")
+set(CPM_PATH "${CMAKE_SOURCE_DIR}/cmake/CPM.cmake")
+if(NOT EXISTS "${CPM_PATH}")
+    message(STATUS "Downloading CPM.cmake (v${CPM_DOWNLOAD_VERSION})")
+    file(DOWNLOAD
+        https://github.com/cpm-cmake/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
+        "${CPM_PATH}"
+        TLS_VERIFY ON)
+endif()
+include(${CPM_PATH})
+
 option(BUILD_ADDON_EXAMPLES "Build all addon examples" OFF)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -29,8 +44,8 @@ add_subdirectory(third_party/blend2d)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui/backends)
+include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui)
+include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui/backends)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui_markdown)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser)
@@ -55,16 +70,16 @@ list(FILTER BLOT_SOURCES EXCLUDE REGEX "third_party/")
 
 # GLOB ImGui core sources
 file(GLOB IMGUI_SOURCES
-    third_party/imgui/imgui.cpp
-    third_party/imgui/imgui_draw.cpp
-    third_party/imgui/imgui_tables.cpp
-    third_party/imgui/imgui_widgets.cpp
-    third_party/imgui/imgui_demo.cpp
+    addons/bxImGui/imgui/imgui.cpp
+    addons/bxImGui/imgui/imgui_draw.cpp
+    addons/bxImGui/imgui/imgui_tables.cpp
+    addons/bxImGui/imgui/imgui_widgets.cpp
+    addons/bxImGui/imgui/imgui_demo.cpp
 )
 # GLOB ImGui backends (only the ones you use)
 file(GLOB IMGUI_BACKEND_SOURCES
-    third_party/imgui/backends/imgui_impl_glfw.cpp
-    third_party/imgui/backends/imgui_impl_opengl3.cpp
+    addons/bxImGui/imgui/backends/imgui_impl_glfw.cpp
+    addons/bxImGui/imgui/backends/imgui_impl_opengl3.cpp
 )
 # GLOB ImGuiColorTextEdit
 file(GLOB IMGUI_COLOR_TEXT_EDIT_SOURCES
@@ -79,35 +94,12 @@ file(GLOB IMGUI_NODE_EDITOR_SOURCES
 )
 
 # ----------------- Addon hybrid build -------------------
-# 1. Add self-managed addons (with their own CMakeLists.txt)
 
-set(ADDON_SELF_MANAGED_DIRS)
-if(EXISTS "${CMAKE_SOURCE_DIR}/addons")
-    file(GLOB ADDON_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/addons" "${CMAKE_SOURCE_DIR}/addons/*")
-    foreach(addon ${ADDON_DIRS})
-        if(EXISTS "${CMAKE_SOURCE_DIR}/addons/${addon}/CMakeLists.txt")
-            # Let the addon handle its own build rules
-            add_subdirectory("addons/${addon}")
-            # Determine target type only if the addon created a target named after its directory
-            if(TARGET ${addon})
-                get_target_property(_atype ${addon} TYPE)
-                if(_atype STREQUAL "STATIC_LIBRARY")
-                    list(APPEND ADDON_STATIC_TARGETS "${addon}")
-                endif()
-            endif()
-            list(APPEND ADDON_SELF_MANAGED_DIRS "${addon}")
-        endif()
-    endforeach()
-endif()
+# No longer building in-tree addons here – each application fetches and
+# builds the addons it needs via CPM.cmake. If you still want to build an
+# addon globally, add it explicitly with add_subdirectory() above this
+# comment.
 
-# 2. Simple addons: collect standalone .cpp files but exclude those directories above
-
-file(GLOB ADDON_SOURCE_FILES CONFIGURE_DEPENDS "addons/*/*.cpp")
-foreach(dir ${ADDON_SELF_MANAGED_DIRS})
-    list(FILTER ADDON_SOURCE_FILES EXCLUDE REGEX "addons/${dir}/.*")
-endforeach()
-
-# ---------------------------------------------------------
 
 add_library(blot STATIC ${BLOT_SOURCES})
 target_sources(blot PRIVATE
@@ -115,7 +107,6 @@ target_sources(blot PRIVATE
     ${IMGUI_BACKEND_SOURCES}
     ${IMGUI_COLOR_TEXT_EDIT_SOURCES}
     ${IMGUI_NODE_EDITOR_SOURCES}
-    ${ADDON_SOURCE_FILES}
     ${APP_PATHS_SOURCES}
 )
 
@@ -139,30 +130,20 @@ target_link_libraries(blot
         OpenGL::GL
         glfw
         blend2d
-        ${ADDON_STATIC_TARGETS}
 )
 
 # Add include directories for submodules (ImGui, etc.)
 target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/third_party/imgui
-    ${CMAKE_SOURCE_DIR}/third_party/imgui/backends
-    ${CMAKE_SOURCE_DIR}/third_party/imgui-node-editor
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/ui
+    ${CMAKE_SOURCE_DIR}/src/rendering
+    ${CMAKE_SOURCE_DIR}/src/ecs
+    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
+    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
+    ${CMAKE_SOURCE_DIR}/third_party/glad/include
     ${CMAKE_SOURCE_DIR}/third_party/json/single_include
-    ${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser
-    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
 )
-
-# Automatically add all addon subdirectories to the include path
-if(EXISTS "${CMAKE_SOURCE_DIR}/addons")
-    file(GLOB ADDON_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/addons" "${CMAKE_SOURCE_DIR}/addons/*")
-    foreach(addon ${ADDON_DIRS})
-        if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/addons/${addon}")
-            target_include_directories(blot PUBLIC "${CMAKE_SOURCE_DIR}/addons/${addon}")
-        endif()
-    endforeach()
-    target_include_directories(blot PUBLIC "${CMAKE_SOURCE_DIR}/addons")
-endif()
 
 # Compiler flags
 if(MSVC)
@@ -171,9 +152,8 @@ else()
     target_compile_options(blot PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-# Copy assets and addons
+# Copy assets
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
-file(COPY addons DESTINATION ${CMAKE_BINARY_DIR})
 
 # -----------------------------------------------------------------------------
 # Optional sample / demo applications
@@ -198,22 +178,22 @@ source_group("Rendering" FILES src/rendering/Graphics.cpp)
 source_group("CodeEditor" FILES addons/bxCodeEditor/bxCodeEditor.cpp addons/bxCodeEditor/bxCodeEditor.h)
 source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)
 source_group("ThirdParty\\ImGui" FILES
-    third_party/imgui/imgui.cpp
-    third_party/imgui/imgui.h
-    third_party/imgui/imgui_draw.cpp
-    third_party/imgui/imgui_internal.h
-    third_party/imgui/imgui_tables.cpp
-    third_party/imgui/imgui_widgets.cpp
-    third_party/imgui/imgui_demo.cpp
-    third_party/imgui/imconfig.h
-    third_party/imgui/imstb_rectpack.h
-    third_party/imgui/imstb_textedit.h
-    third_party/imgui/imstb_truetype.h
-    third_party/imgui/backends/imgui_impl_glfw.cpp
-    third_party/imgui/backends/imgui_impl_glfw.h
-    third_party/imgui/backends/imgui_impl_opengl3.cpp
-    third_party/imgui/backends/imgui_impl_opengl3.h
-    third_party/imgui/backends/imgui_impl_opengl3_loader.h
+    addons/bxImGui/imgui/imgui.cpp
+    addons/bxImGui/imgui/imgui.h
+    addons/bxImGui/imgui/imgui_draw.cpp
+    addons/bxImGui/imgui/imgui_internal.h
+    addons/bxImGui/imgui/imgui_tables.cpp
+    addons/bxImGui/imgui/imgui_widgets.cpp
+    addons/bxImGui/imgui/imgui_demo.cpp
+    addons/bxImGui/imgui/imconfig.h
+    addons/bxImGui/imgui/imstb_rectpack.h
+    addons/bxImGui/imgui/imstb_textedit.h
+    addons/bxImGui/imgui/imstb_truetype.h
+    addons/bxImGui/imgui/backends/imgui_impl_glfw.cpp
+    addons/bxImGui/imgui/backends/imgui_impl_glfw.h
+    addons/bxImGui/imgui/backends/imgui_impl_opengl3.cpp
+    addons/bxImGui/imgui/backends/imgui_impl_opengl3.h
+    addons/bxImGui/imgui/backends/imgui_impl_opengl3_loader.h
 )
 # GLOB all Addons sources and headers
 file(GLOB ADDONS_SOURCES src/addons/*.cpp src/addons/*.h)

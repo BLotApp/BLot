@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "addons/bxBlend2D/Blend2DRenderer.h"
+#include "Blend2DRenderer.h"
 
 // Shader sources
 const char *vertexShaderSrc = R"(

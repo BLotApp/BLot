@@ -5,7 +5,7 @@
 #include <memory>
 
 // Project headers
-#include "addons/bxBlend2D/Blend2DRenderer.h"
+#include "Blend2DRenderer.h"
 #include "core/AddonBase.h"
 #include "rendering/U_rendering.h"
 

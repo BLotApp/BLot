@@ -63,7 +63,9 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	}
 #endif
 
-	m_addonManager->initDefaultAddons();
+	// Applications are now responsible for registering and initializing any
+	// addons they require via MAddon. The engine no longer loads default
+	// addons automatically.
 
 	// store settings for later if needed
 	m_windowSettings = ws;

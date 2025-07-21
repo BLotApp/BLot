@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
-#include "addons/bxScriptEngine/bxScriptEngine.h"
+#include "bxScriptEngine.h"
 #include "core/U_core.h"
 
 namespace blot {

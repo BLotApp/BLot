@@ -20,9 +20,10 @@
 #include <spdlog/spdlog.h>
 
 // Project includes
-#include "addons/bxCodeEditor/bxCodeEditor.h"
-#include "addons/bxScriptEngine/bxScriptEngine.h"
 #include "app.h"
+#include "bxCodeEditor.h"
+#include "bxImGui.h"
+#include "bxScriptEngine.h"
 #include "core/BlotEngine.h"
 #include "core/U_core.h"
 #include "core/canvas/MCanvas.h"
@@ -42,6 +43,18 @@
 void ExampleApp::setup() {
 	spdlog::info("Setting up example application...");
 	getEngine()->init("Example App", 0.1f);
+
+	// -------------------------------------------------------------
+	// Register and initialise required addons (UI, CodeEditor, ScriptEngine)
+	// -------------------------------------------------------------
+	if (auto addonMgr = getAddonManager()) {
+		addonMgr->registerAddon(std::make_shared<bxImGui>());
+		addonMgr->registerAddon(std::make_shared<bxCodeEditor>());
+		addonMgr->registerAddon(std::make_shared<bxScriptEngine>());
+		if (!addonMgr->initAll()) {
+			spdlog::error("Failed to initialise one or more addons");
+		}
+	}
 
 	// Which window do you want to show?
 	getUIManager()->setWindowVisibility("Info", true);
