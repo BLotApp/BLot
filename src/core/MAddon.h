@@ -9,10 +9,11 @@
 #include "core/ISettings.h"
 
 namespace blot {
+class BlotEngine;
 class AddonBase;
 class MAddon : public IManager, public ISettings {
   public:
-	MAddon();
+	explicit MAddon(BlotEngine *engine);
 	~MAddon();
 	void init() override {}
 	void shutdown() override {}
@@ -89,5 +90,7 @@ class MAddon : public IManager, public ISettings {
 	bool checkDependencies(const std::string &addonName);
 	void sortAddonsByDependencies();
 	std::vector<std::string> getCircularDependencies() const;
+
+	blot::BlotEngine *m_engine = nullptr;
 };
 } // namespace blot

@@ -78,10 +78,36 @@ file(GLOB IMGUI_NODE_EDITOR_SOURCES
     third_party/imgui-node-editor/crude_json.cpp
 )
 
-# GLOB addon source files (one .cpp per addon directory)
-file(GLOB ADDON_SOURCE_FILES
-    addons/*/*.cpp
-)
+# ----------------- Addon hybrid build -------------------
+# 1. Add self-managed addons (with their own CMakeLists.txt)
+
+set(ADDON_SELF_MANAGED_DIRS)
+if(EXISTS "${CMAKE_SOURCE_DIR}/addons")
+    file(GLOB ADDON_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/addons" "${CMAKE_SOURCE_DIR}/addons/*")
+    foreach(addon ${ADDON_DIRS})
+        if(EXISTS "${CMAKE_SOURCE_DIR}/addons/${addon}/CMakeLists.txt")
+            # Let the addon handle its own build rules
+            add_subdirectory("addons/${addon}")
+            # Determine target type only if the addon created a target named after its directory
+            if(TARGET ${addon})
+                get_target_property(_atype ${addon} TYPE)
+                if(_atype STREQUAL "STATIC_LIBRARY")
+                    list(APPEND ADDON_STATIC_TARGETS "${addon}")
+                endif()
+            endif()
+            list(APPEND ADDON_SELF_MANAGED_DIRS "${addon}")
+        endif()
+    endforeach()
+endif()
+
+# 2. Simple addons: collect standalone .cpp files but exclude those directories above
+
+file(GLOB ADDON_SOURCE_FILES CONFIGURE_DEPENDS "addons/*/*.cpp")
+foreach(dir ${ADDON_SELF_MANAGED_DIRS})
+    list(FILTER ADDON_SOURCE_FILES EXCLUDE REGEX "addons/${dir}/.*")
+endforeach()
+
+# ---------------------------------------------------------
 
 add_library(blot STATIC ${BLOT_SOURCES})
 target_sources(blot PRIVATE
@@ -113,6 +139,7 @@ target_link_libraries(blot
         OpenGL::GL
         glfw
         blend2d
+        ${ADDON_STATIC_TARGETS}
 )
 
 # Add include directories for submodules (ImGui, etc.)
@@ -147,11 +174,6 @@ endif()
 # Copy assets and addons
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY addons DESTINATION ${CMAKE_BINARY_DIR})
-
-# Add addon subdirectories if they exist
-if(EXISTS ${CMAKE_SOURCE_DIR}/addons)
-    add_subdirectory(addons)
-endif() 
 
 # -----------------------------------------------------------------------------
 # Optional sample / demo applications
@@ -218,10 +240,6 @@ source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${U
 source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
 source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
-
-# spdlog is now included as a subdependency
-add_subdirectory(third_party/spdlog)
-target_link_libraries(blot PUBLIC spdlog::spdlog) 
 
 # Propagate third-party include directories needed by external consumers (apps)
 target_include_directories(blot PUBLIC

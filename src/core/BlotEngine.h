@@ -59,6 +59,13 @@ class BlotEngine {
 
 	GLFWwindow *getWindow() const { return m_window; }
 
+	// Attach/detach UI manager (implemented in .cpp to avoid circular include)
+	void attachUIManager(std::unique_ptr<Mui> ui);
+	void detachUIManager();
+
+	void setUiInitialised(bool v) { m_uiInitialised = v; }
+	bool isUiInitialised() const { return m_uiInitialised; }
+
   private:
 	std::string m_appName = "Blot App";
 	float m_appVersion = 0.1f;
@@ -80,5 +87,7 @@ class BlotEngine {
 	int m_targetFps = 60;
 	int m_currentFps = 0;
 	glm::vec4 m_clearColor{0.4f, 0.4f, 0.4f, 1.0f};
+	// Tracks whether Mui::init() has been called (addon may call it).
+	bool m_uiInitialised = false;
 };
 } // namespace blot

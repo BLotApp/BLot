@@ -5,24 +5,15 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
+#include "addons/bxMui/bxMui.h"
 #include "core/AddonBase.h"
 #include "core/ISettings.h"
 #include "core/json.h"
 
-blot::MAddon::MAddon() : m_addonDirectory("addons") {}
+blot::MAddon::MAddon(blot::BlotEngine *engine)
+	: m_engine(engine), m_addonDirectory("addons") {}
 
 blot::MAddon::~MAddon() { cleanupAll(); }
-
-void blot::MAddon::registerAddon(std::shared_ptr<blot::AddonBase> addon) {
-	if (!addon)
-		return;
-
-	std::string name = addon->getName();
-	m_addons[name] = addon;
-	m_addonOrder.push_back(name);
-
-	spdlog::info("Registered addon: {}", name);
-}
 
 void blot::MAddon::unregisterAddon(const std::string &name) {
 	auto it = m_addons.find(name);
@@ -147,6 +138,10 @@ void blot::MAddon::loadDefaultAddons() {
 	// Example: Register OSC addon
 	// auto oscAddon = std::make_shared<bxOsc>();
 	// registerAddon(oscAddon);
+
+	// Example: Register MUI addon
+	auto muiAddon = std::make_shared<bxMui>();
+	registerAddon(muiAddon);
 }
 
 // Helper struct for metadata
@@ -359,8 +354,8 @@ void blot::MAddon::setAddonDirectory(const std::string &directory) {
 	m_addonDirectory = directory;
 }
 
-void blot::MAddon::addGlobalEventListener(
-	const std::string &event, std::function<void()> callback) {
+void blot::MAddon::addGlobalEventListener(const std::string &event,
+										  std::function<void()> callback) {
 	m_globalEventListeners[event].push_back(callback);
 }
 
@@ -458,4 +453,20 @@ void blot::MAddon::setSettings(const blot::json &settings) {
 	if (settings.contains("addonOrder"))
 		m_addonOrder = settings["addonOrder"].get<std::vector<std::string>>();
 	// Optionally, restore more addon state as needed
+}
+
+void blot::MAddon::registerAddon(std::shared_ptr<blot::AddonBase> addon) {
+	if (!addon)
+		return;
+	// Provide engine pointer to addon before any lifecycle method
+	if (m_engine)
+		addon->setBlotEngine(m_engine);
+	std::string name = addon->getName();
+	// Avoid duplicate entries in order list
+	if (std::find(m_addonOrder.begin(), m_addonOrder.end(), name) ==
+		m_addonOrder.end()) {
+		m_addonOrder.push_back(name);
+	}
+	m_addons[name] = addon;
+	spdlog::info("Registered addon: {}", name);
 }

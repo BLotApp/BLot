@@ -11,12 +11,13 @@ class AppTemplate : public blot::IApp {
 	}
 	void setup() override {
 		spdlog::info("App Template setup!");
-		if (auto eng = getEngine()) {
-			eng->setClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+		if (auto engine = getEngine()) {
+			engine->setClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 		}
 	}
 	void update(float) override {}
 	void draw() override {
+
 		// What would you like to draw today?
 	}
 };

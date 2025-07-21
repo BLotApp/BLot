@@ -28,7 +28,7 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	: m_settings(settings), m_app(std::move(app)),
-	  m_addonManager(std::make_unique<MAddon>()),
+	  m_addonManager(std::make_unique<MAddon>(this)),
 	  m_ecsManager(std::make_unique<MEcs>()),
 	  m_renderingManager(std::make_unique<MRendering>()),
 	  m_canvasManager(std::make_unique<MCanvas>(this)), m_uiManager(nullptr),
@@ -63,7 +63,6 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	}
 #endif
 
-	m_uiManager = std::make_unique<Mui>(m_window);
 	m_addonManager->initDefaultAddons();
 
 	// store settings for later if needed
@@ -87,8 +86,9 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 void BlotEngine::init(const std::string &appName, float appVersion) {
 	m_appName = appName;
 	m_appVersion = appVersion;
-	if (m_uiManager) {
+	if (m_uiManager && !m_uiInitialised) {
 		m_uiManager->init();
+		m_uiInitialised = true;
 	}
 }
 
@@ -149,5 +149,16 @@ void BlotEngine::setTargetFrameRate(int fps) {
 		m_targetFps = fps;
 	}
 }
+
+// -------------- UI Manager attach/detach ----------------
+
+void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+	m_uiManager = std::move(ui);
+	if (m_uiManager) {
+		m_uiManager->setBlotEngine(this);
+	}
+}
+
+void BlotEngine::detachUIManager() { m_uiManager.reset(); }
 
 } // namespace blot
