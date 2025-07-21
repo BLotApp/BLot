@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 #include "core/ISettings.h"
-#include "ui/ImGuiRenderer.h"
-#include "ui/MShortcut.h"
-#include "ui/MWindow.h"
+#include "ImGuiRenderer.h"
+#include "MShortcut.h"
+#include "MWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/PropertiesWindow.h"
@@ -29,7 +29,7 @@ class MainMenuBar;
 
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "rendering/U_gladGlfw.h"
-#include "ui/U_ui.h"
+#include "U_ui.h"
 
 // Forward declarations
 namespace blot {
@@ -56,7 +56,7 @@ struct Modal {
 	bool open = true;
 };
 
-class Mui : public IManager, public ISettings {
+class Mui : public Iui {
   public:
 	Mui(GLFWwindow *window);
 	~Mui();
@@ -65,8 +65,9 @@ class Mui : public IManager, public ISettings {
 	void shutdown() override;
 
 	// Main UI operations
-	void update();
-	void handleInput();
+	void update() override;
+	void handleInput() override;
+	void render() override;
 
 	// ImGui initialization and shutdown
 	void initImGui();

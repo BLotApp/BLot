@@ -20,6 +20,8 @@
 #include <spdlog/spdlog.h>
 
 // Project includes
+#include "Mui.h"
+#include "U_ui.h"
 #include "app.h"
 #include "bxCodeEditor.h"
 #include "bxImGui.h"
@@ -32,8 +34,6 @@
 #include "ecs/components/CEvent.h"
 #include "rendering/MRendering.h"
 #include "rendering/U_rendering.h"
-#include "ui/Mui.h"
-#include "ui/U_ui.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/CodeEditorWindow.h"

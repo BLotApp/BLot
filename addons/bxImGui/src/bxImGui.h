@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/AddonBase.h"
-#include "ui/Mui.h"
+#include "Mui.h"
 
 namespace blot {
 class bxImGui : public AddonBase {

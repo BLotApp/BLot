@@ -12,8 +12,6 @@
 | [GLFW3]     | Window/input management        | submodule     |                   |
 | [GLM]       | Math (vectors/matrices)        | submodule     | Header-only       |
 | [GLAD]      | OpenGL loader                  | Included      |                   |
-| [DearImGui] | UI framework                   | submodule     |                   |
-| [Blend2D]   | 2D vector graphics             | submodule     | *Included Addon*  |
 | [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only       |
 | [spdlog]    | Logging                        | submodule     | Header-only       |
 
@@ -40,11 +38,14 @@ For detailed build instructions, see the [Build Documentation](./docs/build_inst
 
 ## Known Addons
 
-- [ ] **bxImGui** - ImGui-based UI components
-- [ ] **bxBlend2D** - 2D vector graphics rendering
-- [ ] **bxCodeEditor** - Code editing capabilities
-- [ ] **bxOsc** - Open Sound Control support
-- [ ] **bxScriptEngine** - Scripting engine integration
+- [ ] **bxImGui** - Adds Dear ImGui UI components  
+- [ ] **bxTestEngine** - ImGui Test Engine for BLot  
+- [ ] **bxBlend2D** - 2D vector graphics rendering  
+- [ ] **bxMarkdown** - Markdown support  
+- [ ] **bxCodeEditor** - Code editing capabilities  
+- [ ] **bxNodeEditor** - ImGui-based node editor  
+- [ ] **bxOsc** - Open Sound Control support  
+- [ ] **bxScriptEngine** - Scripting engine integration  
 
 ## Contributing
 

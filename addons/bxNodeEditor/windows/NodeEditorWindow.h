@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "Window.h"
+#include "windows/Window.h"
 #include "ecs/MEcs.h"
 
 namespace blot {

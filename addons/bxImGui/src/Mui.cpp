@@ -12,9 +12,9 @@
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
 #include "core/json.h"
-#include "ui/ImGuiRenderer.h"
-#include "ui/MWindow.h"
-#include "ui/U_ui.h"
+#include "ImGuiRenderer.h"
+#include "MWindow.h"
+#include "U_ui.h"
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/CodeEditorWindow.h"
@@ -214,6 +214,14 @@ void Mui::handleInput() {
 	if (m_windowManager) {
 		m_windowManager->handleInput();
 	}
+}
+
+// -----------------------------------------------------------------------------
+// Iui interface: render() – handled implicitly in update (already renders)
+// -----------------------------------------------------------------------------
+
+void Mui::render() {
+    // Rendering is integrated inside update(); nothing required here for now.
 }
 
 void Mui::setupDockspace() {

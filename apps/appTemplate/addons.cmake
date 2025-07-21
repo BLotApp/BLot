@@ -2,11 +2,9 @@
 # Add more CPMAddPackage() blocks as your app grows
 
 include(${CMAKE_SOURCE_DIR}/cmake/CPM.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/BlotAddon.cmake)
 
-CPMAddPackage(
-    NAME bxTemplate
-    GITHUB_REPOSITORY BLotApp/bxTemplate
-    GIT_TAG main
-)
+# bxTemplate addon
+blot_addon_local_or_remote(bxTemplate BLotApp/bxTemplate main)
 
 # bxTemplate target is now available for linking 

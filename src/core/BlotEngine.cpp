@@ -15,7 +15,6 @@
 #include "core/U_core.h"
 #include "core/util/MSettings.h"
 #include "rendering/U_rendering.h"
-#include "ui/U_ui.h"
 
 namespace blot {
 

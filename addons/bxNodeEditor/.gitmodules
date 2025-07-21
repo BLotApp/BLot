@@ -1,0 +1,4 @@
+[submodule "third_party/imgui-node-editor"]
+	path = third_party/imgui-node-editor
+	url = https://github.com/BLotApp/imgui-node-editor
+	branch = master

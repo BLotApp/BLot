@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <imgui.h>
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "ToolbarWindow.h"
 
 namespace blot {
 
@@ -89,13 +88,6 @@ void ThemePanel::renderRandomThemeButton() {
 }
 
 void ThemePanel::renderColorPresets() {
-	if (!m_toolbarWindow) {
-		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f),
-						   ICON_FA_EXCLAMATION_TRIANGLE
-						   " Toolbar not connected");
-		ImGui::Text("Color presets require toolbar connection");
-		return;
-	}
 
 	ImGui::SameLine();
 
@@ -104,37 +96,8 @@ void ThemePanel::renderColorPresets() {
 		ImVec4 randomFill = ImVec4(static_cast<float>(rand()) / RAND_MAX,
 								   static_cast<float>(rand()) / RAND_MAX,
 								   static_cast<float>(rand()) / RAND_MAX, 1.0f);
-		m_toolbarWindow->setFillColor(randomFill);
 		printf("[ThemePanel] Random fill color: (%.2f, %.2f, %.2f)\n",
 			   randomFill.x, randomFill.y, randomFill.z);
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_CIRCLE " No Fill")) {
-		m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-		printf("[ThemePanel] Disabled fill\n");
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_SQUARE " Red Fill")) {
-		m_toolbarWindow->setFillColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-		printf("[ThemePanel] Set fill to red\n");
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_SQUARE " Green Fill")) {
-		m_toolbarWindow->setFillColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-		printf("[ThemePanel] Set fill to green\n");
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_SQUARE " Blue Fill")) {
-		m_toolbarWindow->setFillColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f));
-		printf("[ThemePanel] Set fill to blue\n");
 	}
 }
 

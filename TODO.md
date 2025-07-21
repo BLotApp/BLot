@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] Make sure all adons use our own forks. We don't like unexpected changed but love update cycles.
+
 - [ ] Learn more about Continuous Integration (CI) for C++ projects
     - Research how to set up CI pipelines (e.g., GitHub Actions)
     - Explore tools for code quality, formatting (clang-format), and linting (clang-tidy)

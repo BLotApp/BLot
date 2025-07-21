@@ -36,11 +36,6 @@ set(GLFW3_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
 # Add GLM and EnTT from submodules
 include_directories(${CMAKE_SOURCE_DIR}/third_party/glm)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/json/single_include)
-
-# Remove legacy vcpkg references – Blend2D is provided as a submodule
-# Add Blend2D submodule
-add_subdirectory(third_party/blend2d)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -121,7 +116,6 @@ target_link_libraries(blot
     PRIVATE
         OpenGL::GL
         glfw
-        blend2d
 )
 
 # Add include directories for submodules (ImGui, etc.)
@@ -153,16 +147,6 @@ option(BUILD_APPS "Build sample applications in /apps" ON)
 if(BUILD_APPS)
     add_subdirectory(apps)
 endif()
-
-# ImGuizmo integration
-set(IMGUIZMO_DIR ${CMAKE_SOURCE_DIR}/third_party/ImGuizmo)
-set(IMGUIZMO_SRC ${IMGUIZMO_DIR}/ImGuizmo.cpp)
-
-add_library(ImGuizmo STATIC ${IMGUIZMO_SRC})
-target_include_directories(ImGuizmo PUBLIC ${IMGUIZMO_DIR})
-
-# Link ImGuizmo to your main app target (replace blot with your target name if different)
-target_link_libraries(blot PRIVATE ImGuizmo) 
 
 # Organize source files into folders for Visual Studio
 source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/MCanvas.cpp src/framework/canvas/MCanvas.h)
@@ -230,5 +214,6 @@ target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}/src/rendering
     ${CMAKE_SOURCE_DIR}/src/ecs
     ${CMAKE_SOURCE_DIR}/src/core/canvas
+    ${CMAKE_SOURCE_DIR}/addons/bxImGui/src
     # ...add others as needed
 ) 

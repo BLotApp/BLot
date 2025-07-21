@@ -1,4 +1,4 @@
-#include "ui/CoordinateSystem.h"
+#include "CoordinateSystem.h"
 #include <iomanip>
 #include <sstream>
 
