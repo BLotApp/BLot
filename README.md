@@ -2,9 +2,7 @@
 
 ![preview](apps/appTemplate/img/preview.png)
 
-Blot (Pronounced Beelot) is a creative coding framework inspired by OpenFrameworks, DrawBot and Pixile.
-It suposed to be a super light Entity Component System for creative programming, all weight should come from it's addons.
-It should run on a single-board computer like the Raspberry Pi.
+Blot (Pronounced Beelot) is a creative coding framework inspired by [OpenFrameworks]. It's suposed to be a super light Entity Component System for creative programming, all weight should come from it's addons. Light enough to run super-fast on a single-board computer like the Raspberry Pi.
 
 ### Dependencies
 | Library     | Purpose                        | How Managed   | Notes             |
@@ -42,15 +40,22 @@ On Linux/macOS replace the batch script with `./build.sh` or run the usual `cmak
 For code style and contribution guidelines, see [docs/contributing.md](docs/contributing.md).
 Also check our [TODO.md](./TODO.md) for things that require attention.
 
+### Addons
+
+ -[ ] bxMui
+ -[ ] bxBlend2D
+ -[ ] bxCodeEditor
+ -[ ] bxOsc
+ -[ ] bxScriptEngine
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Inspired by [OpenFrameworks](https://openframeworks.cc/), [DrawBot](https://drawbot.com/) and Pixile. 
-- Uses [Dear ImGui](https://github.com/ocornut/imgui) for UI
+- Inspired by [OpenFrameworks], [DrawBot] and Pixile. 
+- Uses [DearImGui] for UI
 - With `Node Editor` integration from [imgui-node-editor](https://github.com/thedmd/imgui-node-editor)
-- Graphics powered by [OpenGL](https://www.opengl.org/) and [Blend2D](https://blend2d.com/)
+- Graphics powered by [OpenGL](https://www.opengl.org/) and [Blend2D]
 - Entity-Component-System by [EnTT](https://github.com/skypjack/entt)
 
 
@@ -61,6 +66,8 @@ Unless you want, like me, an Entity–component–system type of framework.
 Which might, or might not be, a good idea.
 But as a creative, composition over inherritence makes a lot of sense.
 
+[OpenFrameworks](https://openframeworks.cc/)
+[DrawBot](https://drawbot.com/)
 [GLFW3]: https://github.com/glfw/glfw
 [FreeType]: https://gitlab.freedesktop.org/freetype/freetype
 [GLM]: https://github.com/g-truc/glm
