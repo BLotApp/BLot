@@ -21,6 +21,7 @@
 
 // Project includes
 #include "CodeEditorWindow.h"
+#include "MainMenuBar.h"
 #include "Mui.h"
 #include "U_ui.h"
 #include "app.h"
@@ -38,7 +39,6 @@
 #include "ui/windows/AddonManagerWindow.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/PropertiesWindow.h"
-#include "windows/NodeEditorWindow.h"
 
 void ExampleApp::setup() {
 	spdlog::info("Setting up example application...");
@@ -48,7 +48,7 @@ void ExampleApp::setup() {
 	// Register and initialise required addons (UI, CodeEditor, ScriptEngine)
 	// -------------------------------------------------------------
 	if (auto addonMgr = getAddonManager()) {
-		addonMgr->registerAddon(std::make_shared<bxImGui>());
+		addonMgr->registerAddon(std::make_shared<blot::bxImGui>());
 		addonMgr->registerAddon(std::make_shared<bxCodeEditor>());
 		addonMgr->registerAddon(std::make_shared<bxScriptEngine>());
 		if (!addonMgr->initAll()) {
@@ -126,23 +126,7 @@ void ExampleApp::connectEventSystemToUI() {
 			if (activeCanvas) {
 				mainMenuBar->setCanvas(activeCanvas);
 			}
-			mainMenuBar->setCanvasManager(getCanvasManager());
 		}
-	}
-
-	// Connect MainMenuBar to UI Manager for ImGui theme
-	if (mainMenuBar && getUIManager()) {
-		mainMenuBar->setUIManager(getUIManager());
-	}
-
-	// Connect NodeEditorWindow to the ECS system
-	auto nodeEditorWindow = std::dynamic_pointer_cast<blot::NodeEditorWindow>(
-		getUIManager()->getWindowManager()->getWindow("NodeEditor"));
-	if (nodeEditorWindow) {
-		// Create a shared_ptr from the central ECS Manager for the window
-		auto ecsSharedPtr =
-			std::shared_ptr<blot::MEcs>(getECSManager(), [](blot::MEcs *) {});
-		nodeEditorWindow->setECSManager(ecsSharedPtr);
 	}
 
 	// Connect PropertiesWindow to the ECS system
@@ -240,20 +224,22 @@ void ExampleApp::registerUIActions(blot::ecs::SEvent &eventSystem) {
 	});
 
 	// Edit menu actions
-	eventSystem.registerAction("addon_manager", [this]() {
-		spdlog::info("Addon manager action triggered");
-		auto addonManagerWindow =
-			getUIManager()->getWindowManager()->getWindow("Addon Manager");
-		if (addonManagerWindow) {
-			addonManagerWindow->show();
-		}
-	});
+	eventSystem.registerAction(
+		"addon_manager", std::function<void()>([this]() {
+			spdlog::info("Addon manager action triggered");
+			auto addonManagerWindow =
+				getUIManager()->getWindowManager()->getWindow("Addon Manager");
+			if (addonManagerWindow) {
+				addonManagerWindow->show();
+			}
+		}));
 
-	eventSystem.registerAction("reload_addons", [this]() {
-		spdlog::info("Reload addons action triggered");
-		// The Addon Manager is now managed by BlotApp, so we don't need to
-		// reload here.
-	});
+	eventSystem.registerAction("reload_addons", std::function<void()>([this]() {
+								   spdlog::info(
+									   "Reload addons action triggered");
+								   // The Addon Manager is now managed by
+								   // BlotApp, so we don't need to reload here.
+							   }));
 
 	// View menu actions
 	eventSystem.registerAction("theme_editor", [this]() {
@@ -367,6 +353,29 @@ void ExampleApp::registerUIActions(blot::ecs::SEvent &eventSystem) {
 			}
 		}));
 
+	// Canvas query actions
+	eventSystem.registerAction(
+		"get_canvas_list",
+		std::function<std::vector<std::pair<size_t, std::string>>()>([this]() {
+			if (getCanvasManager()) {
+				return getCanvasManager()->getAllCanvasInfo();
+			}
+			return std::vector<std::pair<size_t, std::string>>{};
+		}));
+
+	eventSystem.registerAction(
+		"get_active_canvas", std::function<size_t()>([this]() {
+			return getCanvasManager()
+					   ? getCanvasManager()->getActiveCanvasIndex()
+					   : 0;
+		}));
+
+	eventSystem.registerAction(
+		"get_canvas_count", std::function<size_t()>([this]() {
+			return getCanvasManager() ? getCanvasManager()->getCanvasCount()
+									  : 0;
+		}));
+
 	// Canvas management actions
 	eventSystem.registerAction(
 		"select_canvas",
@@ -382,7 +391,6 @@ void ExampleApp::registerUIActions(blot::ecs::SEvent &eventSystem) {
 			// TODO: Implement canvas closing
 		}));
 
-	// Canvas management actions
 	eventSystem.registerAction(
 		"new_canvas", std::function<void()>([this]() {
 			spdlog::info("New canvas action triggered");

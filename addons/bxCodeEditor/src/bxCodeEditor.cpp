@@ -1,5 +1,5 @@
 #include "bxCodeEditor.h"
-#include "third_party/ImGuiColorTextEdit/TextEditor.h"
+#include "TextEditor.h"
 
 bxCodeEditor::bxCodeEditor()
 	: blot::AddonBase("bxCodeEditor"),

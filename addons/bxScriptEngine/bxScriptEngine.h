@@ -1,27 +1,38 @@
 #pragma once
 
-#include <functional>
 #include <glm/glm.hpp>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "core/AddonBase.h"
 
 namespace blot {
 class Canvas;
 class Graphics;
 } // namespace blot
 
-class bxScriptEngine {
+// Script engine now acts as an addon so it can be registered with MAddon
+
+class bxScriptEngine : public blot::AddonBase {
   public:
 	bxScriptEngine();
 	~bxScriptEngine();
 
-	void runCode(const std::string &code);
-	void stop();
-	void update(float deltaTime);
+	// AddonBase lifecycle
+	bool init() override { return true; }
+	void setup() override {}
+	void update(float deltaTime) override;
+	void draw() override {}
+	void cleanup() override {}
+
 	// Convenience wrapper used by examples
 	void updateScript(float deltaTime) { update(deltaTime); }
+
+	// Run/stop script execution
+	void runCode(const std::string &code);
+	void stop();
 
 	// API functions that can be called from scripts
 	void size(int width, int height);

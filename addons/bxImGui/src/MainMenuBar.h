@@ -7,7 +7,6 @@
 #include "Window.h"
 #include "core/BlotEngine.h"
 #include "core/canvas/Canvas.h"
-#include "core/canvas/MCanvas.h"
 #include "ecs/components/CEvent.h"
 #include "ecs/systems/SEvent.h"
 
@@ -34,11 +33,6 @@ class MainMenuBar {
 	// Set Canvas reference for renderer state
 	void setCanvas(std::shared_ptr<Canvas> canvas) { m_canvas = canvas; }
 
-	// Set Canvas Manager reference for canvas operations
-	void setCanvasManager(blot::MCanvas *canvasManager) {
-		m_canvasManager = canvasManager;
-	}
-
 	// Set UI Manager reference for ImGui theme
 	void setUIManager(Mui *uiManager) { m_uiManager = uiManager; }
 
@@ -61,9 +55,6 @@ class MainMenuBar {
 
 	// Canvas reference for renderer state
 	std::shared_ptr<Canvas> m_canvas;
-
-	// Canvas Manager reference for canvas operations
-	blot::MCanvas *m_canvasManager = nullptr;
 
 	// UI Manager reference for ImGui theme
 	Mui *m_uiManager = nullptr;

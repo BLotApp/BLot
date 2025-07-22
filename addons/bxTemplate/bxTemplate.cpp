@@ -1,5 +1,4 @@
 #include "bxTemplate.h"
-#include <iostream>
 
 bxTemplate::bxTemplate()
 	: blot::AddonBase("bxTemplate", "1.0.0"), m_initialized(false),
@@ -24,10 +23,10 @@ bool bxTemplate::init() {
 void bxTemplate::setup() {
 	this->log("Setting up bxTemplate addon");
 
-	// Set up default parameters
-	setParameter("speed", 1.0f);
-	setParameter("amplitude", 100.0f);
-	setParameter("frequency", 0.5f);
+	// Example: Set up default parameters
+	// setParameter("speed", 1.0f);
+	// setParameter("amplitude", 100.0f);
+	// setParameter("frequency", 0.5f);
 }
 
 void bxTemplate::update(float deltaTime) {
@@ -35,12 +34,12 @@ void bxTemplate::update(float deltaTime) {
 
 	// Update addon logic here
 	// Example: Update parameters based on time
-	float speed = getParameter("speed");
-	float amplitude = getParameter("amplitude");
-	float frequency = getParameter("frequency");
+	// float speed = getParameter("speed");
+	// float amplitude = getParameter("amplitude");
+	// float frequency = getParameter("frequency");
 
-	// You can trigger events here
-	this->triggerEvent("update");
+	// You can trigger events
+	// this->triggerEvent("update");
 }
 
 void bxTemplate::draw() {

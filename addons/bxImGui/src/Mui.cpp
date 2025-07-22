@@ -11,6 +11,7 @@
 #include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
 #include "ImGuiRenderer.h"
 #include "MWindow.h"
+#include "MainMenuBar.h"
 #include "U_ui.h"
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
@@ -19,11 +20,8 @@
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/LogWindow.h"
-#include "ui/windows/MainMenuBar.h"
-#include "ui/windows/NodeEditorWindow.h"
 #include "ui/windows/PropertiesWindow.h"
 #include "ui/windows/SaveWorkspaceDialog.h"
-#include "ui/windows/StrokeWindow.h"
 #include "ui/windows/TextureViewerWindow.h"
 #include "ui/windows/ThemeEditorWindow.h"
 #include "ui/windows/ThemePanel.h"
@@ -368,16 +366,6 @@ void Mui::setupWindows(BlotEngine *app) {
 
 	m_windowManager->createWindow(toolbarWindow->getTitle(), toolbarWindow);
 
-	// Connect theme panel to toolbar window
-	if (m_windowManager->getWindow("ThemePanel")) { // Assuming ThemePanel is
-													// registered with MWindow
-		auto themePanel = std::dynamic_pointer_cast<ThemePanel>(
-			m_windowManager->getWindow("ThemePanel"));
-		if (themePanel) {
-			themePanel->setToolbarWindow(toolbarWindow);
-		}
-	}
-
 	// Create canvas window
 	auto canvasWindow = std::make_shared<CanvasWindow>(
 		"Canvas###MainCanvas",
@@ -394,14 +382,9 @@ void Mui::setupWindows(BlotEngine *app) {
 	m_windowManager->createWindow(propertiesWindow->getTitle(),
 								  propertiesWindow);
 
-	// Create code editor window
-	auto codeEditorWindow = std::make_shared<CodeEditorWindow>(
-		"Code Editor###MainCodeEditor", Window::Flags::None);
-	m_windowManager->createWindow(codeEditorWindow->getTitle(),
-								  codeEditorWindow);
-
 	// Create main menu bar (standalone, not managed by MWindow)
 	m_mainMenuBar = std::make_unique<MainMenuBar>("Main Menu Bar");
+	m_mainMenuBar->setUIManager(this);
 
 	// Create addon manager window
 	auto addonManagerWindow = std::make_shared<AddonManagerWindow>(
@@ -412,17 +395,6 @@ void Mui::setupWindows(BlotEngine *app) {
 	}
 	m_windowManager->createWindow(addonManagerWindow->getTitle(),
 								  addonManagerWindow);
-
-	// Create node editor window
-	auto nodeEditorWindow = std::make_shared<NodeEditorWindow>(
-		"Node Editor###NodeEditor", Window::Flags::None);
-	m_windowManager->createWindow(nodeEditorWindow->getTitle(),
-								  nodeEditorWindow);
-
-	// Create stroke window
-	auto strokeWindow = std::make_shared<StrokeWindow>("Stroke###StrokeWindow",
-													   Window::Flags::None);
-	m_windowManager->createWindow(strokeWindow->getTitle(), strokeWindow);
 
 	// Create and register theme editor window
 	auto themeEditorWindow = std::make_shared<ThemeEditorWindow>(
@@ -715,48 +687,10 @@ void Mui::setupWindowCallbacks(BlotEngine *app) {
 	if (toolbarWindow) {
 		toolbarWindow->setOnStrokeWidthChanged([this](float width) {
 			// Get stroke window through MWindow
-			auto strokeWindow = std::dynamic_pointer_cast<StrokeWindow>(
-				m_windowManager->getWindow("Stroke"));
-			if (strokeWindow) {
-				strokeWindow->setStrokeWidth(static_cast<double>(width));
-			}
 		});
 	}
 
 	// Get the stroke window and set up its callbacks
-	auto strokeWindow = std::dynamic_pointer_cast<StrokeWindow>(
-		m_windowManager->getWindow("Stroke"));
-	if (strokeWindow) {
-		strokeWindow->setStrokeWidthCallback([app](double width) {
-			// This will be handled by the app
-		});
-
-		strokeWindow->setStrokeCapCallback([app](BLStrokeCap cap) {
-			// This will be handled by the app
-		});
-
-		strokeWindow->setStrokeJoinCallback([app](BLStrokeJoin join) {
-			// This will be handled by the app
-		});
-
-		strokeWindow->setMiterLimitCallback([app](double limit) {
-			// This will be handled by the app
-		});
-
-		strokeWindow->setDashArrayCallback(
-			[app](const std::vector<double> &dashes) {
-				// This will be handled by the app
-			});
-
-		strokeWindow->setDashOffsetCallback([app](double offset) {
-			// This will be handled by the app
-		});
-
-		strokeWindow->setTransformOrderCallback(
-			[app](BLStrokeTransformOrder order) {
-				// This will be handled by the app
-			});
-	}
 }
 
 void Mui::saveCurrentImGuiLayout() {

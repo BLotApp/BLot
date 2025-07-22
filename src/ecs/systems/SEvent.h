@@ -40,6 +40,11 @@ class SEvent {
 						std::function<void(bool)> action);
 	void registerAction(const std::string &actionId,
 						std::function<bool()> action);
+	void registerAction(
+		const std::string &actionId,
+		std::function<std::vector<std::pair<size_t, std::string>>()> action);
+	void registerAction(const std::string &actionId,
+						std::function<size_t()> action);
 
 	// Event emission
 	void emitEvent(const CEvent &event);
@@ -117,7 +122,7 @@ class SEvent {
 // Template implementation
 template <typename... Args>
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<void(Args...)> action) {
+							std::function<void(Args...)> action) {
 	m_actions[actionId] = action;
 }
 

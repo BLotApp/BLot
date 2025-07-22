@@ -3,6 +3,7 @@
 #include <entt/entt.hpp>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "Window.h"
 #include "core/ISettings.h"
@@ -30,6 +31,8 @@ class MWindow : public ISettings {
 	// Window queries
 	entt::entity getWindowEntity(const std::string &name);
 	std::shared_ptr<Window> getWindow(const std::string &name);
+	std::shared_ptr<Window> getWindow(entt::entity e);
+	std::shared_ptr<Window> getWindow(entt::entity e) const;
 	std::shared_ptr<Window> getFocusedWindow();
 	entt::entity getFocusedWindowEntity();
 	std::vector<std::string> getAllWindowNames() const;
@@ -135,6 +138,8 @@ class MWindow : public ISettings {
 	WorkspaceConfig
 	createWorkspaceFromCurrentState(const std::string &workspaceName);
 	void updateMainIniFile();
+
+	std::unordered_map<entt::entity, std::shared_ptr<Window>> m_windowMap;
 };
 
 } // namespace blot

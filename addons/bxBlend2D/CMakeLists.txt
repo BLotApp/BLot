@@ -31,3 +31,13 @@ option(BUILD_ADDON_EXAMPLES "Build examples in this addon" OFF)
 if(BUILD_ADDON_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
     add_subdirectory(examples)
 endif() 
+
+file(GLOB BLEND2D_WIN_SRC windows/*.cpp windows/*.h)
+
+target_sources(${ADDON_NAME} PRIVATE ${BLEND2D_WIN_SRC})
+
+target_include_directories(${ADDON_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/windows>
+)
+
+target_link_libraries(${ADDON_NAME} PUBLIC bxImGui) 

@@ -6,33 +6,28 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "core/ISettings.h"
+#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
+#include "CoordinateSystem.h"
 #include "ImGuiRenderer.h"
 #include "MShortcut.h"
 #include "MWindow.h"
+#include "U_ui.h"
+#include "core/BlotEngine.h"
+#include "core/ISettings.h"
+#include "core/Iui.h"
+#include "rendering/U_gladGlfw.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/InfoWindow.h"
 #include "ui/windows/PropertiesWindow.h"
+#include "ui/windows/SaveWorkspaceDialog.h"
 #include "ui/windows/TextureViewerWindow.h"
 #include "ui/windows/ThemePanel.h"
 #include "ui/windows/ToolbarWindow.h"
 
 // Forward declarations
 struct GLFWwindow;
-#include "CoordinateSystem.h"
-#include "core/BlotEngine.h"
-#include "ui/windows/SaveWorkspaceDialog.h"
-
 namespace blot {
 class MainMenuBar;
-}
-
-#include "../third_party/IconFontCppHeaders/IconsFontAwesome5.h"
-#include "rendering/U_gladGlfw.h"
-#include "U_ui.h"
-
-// Forward declarations
-namespace blot {
 class SaveWorkspaceDialog;
 class Window;
 } // namespace blot

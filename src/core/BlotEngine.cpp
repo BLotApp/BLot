@@ -8,6 +8,7 @@
 #include <iostream>
 #include <thread>
 
+#include "Mui.h"
 #include "core/AppSettings.h"
 #include "core/IApp.h"
 #include "core/Iui.h"
@@ -155,6 +156,15 @@ void BlotEngine::setTargetFrameRate(int fps) {
 
 void BlotEngine::attachUiManager(std::unique_ptr<Iui> ui) {
 	m_uiManager = std::move(ui);
+	if (m_uiManager) {
+		m_uiManager->setBlotEngine(this);
+	}
+}
+
+// Temporary wrapper (backward compatibility)
+
+void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+	m_uiManager.reset(ui.release());
 	if (m_uiManager) {
 		m_uiManager->setBlotEngine(this);
 	}

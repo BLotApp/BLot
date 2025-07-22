@@ -2,8 +2,11 @@
 #include <spdlog/spdlog.h>
 
 // Project headers
+#include "MWindow.h"
+#include "Mui.h"
 #include "bxBlend2DAddon.h"
 #include "rendering/U_rendering.h"
+#include "windows/StrokeWindow.h"
 
 namespace blot {
 
@@ -23,6 +26,14 @@ bool bxBlend2DAddon::init() {
 				 "renderer factory");
 	registerRendererFactory();
 	m_initialized = true;
+	if (m_blotEngine && m_blotEngine->getUiManager()) {
+		auto winMgr = m_blotEngine->getUiManager()->getWindowManager();
+		if (winMgr) {
+			auto strokeWin =
+				std::make_shared<StrokeWindow>("Stroke###StrokeWindow");
+			winMgr->createWindow(strokeWin->getTitle(), strokeWin);
+		}
+	}
 	return true;
 }
 

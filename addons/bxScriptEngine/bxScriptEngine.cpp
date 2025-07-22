@@ -1,19 +1,20 @@
 #include "bxScriptEngine.h"
-#include "core/canvas/Canvas.h"
-#include "rendering/Graphics.h"
-#include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 #include <iostream>
 #include <random>
+#include "core/canvas/Canvas.h"
+#include "rendering/Graphics.h"
 
 bxScriptEngine::bxScriptEngine()
-	: m_isRunning(false), m_hasSetup(false), m_hasDraw(false), m_frameCount(0),
-	  m_frameRate(60.0f), m_lastFrameTime(0.0f), m_time(0.0f), m_mouseX(0.0f),
-	  m_mouseY(0.0f), m_mousePressed(false), m_keyPressed(false),
-	  m_currentKey(0), m_width(800), m_height(600), m_hasFill(true),
-	  m_hasStroke(true), m_fillR(1.0f), m_fillG(1.0f), m_fillB(1.0f),
-	  m_fillA(1.0f), m_strokeR(0.0f), m_strokeG(0.0f), m_strokeB(0.0f),
-	  m_strokeA(1.0f), m_strokeWeight(1.0f), m_textSize(12.0f), m_textAlign(0) {
+	: blot::AddonBase("bxScriptEngine"), m_isRunning(false), m_hasSetup(false),
+	  m_hasDraw(false), m_frameCount(0), m_frameRate(60.0f),
+	  m_lastFrameTime(0.0f), m_time(0.0f), m_mouseX(0.0f), m_mouseY(0.0f),
+	  m_mousePressed(false), m_keyPressed(false), m_currentKey(0), m_width(800),
+	  m_height(600), m_hasFill(true), m_hasStroke(true), m_fillR(1.0f),
+	  m_fillG(1.0f), m_fillB(1.0f), m_fillA(1.0f), m_strokeR(0.0f),
+	  m_strokeG(0.0f), m_strokeB(0.0f), m_strokeA(1.0f), m_strokeWeight(1.0f),
+	  m_textSize(12.0f), m_textAlign(0) {
 	m_currentMatrix = glm::mat4(1.0f);
 	initAPI();
 }

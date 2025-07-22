@@ -1,35 +1,35 @@
 # Logging in Blot
 
-## Overview
-Blot uses [spdlog](https://github.com/gabime/spdlog) for logging. This provides fast, flexible, and thread-safe logging with support for log levels, sinks, and formatting.
+Blot uses the popular **[spdlog](https://github.com/gabime/spdlog)** library for runtime logging, but most of the codebase does **not call spdlog directly**.  Instead, higher-level helpers encapsulate common patterns so that modules don’t need to worry about formatting or sinks.
 
-## How to Use
+## The `AddonBase::log()` Helper
 
-Include the spdlog header in any file:
+Every add-on derives from `blot::AddonBase`.  That base class exposes
+```cpp
+void log(const std::string& message,
+         spdlog::level::level_enum lvl = spdlog::level::info);
+```
+Internally it forwards to a central spdlog logger that is configured by the engine.  A typical add-on therefore only needs:
+```cpp
+this->log("Initializing foo-addon");
+```
+No `#include <spdlog/spdlog.h>` is required in the add-on’s source file (see `addons/bxTemplate/bxTemplate.cpp` for a minimal example).
+
+## Why the indirection?
+1. **Consistency** – messages are automatically prefixed with the add-on name.
+2. **Decoupling** – add-ons do not depend on the logging backend; switching to another library would only touch the helper implementation.
+3. **Configuration** – the engine sets log level, pattern, and sinks globally.
+
+## Using spdlog Directly
+It’s still possible (and sometimes useful) to include spdlog in engine/core code:
 ```cpp
 #include <spdlog/spdlog.h>
+spdlog::debug("deltaTime = {}", dt);
 ```
+Just keep this out of add-on code unless you have a good reason.
 
-Log messages at various levels:
-```cpp
-spdlog::info("Hello, {}!", "world");
-spdlog::warn("This is a warning");
-spdlog::error("Something went wrong: {}", errorMsg);
-```
+## Where is the logger configured?
+`src/core/U_core.h` and its implementation set up a default console sink with color support as soon as the engine starts.  Applications can add file sinks or change patterns before the first log call.
 
-## LogWindow Integration
-
-Blot's in-app LogWindow is wired to receive log messages via a custom spdlog sink. All log messages sent to spdlog will also appear in the LogWindow UI.
-
-- To log to the in-app window, just use `spdlog` as above.
-- The LogWindow will display messages in real time.
-
-## Best Practices
-- Use appropriate log levels (`info`, `warn`, `error`, `debug`, `trace`).
-- Avoid logging sensitive information.
-- Prefer structured messages with formatting.
-- Use log categories or tags if needed for filtering.
-
-## Advanced
-- You can add more sinks (e.g., file, rotating file, etc.) via spdlog's API.
-- See the [spdlog documentation](https://github.com/gabime/spdlog) for more advanced usage. 
+---
+*Last updated: {{date}}* 

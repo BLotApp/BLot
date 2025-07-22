@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <memory>
-#include "Mui.h"
 #include "core/AppSettings.h"
 #include "core/Iui.h"
 #include "core/U_core.h"
@@ -35,9 +34,7 @@ class BlotEngine {
 
 	MEcs *getECSManager() { return m_ecsManager.get(); }
 	MAddon *getAddonManager() { return m_addonManager.get(); }
-	Mui *getUIManager() {
-		return m_uiManager ? static_cast<Mui *>(m_uiManager.get()) : nullptr;
-	}
+	Mui *getUIManager() { return reinterpret_cast<Mui *>(m_uiManager.get()); }
 	Iui *getUiManager() { return m_uiManager.get(); }
 	MRendering *getRenderingManager() { return m_renderingManager.get(); }
 	MCanvas *getCanvasManager() { return m_canvasManager.get(); }
@@ -67,10 +64,8 @@ class BlotEngine {
 
 	// Attach/detach UI manager (implemented in .cpp to avoid circular include)
 	void attachUiManager(std::unique_ptr<Iui> ui);
-	// Temporary wrapper for backward compatibility
-	void attachUIManager(std::unique_ptr<Mui> ui) {
-		attachUiManager(std::unique_ptr<Iui>(ui.release()));
-	}
+	// Temporary wrapper for backward compatibility (defined in .cpp)
+	void attachUIManager(std::unique_ptr<Mui> ui);
 	void detachUIManager();
 
 	void setUiInitialised(bool v) { m_uiInitialised = v; }

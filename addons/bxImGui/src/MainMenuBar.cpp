@@ -1,4 +1,4 @@
-#include "ui/windows/MainMenuBar.h"
+#include "MainMenuBar.h"
 #include <imgui.h>
 #include <iostream>
 #include "CodeEditorWindow.h"
@@ -143,25 +143,29 @@ void MainMenuBar::render() {
 			}
 			ImGui::Separator();
 
-			// List canvases using Canvas Manager
-			if (m_canvasManager) {
-				auto canvasInfo = m_canvasManager->getAllCanvasInfo();
-				size_t activeIndex = m_canvasManager->getActiveCanvasIndex();
+			// List canvases via event system
+			if (hasAction("get_canvas_list") && hasAction("get_active_canvas") &&
+				hasAction("get_canvas_count")) {
+				auto canvasInfo = m_eventSystem->triggerActionWithResult<
+					std::vector<std::pair<size_t, std::string>>>(
+					"get_canvas_list");
+				size_t activeIndex = m_eventSystem->triggerActionWithResult<size_t>(
+					"get_active_canvas");
+				size_t canvasCount = m_eventSystem->triggerActionWithResult<size_t>(
+					"get_canvas_count");
 
 				for (const auto &canvasPair : canvasInfo) {
 					size_t index = canvasPair.first;
 					const std::string &name = canvasPair.second;
 					bool isActive = (index == activeIndex);
 					if (ImGui::MenuItem(name.c_str(), nullptr, isActive)) {
-						m_eventSystem->triggerAction(
-							"switch_canvas", static_cast<uint32_t>(index));
+						m_eventSystem->triggerAction("switch_canvas",
+									 	static_cast<uint32_t>(index));
 					}
-					if (ImGui::IsItemClicked(1)) { // Right click
+					if (ImGui::IsItemClicked(1)) {
 						if (ImGui::BeginPopupContextItem()) {
-							if (ImGui::MenuItem("Close") &&
-								m_canvasManager->getCanvasCount() > 1) {
-								m_eventSystem->triggerAction(
-									"close_active_canvas");
+							if (ImGui::MenuItem("Close") && canvasCount > 1) {
+								m_eventSystem->triggerAction("close_active_canvas");
 							}
 							ImGui::EndPopup();
 						}
@@ -283,4 +287,6 @@ void MainMenuBar::render() {
 
 		ImGui::EndMainMenuBar();
 	}
+}
+
 } // namespace blot

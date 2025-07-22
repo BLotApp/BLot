@@ -6,6 +6,7 @@ set(ADDON_NAME "bxCodeEditor")
 file(GLOB BXCODEEDITOR_SRC
     src/*.cpp
     src/*.h
+    third_party/ImGuiColorTextEdit/TextEditor.cpp
 )
 
 add_library(${ADDON_NAME} STATIC ${BXCODEEDITOR_SRC})
