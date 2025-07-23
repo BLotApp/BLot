@@ -9,4 +9,5 @@ std::string getUserSettingsFile() {
 	return getAssetsDir() + "/user/blot_settings.json";
 }
 std::string getImGuiIniPath() { return getWorkspacesDir() + "/imgui.ini"; }
+std::string getManifestPath() { return "app.json"; }
 } // namespace AppPaths

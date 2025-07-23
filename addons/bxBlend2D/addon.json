@@ -1,0 +1,9 @@
+{
+  "name": "bxBlend2D",
+  "url": "https://github.com/BlotApp/bxBlend2D.git",
+  "branch": "main",
+  "version": "0.1.0",
+  "author": "Blot Team",
+  "description": "Blend2D renderer addon for Blot.",
+  "dependencies": []
+} 

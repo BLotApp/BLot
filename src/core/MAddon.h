@@ -39,6 +39,7 @@ class MAddon : public IManager, public ISettings {
 	bool loadAddon(const std::string &path);
 	void reloadAddon(const std::string &name);
 	void reloadAllAddons();
+	bool loadFromManifest(const std::string &path);
 
 	// Addon state management
 	void enableAddon(const std::string &name);

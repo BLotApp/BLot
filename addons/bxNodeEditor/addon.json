@@ -1,0 +1,9 @@
+{
+  "name": "bxNodeEditor",
+  "url": "https://github.com/BlotApp/bxNodeEditor.git",
+  "branch": "main",
+  "version": "1.0.0",
+  "author": "Blot Team",
+  "description": "Node editor addon for Blot.",
+  "dependencies": ["bxImGui"]
+} 

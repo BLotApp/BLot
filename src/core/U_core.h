@@ -1,8 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <spdlog/spdlog.h>
-#include "Mui.h"
-#include "addons/bxImGui/src/MainMenuBar.h"
 #include "core/AddonBase.h"
 #include "core/IApp.h"
 #include "core/MAddon.h"

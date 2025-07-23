@@ -15,6 +15,7 @@
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
 #include "core/Iui.h"
+#include "ecs/systems/SEvent.h"
 #include "rendering/U_gladGlfw.h"
 #include "ui/windows/CanvasWindow.h"
 #include "ui/windows/InfoWindow.h"
@@ -160,6 +161,10 @@ class Mui : public Iui {
 	json getSettings() const override;
 	void setSettings(const json &settings) override;
 
+	// Provide ECS event system to UI components
+	void setEventSystem(blot::ecs::SEvent *es);
+	void registerUIActions(blot::ecs::SEvent &) override;
+
   private:
 	// GLFW window reference
 	GLFWwindow *m_window;
@@ -190,6 +195,7 @@ class Mui : public Iui {
 
 	BlotEngine *m_blotEngine = nullptr;
 	CoordinateSystem m_coordinateSystem;
+	blot::ecs::SEvent *m_eventSystem = nullptr;
 };
 
 } // namespace blot

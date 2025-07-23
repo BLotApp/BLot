@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.19)
 
 # vcpkg toolchain logic removed – project now builds entirely from vendored
 # submodules and system libraries.
@@ -226,4 +226,29 @@ endif()
 
 # Add the ImGui include dir so blot's sources can find imgui.h
 target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR}) 
+
+include(cmake/BlotAddons.cmake)
+
+# helper macro
+function(add_blot_application APP_NAME)
+    set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/apps/${APP_NAME}")
+    set(APP_MANIFEST "${APP_DIR}/app.json")
+
+    # Resolve addon dependencies declared in the manifest (variable -> APP_ADDON_LIBS)
+    blot_load_addons(${APP_MANIFEST} APP_ADDON_LIBS)
+
+    # Collect all sources inside the application directory (headers are optional)
+    file(GLOB APP_SRC
+        "${APP_DIR}/*.cpp"
+        "${APP_DIR}/*.c"
+        "${APP_DIR}/*.h"
+        "${APP_DIR}/*.hpp"
+    )
+
+    add_executable(${APP_NAME} ${APP_SRC})
+    target_link_libraries(${APP_NAME} PRIVATE blot ${APP_ADDON_LIBS})
+    target_include_directories(${APP_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
+endfunction()
+
+add_blot_application(example_app) 
 

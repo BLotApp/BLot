@@ -66,7 +66,44 @@ See `addons/bxBlend2D/` for a full example of a renderer addon that registers a 
 - Document your addon in its own README
 
 ## Loading and Enabling Addons
-Addons are discovered and loaded by the `MAddon`. You can enable/disable addons via config or at runtime.
+Addons are registered and loaded by applications using the `AddonLoader` class. This provides a clean, centralized way to register addons without relying on static initialization or individual registration files.
+
+### Registering Addons in Applications
+
+Applications should register addons explicitly in their setup code:
+
+```cpp
+#include "core/AddonLoader.h"
+
+void MyApp::setup() {
+    getEngine()->init("My App", 0.1f);
+    
+    // Register specific addons that this app needs
+    auto addonManager = getEngine()->getAddonManager();
+    if (addonManager) {
+        blot::AddonLoader::registerAvailableAddons(addonManager, {
+            "bxImGui",
+            "bxScriptEngine",
+            "bxCodeEditor"
+        });
+    }
+}
+```
+
+### Available Addon Names
+
+The following addons are available for registration:
+- `bxImGui` - ImGui UI system
+- `bxScriptEngine` - Scripting engine
+- `bxCodeEditor` - Code editor with syntax highlighting
+- `bxBlend2D` - Blend2D rendering backend
+- `bxMarkdown` - Markdown rendering
+- `bxNodeEditor` - Node editor
+- `bxOsc` - OSC communication
+- `bxTemplate` - Template addon
+- `bxTestEngine` - Testing framework
+
+You can enable/disable addons via config or at runtime using the `MAddon` interface.
 
 ---
 

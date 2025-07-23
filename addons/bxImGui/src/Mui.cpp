@@ -385,6 +385,7 @@ void Mui::setupWindows(BlotEngine *app) {
 	// Create main menu bar (standalone, not managed by MWindow)
 	m_mainMenuBar = std::make_unique<MainMenuBar>("Main Menu Bar");
 	m_mainMenuBar->setUIManager(this);
+	m_mainMenuBar->setEventSystem(m_eventSystem);
 
 	// Create addon manager window
 	auto addonManagerWindow = std::make_shared<AddonManagerWindow>(
@@ -729,6 +730,20 @@ void Mui::setSettings(const blot::json &settings) {
 		m_windowManager->setSettings(settings["windowManager"]);
 	}
 	// Restore more UI state as needed
+}
+
+void Mui::setEventSystem(blot::ecs::SEvent *es) {
+	m_eventSystem = es;
+	if (m_mainMenuBar) {
+		m_mainMenuBar->setEventSystem(es);
+	}
+}
+
+void Mui::registerUIActions(blot::ecs::SEvent &eventSystem) {
+	// default bxImGui does not register application-specific actions.
+	m_eventSystem = &eventSystem;
+	if (m_mainMenuBar)
+		m_mainMenuBar->setEventSystem(&eventSystem);
 }
 
 } // namespace blot

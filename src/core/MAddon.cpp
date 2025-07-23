@@ -7,6 +7,7 @@
 #include <unordered_set>
 // Removed direct bxImGui include; addons are now registered by applications.
 #include "core/AddonBase.h"
+#include "core/AddonRegistry.h"
 #include "core/ISettings.h"
 #include "core/json.h"
 
@@ -463,4 +464,33 @@ void blot::MAddon::registerAddon(std::shared_ptr<blot::AddonBase> addon) {
 	}
 	m_addons[name] = addon;
 	spdlog::info("Registered addon: {}", name);
+}
+
+bool blot::MAddon::loadFromManifest(const std::string &path) {
+	std::ifstream f(path);
+	if (!f.is_open()) {
+		spdlog::error("[MAddon] Could not open manifest {}", path);
+		return false;
+	}
+	json j;
+	f >> j;
+	if (!j.contains("dependencies") || !j["dependencies"].is_array()) {
+		spdlog::warn("[MAddon] Manifest {} missing dependencies array", path);
+		return false;
+	}
+	for (const auto &dep : j["dependencies"]) {
+		std::string name;
+		if (dep.is_string())
+			name = dep.get<std::string>();
+		else if (dep.is_object() && dep.contains("name"))
+			name = dep["name"].get<std::string>();
+		else
+			continue;
+		auto addonPtr = blot::AddonRegistry::instance().create(name);
+		if (addonPtr)
+			registerAddon(addonPtr);
+		else
+			spdlog::warn("[MAddon] Unknown addon {}", name);
+	}
+	return initAll();
 }

@@ -1,0 +1,9 @@
+{
+  "name": "bxMarkdown",
+  "url": "https://github.com/BlotApp/bxMarkdown.git",
+  "branch": "main",
+  "version": "0.1.0",
+  "author": "Blot Team",
+  "description": "Markdown rendering addon for Blot.",
+  "dependencies": ["bxImGui"]
+} 

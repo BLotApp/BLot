@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/ISettings.h"
+#include "ecs/systems/SEvent.h"
 
 namespace blot {
 
@@ -27,6 +28,8 @@ class Iui : public ISettings {
 
 	// Give the UI manager a pointer back to the engine (optional)
 	virtual void setBlotEngine(BlotEngine *engine) = 0;
+
+	virtual void registerUIActions(blot::ecs::SEvent &) {}
 };
 
 } // namespace blot

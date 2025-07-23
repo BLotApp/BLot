@@ -4,13 +4,13 @@
 #include <iostream>
 #include "core/ISettings.h"
 #include "ecs/components/CAnimation.h"
+#include "ecs/components/CDrawStyle.h"
 #include "ecs/components/CDrawing.h"
 #include "ecs/components/CNode.h"
 #include "ecs/components/CParameter.h"
 #include "ecs/components/CScript.h"
 #include "ecs/components/CSelection.h"
 #include "ecs/components/CShape.h"
-#include "ecs/components/CDrawStyle.h"
 #include "ecs/components/CTransform.h"
 #include "ecs/systems/SCanvas.h"
 #include "ecs/systems/SShapeRendering.h"
@@ -61,12 +61,18 @@ entt::entity MEcs::findEntity(const std::string &name) {
 	return entt::null;
 }
 
-void MEcs::updateSystems(float deltaTime) {
-	// Update event system
+void MEcs::updateSystems(MRendering *renderingManager, float deltaTime) {
+	// Update event system first (input, queued actions, etc.)
 	if (m_eventSystem) {
 		m_eventSystem->update();
 	}
 
+	// --- Canvas-specific update (driven by SCanvas system) ---
+	if (renderingManager) {
+		blot::ecs::SCanvasUpdate(*this, renderingManager, deltaTime);
+	}
+
+	// --- Generic ECS systems ---
 	updateAnimationSystem(deltaTime);
 	updateScriptSystem(deltaTime);
 	updateParameterSystem();
@@ -75,19 +81,17 @@ void MEcs::updateSystems(float deltaTime) {
 void MEcs::renderSystems() { renderShapeSystem(); }
 
 void MEcs::connectParameters(entt::entity source,
-								   const std::string &sourceParam,
-								   entt::entity target,
-								   const std::string &targetParam) {
+							 const std::string &sourceParam,
+							 entt::entity target,
+							 const std::string &targetParam) {
 	if (!m_registry.valid(source) || !m_registry.valid(target)) {
 		return;
 	}
 
 	if (m_registry.all_of<blot::ecs::CParameter>(source) &&
 		m_registry.all_of<blot::ecs::CParameter>(target)) {
-		auto &sourceParamComp =
-			m_registry.get<blot::ecs::CParameter>(source);
-		auto &targetParamComp =
-			m_registry.get<blot::ecs::CParameter>(target);
+		auto &sourceParamComp = m_registry.get<blot::ecs::CParameter>(source);
+		auto &targetParamComp = m_registry.get<blot::ecs::CParameter>(target);
 
 		sourceParamComp.isConnected = true;
 		sourceParamComp.connectedTo = target;
@@ -100,14 +104,13 @@ void MEcs::connectParameters(entt::entity source,
 }
 
 void MEcs::disconnectParameters(entt::entity source,
-									  const std::string &sourceParam) {
+								const std::string &sourceParam) {
 	if (!m_registry.valid(source)) {
 		return;
 	}
 
 	if (m_registry.all_of<blot::ecs::CParameter>(source)) {
-		auto &sourceParamComp =
-			m_registry.get<blot::ecs::CParameter>(source);
+		auto &sourceParamComp = m_registry.get<blot::ecs::CParameter>(source);
 		sourceParamComp.isConnected = false;
 		sourceParamComp.connectedTo = entt::null;
 	}
@@ -125,7 +128,7 @@ void MEcs::createNode(const std::string &nodeType, float x, float y) {
 	// Add node component
 	blot::ecs::CNodeComponent node;
 	node.type = blot::ecs::CNodeType::Custom; // or map nodeType string to
-													// enum if needed
+											  // enum if needed
 	node.name = nodeType;
 	addComponent<blot::ecs::CNodeComponent>(entity, node);
 
@@ -161,10 +164,8 @@ void MEcs::createNode(const std::string &nodeType, float x, float y) {
 	}
 }
 
-void MEcs::connectNodes(entt::entity sourceNode,
-							  const std::string &output,
-							  entt::entity targetNode,
-							  const std::string &input) {
+void MEcs::connectNodes(entt::entity sourceNode, const std::string &output,
+						entt::entity targetNode, const std::string &input) {
 	if (!m_registry.valid(sourceNode) || !m_registry.valid(targetNode)) {
 		return;
 	}
@@ -207,14 +208,10 @@ void MEcs::clear() {
 
 size_t MEcs::getEntityCount() const { return m_entities.size(); }
 
-std::vector<entt::entity> MEcs::getAllEntities() const {
-	return m_entities;
-}
+std::vector<entt::entity> MEcs::getAllEntities() const { return m_entities; }
 
 void MEcs::updateAnimationSystem(float deltaTime) {
-	auto view =
-		m_registry
-			.view<blot::ecs::CAnimation, blot::ecs::CTransform>();
+	auto view = m_registry.view<blot::ecs::CAnimation, blot::ecs::CTransform>();
 
 	for (auto entity : view) {
 		auto &animation = view.get<blot::ecs::CAnimation>(entity);
@@ -283,22 +280,20 @@ void MEcs::updateParameterSystem() {
 		if (parameter.isConnected && m_registry.valid(parameter.connectedTo)) {
 			if (m_registry.all_of<blot::ecs::CParameter>(
 					parameter.connectedTo)) {
-				auto &connectedParam =
-					m_registry.get<blot::ecs::CParameter>(
-						parameter.connectedTo);
+				auto &connectedParam = m_registry.get<blot::ecs::CParameter>(
+					parameter.connectedTo);
 				connectedParam.value = parameter.value;
 			}
 		}
 	}
 }
 
-void MEcs::runCanvasSystems(MRendering *renderingManager,
-								  float deltaTime) {
+void MEcs::runCanvasSystems(MRendering *renderingManager, float deltaTime) {
 	blot::ecs::SCanvasUpdate(*this, renderingManager, deltaTime);
 }
 
 void MEcs::runCanvasRenderSystem(MRendering *renderingManager,
-									   entt::entity activeCanvasId) {
+								 entt::entity activeCanvasId) {
 	blot::ecs::SCanvasRender(*this, renderingManager, activeCanvasId);
 }
 
