@@ -19,7 +19,13 @@
 
 namespace blot {
 
-BlotEngine::~BlotEngine() = default;
+// Initialize static member
+BlotEngine *BlotEngine::s_instance = nullptr;
+
+BlotEngine::~BlotEngine() {
+	// Clear global engine instance
+	s_instance = nullptr;
+}
 
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 	: BlotEngine(std::move(app), AppSettings{}) {}
@@ -33,6 +39,9 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	  m_renderingManager(std::make_unique<MRendering>()),
 	  m_canvasManager(std::make_unique<MCanvas>(this)), m_uiManager(nullptr),
 	  m_settingsManager(std::make_unique<MSettings>()), m_window(nullptr) {
+
+	// Set global engine instance
+	s_instance = this;
 	// Apply settings
 	WindowSettings ws = m_settings.window;
 	if (m_app) {

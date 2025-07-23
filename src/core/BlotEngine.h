@@ -71,6 +71,10 @@ class BlotEngine {
 	void setUiInitialised(bool v) { m_uiInitialised = v; }
 	bool isUiInitialised() const { return m_uiInitialised; }
 
+	// Global engine access
+	static BlotEngine *getEngine() { return s_instance; }
+	static void setEngine(BlotEngine *engine) { s_instance = engine; }
+
   private:
 	std::string m_appName = "Blot App";
 	float m_appVersion = 0.1f;
@@ -94,5 +98,8 @@ class BlotEngine {
 	glm::vec4 m_clearColor{0.4f, 0.4f, 0.4f, 1.0f};
 	// Tracks whether Mui::init() has been called (addon may call it).
 	bool m_uiInitialised = false;
+
+	// Global engine instance
+	static BlotEngine *s_instance;
 };
 } // namespace blot

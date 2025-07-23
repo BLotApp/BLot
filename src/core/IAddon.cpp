@@ -1,6 +1,7 @@
 #include "core/IAddon.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include "core/BlotEngine.h"
 
 namespace blot {
 
@@ -135,5 +136,7 @@ void IAddon::blotCleanup() {
 
 	m_initialized = false;
 }
+
+BlotEngine *IAddon::getEngine() const { return BlotEngine::getEngine(); }
 
 } // namespace blot

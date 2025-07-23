@@ -6,9 +6,32 @@ using namespace blot;
 bxImGui::bxImGui() : blot::IAddon("ImGui", "0.1.0") {}
 
 bool bxImGui::init() {
-	// For now, just return true - the UI manager will be set up elsewhere
-	// TODO: Implement proper UI manager initialization
 	spdlog::info("[bxImGui] Initializing ImGui addon");
+
+	auto engine = getEngine();
+	if (!engine) {
+		spdlog::error("[bxImGui] No engine instance available");
+		return false;
+	}
+
+	if (engine->getUIManager()) {
+		spdlog::info(
+			"[bxImGui] UI manager already present – skipping creation");
+		m_ui = engine->getUIManager();
+		return true;
+	}
+
+	// Create UI manager tied to engine window
+	auto uiPtr = std::make_unique<Mui>(engine->getWindow());
+	m_ui = uiPtr.get();
+	engine->attachUIManager(std::move(uiPtr));
+
+	// Call Mui::init() immediately so first frame is safe
+	m_ui->init();
+	engine->setUiInitialised(true);
+
+	spdlog::info("[bxImGui] ImGui addon initialised");
+
 	return true;
 }
 

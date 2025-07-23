@@ -453,6 +453,7 @@ void blot::MAddon::setSettings(const blot::json &settings) {
 void blot::MAddon::registerAddon(std::shared_ptr<blot::IAddon> addon) {
 	if (!addon)
 		return;
+
 	std::string name = addon->getName();
 	// Avoid duplicate entries in order list
 	if (std::find(m_addonOrder.begin(), m_addonOrder.end(), name) ==

@@ -6,12 +6,10 @@
 #include <unordered_map>
 #include <vector>
 
-// Forward declarations
-class Canvas;
-class Graphics;
-class bxScriptEngine;
-
 namespace blot {
+
+// Forward declaration for engine access
+class BlotEngine;
 
 class IAddon {
   public:
@@ -52,7 +50,8 @@ class IAddon {
 	void setAuthor(const std::string &author) { m_author = author; }
 	void setLicense(const std::string &license) { m_license = license; }
 
-
+	// Engine access
+	BlotEngine *getEngine() const;
 
 	// Utility functions for addons
 	template <typename T> T *getAddon(const std::string &name);
@@ -106,7 +105,8 @@ class IAddon {
 	float m_time;
 	std::unordered_map<std::string, float> m_parameters;
 	std::unordered_map<std::string, std::string> m_stringParameters;
-	std::unordered_map<std::string, std::function<void(float)>> m_parameterCallbacks;
+	std::unordered_map<std::string, std::function<void(float)>>
+		m_parameterCallbacks;
 
 	// Helper functions for addons
 	void log(const std::string &message);
@@ -121,4 +121,4 @@ template <typename T> T *IAddon::getAddon(const std::string &name) {
 	return nullptr;
 }
 
-} // namespace blot 
+} // namespace blot
