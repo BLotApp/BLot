@@ -1,8 +1,6 @@
 #include "bxMarkdown.h"
 
-bxMarkdown::bxMarkdown()
-	: blot::AddonBase("bxMarkdown", "0.1.0"), m_initialized(false),
-	  m_time(0.0f) {
+bxMarkdown::bxMarkdown() : blot::IAddon("bxMarkdown", "0.1.0") {
 	setDescription("Markdown support for Blot");
 	setAuthor("Your Name");
 	setLicense("MIT");

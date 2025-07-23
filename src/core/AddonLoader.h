@@ -1,21 +1,10 @@
 #pragma once
 
 #include <memory>
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 #include "core/MAddon.h"
 
 namespace blot {
-
-// Forward declarations for addon classes
-class bxImGui;
-class bxScriptEngine;
-class bxCodeEditor;
-class bxBlend2DAddon;
-class bxMarkdown;
-class bxNodeEditor;
-class bxOsc;
-class bxTemplate;
-class bxTestEngine;
 
 /**
  * Centralized addon loading utility
@@ -50,18 +39,6 @@ class AddonLoader {
 	 * Get a list of all available addon names
 	 */
 	static std::vector<std::string> getAvailableAddonNames();
-
-  private:
-	// Factory functions for each addon
-	static std::shared_ptr<AddonBase> createbxImGui();
-	static std::shared_ptr<AddonBase> createbxScriptEngine();
-	static std::shared_ptr<AddonBase> createbxCodeEditor();
-	static std::shared_ptr<AddonBase> createbxBlend2DAddon();
-	static std::shared_ptr<AddonBase> createbxMarkdown();
-	static std::shared_ptr<AddonBase> createbxNodeEditor();
-	static std::shared_ptr<AddonBase> createbxOsc();
-	static std::shared_ptr<AddonBase> createbxTemplate();
-	static std::shared_ptr<AddonBase> createbxTestEngine();
 };
 
 } // namespace blot

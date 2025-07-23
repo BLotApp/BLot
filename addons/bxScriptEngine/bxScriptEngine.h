@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 
 namespace blot {
 class Canvas;
@@ -15,12 +15,12 @@ class Graphics;
 
 // Script engine now acts as an addon so it can be registered with MAddon
 
-class bxScriptEngine : public blot::AddonBase {
+class bxScriptEngine : public blot::IAddon {
   public:
 	bxScriptEngine();
 	~bxScriptEngine();
 
-	// AddonBase lifecycle
+	// IAddon lifecycle
 	bool init() override { return true; }
 	void setup() override {}
 	void update(float deltaTime) override;

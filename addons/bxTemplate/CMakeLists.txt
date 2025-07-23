@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.19)
 
 set(ADDON_NAME "bxTemplate")
 add_library(${ADDON_NAME} STATIC ${ADDON_NAME}.cpp ${ADDON_NAME}.h)

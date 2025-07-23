@@ -6,8 +6,8 @@
 #include <spdlog/spdlog.h>
 #include <unordered_set>
 // Removed direct bxImGui include; addons are now registered by applications.
-#include "core/AddonBase.h"
 #include "core/AddonRegistry.h"
+#include "core/IAddon.h"
 #include "core/ISettings.h"
 #include "core/json.h"
 
@@ -33,7 +33,7 @@ void blot::MAddon::unregisterAddon(const std::string &name) {
 	}
 }
 
-std::shared_ptr<blot::AddonBase>
+std::shared_ptr<blot::IAddon>
 blot::MAddon::getAddon(const std::string &name) const {
 	auto it = m_addons.find(name);
 	if (it != m_addons.end()) {
@@ -63,7 +63,8 @@ bool blot::MAddon::initAll() {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled()) {
 			spdlog::info("Initializing addon: {}", name);
-			if (!addon->init()) {
+			addon->blotInit();
+			if (!addon->isInitialized()) {
 				spdlog::error("Failed to initialize addon: {}", name);
 				return false;
 			}
@@ -78,7 +79,7 @@ void blot::MAddon::setupAll() {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
-			addon->setup();
+			addon->blotSetup();
 		}
 	}
 }
@@ -87,7 +88,7 @@ void blot::MAddon::updateAll(float deltaTime) {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
-			addon->update(deltaTime);
+			addon->blotUpdate(deltaTime);
 		}
 	}
 }
@@ -96,7 +97,7 @@ void blot::MAddon::drawAll() {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
-			addon->draw();
+			addon->blotDraw();
 		}
 	}
 }
@@ -104,7 +105,7 @@ void blot::MAddon::drawAll() {
 void blot::MAddon::cleanupAll() {
 	for (auto &pair : m_addons) {
 		if (pair.second) {
-			pair.second->cleanup();
+			pair.second->blotCleanup();
 		}
 	}
 	m_addons.clear();
@@ -241,10 +242,10 @@ bool blot::MAddon::loadAddon(const std::string &path) {
 void blot::MAddon::reloadAddon(const std::string &name) {
 	auto addon = getAddon(name);
 	if (addon) {
-		addon->cleanup();
+		addon->blotCleanup();
 		// In a real implementation, you would reload the addon here
-		addon->init();
-		addon->setup();
+		addon->blotInit();
+		addon->blotSetup();
 	}
 }
 
@@ -297,9 +298,9 @@ std::vector<std::string> blot::MAddon::getAddonNames() const {
 	return names;
 }
 
-std::vector<std::shared_ptr<blot::AddonBase>>
+std::vector<std::shared_ptr<blot::IAddon>>
 blot::MAddon::getEnabledAddons() const {
-	std::vector<std::shared_ptr<blot::AddonBase>> enabled;
+	std::vector<std::shared_ptr<blot::IAddon>> enabled;
 	for (const auto &pair : m_addons) {
 		if (pair.second->isEnabled()) {
 			enabled.push_back(pair.second);
@@ -308,9 +309,8 @@ blot::MAddon::getEnabledAddons() const {
 	return enabled;
 }
 
-std::vector<std::shared_ptr<blot::AddonBase>>
-blot::MAddon::getAllAddons() const {
-	std::vector<std::shared_ptr<blot::AddonBase>> all;
+std::vector<std::shared_ptr<blot::IAddon>> blot::MAddon::getAllAddons() const {
+	std::vector<std::shared_ptr<blot::IAddon>> all;
 	for (const auto &pair : m_addons) {
 		all.push_back(pair.second);
 	}
@@ -450,12 +450,9 @@ void blot::MAddon::setSettings(const blot::json &settings) {
 	// Optionally, restore more addon state as needed
 }
 
-void blot::MAddon::registerAddon(std::shared_ptr<blot::AddonBase> addon) {
+void blot::MAddon::registerAddon(std::shared_ptr<blot::IAddon> addon) {
 	if (!addon)
 		return;
-	// Provide engine pointer to addon before any lifecycle method
-	if (m_engine)
-		addon->setBlotEngine(m_engine);
 	std::string name = addon->getName();
 	// Avoid duplicate entries in order list
 	if (std::find(m_addonOrder.begin(), m_addonOrder.end(), name) ==

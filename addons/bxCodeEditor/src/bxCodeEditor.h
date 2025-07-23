@@ -1,17 +1,17 @@
 #pragma once
 
-#include "core/AddonBase.h"
 #include <memory>
 #include <string>
+#include "core/IAddon.h"
 
 // Forward declaration
 class TextEditor;
 
-class bxCodeEditor : public blot::AddonBase {
+class bxCodeEditor : public blot::IAddon {
   public:
 	bxCodeEditor();
 	~bxCodeEditor();
-	// Inherit getName() from AddonBase which already returns the addon name set
+	// Inherit getName() from IAddon which already returns the addon name set
 	// via constructor.
 	bool init() override { return true; }
 	void setup() override {}

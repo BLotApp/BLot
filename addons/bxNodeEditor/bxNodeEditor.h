@@ -2,9 +2,9 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 
-class bxNodeEditor : public blot::AddonBase {
+class bxNodeEditor : public blot::IAddon {
   public:
 	bxNodeEditor();
 	~bxNodeEditor();

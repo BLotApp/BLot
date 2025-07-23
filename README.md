@@ -2,8 +2,7 @@
 
 ![preview](apps/appTemplate/img/preview.png)
 
-**Blot** (pronounced "Beelot") is a lightweight creative coding framework inspired by [OpenFrameworks]. Built around an Entity-Component-System architecture, it's designed to be fast enough to run on single-board computers like the Raspberry Pi while providing a flexible foundation for creative programming projects.
-
+**Blot** is a lightweight creative application framework inspired by [OpenFrameworks]. Built around an Entity-Component-System architecture, it's designed to be fast enough to run on single-board computers like the Raspberry Pi while providing a flexible foundation for creative programming projects.
 
 ## Dependencies
 

@@ -1,8 +1,9 @@
 #pragma once
-#include "core/AddonBase.h"
-#include "imgui_markdown.h"
+#include "core/IAddon.h"
+// #include "imgui_markdown.h"  // Temporarily commented out - imgui_markdown
+// library not properly configured
 
-class bxMarkdown : public AddonBase {
+class bxMarkdown : public blot::IAddon {
   public:
 	bxMarkdown();
 	bool init();

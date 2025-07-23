@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.19)
 
 set(ADDON_NAME "bxBlend2D")
 
@@ -7,7 +7,7 @@ add_subdirectory(third_party/asmjit EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/blend2d EXCLUDE_FROM_ALL)
 
 add_library(${ADDON_NAME} STATIC
-    bxBlend2DAddon.cpp
+    bxBlend2d.cpp
     Blend2DRenderer.cpp
     Blend2DRenderer.h
 )
@@ -20,6 +20,7 @@ target_link_libraries(${ADDON_NAME}
 
 target_include_directories(${ADDON_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/third_party/blend2d/src>
 )
 
 message(STATUS "Configured addon: ${ADDON_NAME} with local Blend2D/AsmJit")

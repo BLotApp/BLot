@@ -2,8 +2,7 @@
 #include "TextEditor.h"
 
 bxCodeEditor::bxCodeEditor()
-	: blot::AddonBase("bxCodeEditor"),
-	  m_editor(std::make_unique<TextEditor>()) {
+	: blot::IAddon("bxCodeEditor"), m_editor(std::make_unique<TextEditor>()) {
 	m_editor->SetLanguageDefinition(
 		TextEditor::LanguageDefinition::CPlusPlus());
 }

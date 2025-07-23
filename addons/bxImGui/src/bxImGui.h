@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/AddonBase.h"
 #include "Mui.h"
+#include "core/IAddon.h"
 
 namespace blot {
-class bxImGui : public AddonBase {
+class bxImGui : public blot::IAddon {
   public:
 	bxImGui();
 	bool init() override;

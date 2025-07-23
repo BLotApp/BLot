@@ -5,14 +5,14 @@
 #include <unordered_map>
 
 namespace blot {
-class AddonBase;
+class IAddon;
 
 class AddonRegistry {
   public:
-	using Factory = std::function<std::shared_ptr<AddonBase>()>;
+	using Factory = std::function<std::shared_ptr<IAddon>()>;
 	static AddonRegistry &instance();
 	void addFactory(const std::string &name, Factory f);
-	std::shared_ptr<AddonBase> create(const std::string &name) const;
+	std::shared_ptr<IAddon> create(const std::string &name) const;
 
   private:
 	std::unordered_map<std::string, Factory> m_factories;

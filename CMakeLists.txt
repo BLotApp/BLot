@@ -52,6 +52,8 @@ include_directories(third_party/portable-file-dialogs)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/implot)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/implot3d)
 
+
+
 # Automatically collect all source and header files in src/
 file(GLOB_RECURSE BLOT_SOURCES
     src/*.cpp

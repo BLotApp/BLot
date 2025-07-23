@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <spdlog/spdlog.h>
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 #include "core/IApp.h"
 #include "core/MAddon.h"
 #include "core/WindowSettings.h"

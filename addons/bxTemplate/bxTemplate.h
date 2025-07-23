@@ -1,32 +1,20 @@
 #pragma once
-#include "core/AddonBase.h"
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include "core/IAddon.h"
 
-namespace blot {
-class Canvas;
-}
-
-class bxTemplate : public blot::AddonBase {
+class bxTemplate : public blot::IAddon {
   public:
 	bxTemplate();
 	~bxTemplate();
 
-	bool init();
-	void setup();
-	void update(float deltaTime);
-	void draw();
-	void cleanup();
+	bool init() override;
+	void setup() override;
+	void update(float deltaTime) override;
+	void draw() override;
+	void cleanup() override;
 
-	void setParameter(const std::string &name, float value);
-	float getParameter(const std::string &name) const;
-	void onParameterChanged(const std::string &name,
-							std::function<void(float)> callback);
-
-  private:
-	bool m_initialized;
-	float m_time;
-	std::unordered_map<std::string, float> m_parameters;
-	std::unordered_map<std::string, std::function<void(float)>> m_callbacks;
+	// Parameter methods are now inherited from IAddon
+	// No need to redeclare setParameter, getParameter, onParameterChanged
 };

@@ -2,9 +2,7 @@
 #include <iostream>
 #include "windows/NodeEditorWindow.h"
 
-bxNodeEditor::bxNodeEditor()
-	: blot::AddonBase("bxNodeEditor", "0.1.0"), m_initialized(false),
-	  m_time(0.0f) {
+bxNodeEditor::bxNodeEditor() : blot::IAddon("bxNodeEditor", "0.1.0") {
 	setDescription("Node Editor");
 	setAuthor("Your Name");
 	setLicense("MIT");

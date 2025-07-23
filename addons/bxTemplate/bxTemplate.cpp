@@ -1,8 +1,6 @@
 #include "bxTemplate.h"
 
-bxTemplate::bxTemplate()
-	: blot::AddonBase("bxTemplate", "1.0.0"), m_initialized(false),
-	  m_time(0.0f) {
+bxTemplate::bxTemplate() : blot::IAddon("bxTemplate", "1.0.0") {
 	setDescription("Template addon for BLot creative coding");
 	setAuthor("Your Name");
 	setLicense("MIT");
@@ -14,7 +12,7 @@ bool bxTemplate::init() {
 	this->log("Initializing bxTemplate addon");
 
 	// Initialize addon-specific resources
-	m_initialized = true;
+	// m_initialized is now handled by IAddon
 
 	this->log("bxTemplate addon initialized successfully");
 	return true;
@@ -30,8 +28,6 @@ void bxTemplate::setup() {
 }
 
 void bxTemplate::update(float deltaTime) {
-	m_time += deltaTime;
-
 	// Update addon logic here
 	// Example: Update parameters based on time
 	// float speed = getParameter("speed");
@@ -48,33 +44,10 @@ void bxTemplate::draw() {
 }
 
 void bxTemplate::cleanup() {
-	if (m_initialized) {
-		this->log("Cleaning up bxTemplate addon");
-		m_initialized = false;
-	}
+	this->log("Cleaning up bxTemplate addon");
+	// Addon-specific cleanup
+	// m_initialized is now handled by IAddon
 }
 
-void bxTemplate::setParameter(const std::string &name, float value) {
-	m_parameters[name] = value;
-
-	// Trigger callback if registered
-	auto it = m_callbacks.find(name);
-	if (it != m_callbacks.end()) {
-		it->second(value);
-	}
-
-	this->log("Parameter " + name + " set to " + std::to_string(value));
-}
-
-float bxTemplate::getParameter(const std::string &name) const {
-	auto it = m_parameters.find(name);
-	if (it != m_parameters.end()) {
-		return it->second;
-	}
-	return 0.0f;
-}
-
-void bxTemplate::onParameterChanged(const std::string &name,
-									std::function<void(float)> callback) {
-	m_callbacks[name] = callback;
-}
+// Parameter methods are now inherited from IAddon
+// No need to reimplement setParameter, getParameter, onParameterChanged

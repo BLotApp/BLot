@@ -1,10 +1,13 @@
 #pragma once
 
-#include "../../src/AddonBase.h"
+#include "core/IAddon.h"
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+namespace blot {
 
 // OSC message structure
 struct OscMessage {
@@ -28,12 +31,12 @@ struct OscMessage {
 	int getNumArgs() const { return arguments.size(); }
 };
 
-class bxOsc : public AddonBase {
+class bxOsc : public blot::IAddon {
   public:
 	bxOsc();
-	~bxOsc();
+	~bxOsc() override;
 
-	// AddonBase implementation
+	// IAddon lifecycle
 	bool init() override;
 	void setup() override;
 	void update(float deltaTime) override;
@@ -41,7 +44,7 @@ class bxOsc : public AddonBase {
 	void cleanup() override;
 
 	// OSC setup
-	void setup(const std::string &host, int port);
+	void setupOsc(const std::string &host, int port);
 	void setupSender(const std::string &host, int port);
 	void setupReceiver(int port);
 
@@ -121,3 +124,5 @@ class OscReceiver {
 	bool m_listening;
 	std::vector<OscMessage> m_messages;
 };
+
+} // namespace blot 

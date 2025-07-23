@@ -1,9 +1,7 @@
 {
   "name": "bxOsc",
-  "url": "https://github.com/BlotApp/bxOsc.git",
-  "branch": "main",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Blot Team",
-  "description": "OSC addon for Blot.",
+  "description": "Open Sound Control (OSC) communication addon for Blot. Provides simple send/receive wrappers for OSC messaging.",
   "dependencies": []
 } 

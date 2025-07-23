@@ -10,7 +10,7 @@
 
 namespace blot {
 class BlotEngine;
-class AddonBase;
+class IAddon;
 class MAddon : public IManager, public ISettings {
   public:
 	explicit MAddon(BlotEngine *engine);
@@ -19,9 +19,9 @@ class MAddon : public IManager, public ISettings {
 	void shutdown() override {}
 
 	// Addon registration and management
-	void registerAddon(std::shared_ptr<AddonBase> addon);
+	void registerAddon(std::shared_ptr<IAddon> addon);
 	void unregisterAddon(const std::string &name);
-	std::shared_ptr<AddonBase> getAddon(const std::string &name) const;
+	std::shared_ptr<IAddon> getAddon(const std::string &name) const;
 
 	// Addon lifecycle management
 	bool initAll();
@@ -48,8 +48,8 @@ class MAddon : public IManager, public ISettings {
 
 	// Addon information
 	std::vector<std::string> getAddonNames() const;
-	std::vector<std::shared_ptr<AddonBase>> getEnabledAddons() const;
-	std::vector<std::shared_ptr<AddonBase>> getAllAddons() const;
+	std::vector<std::shared_ptr<IAddon>> getEnabledAddons() const;
+	std::vector<std::shared_ptr<IAddon>> getAllAddons() const;
 
 	// Dependency resolution
 	bool resolveDependencies();
@@ -75,7 +75,7 @@ class MAddon : public IManager, public ISettings {
 
   private:
 	// Addon storage
-	std::unordered_map<std::string, std::shared_ptr<AddonBase>> m_addons;
+	std::unordered_map<std::string, std::shared_ptr<IAddon>> m_addons;
 	std::vector<std::string> m_addonOrder; // Order for initialization
 
 	// Configuration

@@ -4,9 +4,10 @@
 // Project headers
 #include "MWindow.h"
 #include "Mui.h"
-#include "bxBlend2DAddon.h"
+#include "bxBlend2d.h"
 #include "rendering/U_rendering.h"
 #include "windows/StrokeWindow.h"
+#include "core/AddonRegistry.h"
 
 namespace blot {
 
@@ -17,11 +18,11 @@ std::unique_ptr<IRenderer> createBlend2DRenderer() {
 }
 } // namespace
 
-bxBlend2DAddon::bxBlend2DAddon() : AddonBase("bxBlend2D", "1.0.0") {}
+bxBlend2d::bxBlend2d() : blot::IAddon("bxBlend2d", "1.0.0") {}
 
-bxBlend2DAddon::~bxBlend2DAddon() { cleanup(); }
+bxBlend2d::~bxBlend2d() { cleanup(); }
 
-bool bxBlend2DAddon::init() {
+bool bxBlend2d::init() {
 	spdlog::info("[bxBlend2DAddon] Initializing and registering Blend2D "
 				 "renderer factory");
 	registerRendererFactory();
@@ -37,15 +38,18 @@ bool bxBlend2DAddon::init() {
 	return true;
 }
 
-void bxBlend2DAddon::setup() {}
-void bxBlend2DAddon::update(float) {}
-void bxBlend2DAddon::draw() {}
-void bxBlend2DAddon::cleanup() {}
+void bxBlend2d::setup() {}
+void bxBlend2d::update(float) {}
+void bxBlend2d::draw() {}
+void bxBlend2d::cleanup() {}
 
-void bxBlend2DAddon::registerRendererFactory() {
+void bxBlend2d::registerRendererFactory() {
 	// Register the factory with the renderer registry
 	RendererRegistry::instance().registerFactory(RendererType::Blend2D,
 												 createBlend2DRenderer);
 }
 
 } // namespace blot
+
+// Auto-register the addon with the AddonRegistry
+BLOT_REGISTER_ADDON(bxBlend2d)

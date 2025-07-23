@@ -6,15 +6,15 @@
 
 // Project headers
 #include "Blend2DRenderer.h"
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 #include "rendering/U_rendering.h"
 
 namespace blot {
 
-class bxBlend2DAddon : public AddonBase {
+class bxBlend2d : public blot::IAddon {
   public:
-	bxBlend2DAddon();
-	~bxBlend2DAddon() override;
+	bxBlend2d();
+	~bxBlend2d() override;
 
 	bool init() override;
 	void setup() override;

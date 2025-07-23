@@ -20,15 +20,38 @@ Each addon lives in its own folder under `addons/` and typically contains:
 3. **Inherit from `AddonBase`** and implement the required lifecycle methods:
 
 ```cpp
-#include "framework/AddonBase.h"
-class MyAddon : public AddonBase {
+#include "core/IAddon.h"
+
+class MyAddon : public blot::IAddon {
 public:
-    MyAddon() : AddonBase("myAddon", "1.0.0") {}
-    bool init() override { /* ... */ return true; }
-    void setup() override {}
-    void update(float dt) override {}
-    void draw() override {}
-    void cleanup() override {}
+    MyAddon() : blot::IAddon("myAddon", "1.0.0") {
+        // Optional: Set addon metadata
+        setDescription("My custom addon");
+        setAuthor("Your Name");
+    }
+    
+    // Override these lifecycle methods for custom behavior
+    bool init() override { 
+        log("Initializing MyAddon");
+        // Your initialization code here
+        return true; 
+    }
+    void setup() override { 
+        log("Setting up MyAddon");
+        // Your setup code here
+        setParameter("myParam", 1.0f);
+    }
+    void update(float dt) override { 
+        // Your update code here
+        // Time tracking is handled automatically by IAddon::blotUpdate()
+    }
+    void draw() override { 
+        // Your drawing code here
+    }
+    void cleanup() override { 
+        log("Cleaning up MyAddon");
+        // Your cleanup code here
+    }
 };
 ```
 
@@ -38,6 +61,23 @@ add_library(myAddon STATIC myAddon.cpp)
 target_include_directories(myAddon PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 ```
 Add `add_subdirectory(myAddon)` to `addons/CMakeLists.txt`.
+
+### IAddon Interface Pattern
+
+The `IAddon` interface uses the **Template Method Pattern** (like `IApp`) to ensure proper lifecycle management. This means:
+
+- **Framework controls the flow**: `IAddon::blotUpdate()` always updates time tracking
+- **User implements hooks**: Override `update()`, `init()`, etc. for custom behavior
+- **Automatic time tracking**: Time is automatically tracked and available via `getTime()`
+- **Parameter system**: Built-in parameter management with callbacks via `setParameter()`, `getParameter()`, `onParameterChanged()`
+
+**Important**: The framework calls your methods automatically - no need to call parent methods:
+```cpp
+void update(float dt) override {
+    // Your update code here
+    // Time tracking is handled automatically by IAddon::blotUpdate()
+}
+```
 
 5. **Add an `addon.json` file** with metadata:
 ```json
