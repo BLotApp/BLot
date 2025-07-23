@@ -16,8 +16,14 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y clang-format-14
       - name: Check formatting
         run: |
-          git fetch origin main --depth=1
-          BASE=$(git merge-base origin/main HEAD)
+          # Get the base commit for comparison
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+          else
+            # For pushes, compare with the previous commit
+            BASE=$(git rev-parse HEAD~1)
+          fi
+          
           FILES=$(git diff --name-only $BASE HEAD -- '*.cpp' '*.h' '*.c' '*.hpp' | grep -vE '^(third_party|assets|addons)/')
           if [ -n "$FILES" ]; then
             # Filter out deleted files and only check existing files
