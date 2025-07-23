@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include "core/AppSettings.h"
+#include "core/Iui.h"
 #include "core/U_core.h"
 #include "core/WindowSettings.h"
 #include "rendering/U_gladGlfw.h"
@@ -11,7 +12,8 @@ namespace blot {
 class IApp;
 class MEcs;
 class MAddon;
-class Mui;
+class Iui;
+class Mui; // forward declaration
 class MRendering;
 class MCanvas;
 class MSettings;
@@ -32,7 +34,8 @@ class BlotEngine {
 
 	MEcs *getECSManager() { return m_ecsManager.get(); }
 	MAddon *getAddonManager() { return m_addonManager.get(); }
-	Mui *getUIManager() { return m_uiManager.get(); }
+	Mui *getUIManager() { return reinterpret_cast<Mui *>(m_uiManager.get()); }
+	Iui *getUiManager() { return m_uiManager.get(); }
 	MRendering *getRenderingManager() { return m_renderingManager.get(); }
 	MCanvas *getCanvasManager() { return m_canvasManager.get(); }
 	MSettings *getSettings() { return m_settingsManager.get(); }
@@ -60,11 +63,17 @@ class BlotEngine {
 	GLFWwindow *getWindow() const { return m_window; }
 
 	// Attach/detach UI manager (implemented in .cpp to avoid circular include)
+	void attachUiManager(std::unique_ptr<Iui> ui);
+	// Temporary wrapper for backward compatibility (defined in .cpp)
 	void attachUIManager(std::unique_ptr<Mui> ui);
 	void detachUIManager();
 
 	void setUiInitialised(bool v) { m_uiInitialised = v; }
 	bool isUiInitialised() const { return m_uiInitialised; }
+
+	// Global engine access
+	static BlotEngine *getEngine() { return s_instance; }
+	static void setEngine(BlotEngine *engine) { s_instance = engine; }
 
   private:
 	std::string m_appName = "Blot App";
@@ -75,7 +84,7 @@ class BlotEngine {
 	std::unique_ptr<IApp> m_app;
 	std::unique_ptr<MEcs> m_ecsManager;
 	std::unique_ptr<MAddon> m_addonManager;
-	std::unique_ptr<Mui> m_uiManager;
+	std::unique_ptr<Iui> m_uiManager;
 	std::unique_ptr<MRendering> m_renderingManager;
 	std::unique_ptr<MCanvas> m_canvasManager;
 	std::unique_ptr<MSettings> m_settingsManager;
@@ -89,5 +98,8 @@ class BlotEngine {
 	glm::vec4 m_clearColor{0.4f, 0.4f, 0.4f, 1.0f};
 	// Tracks whether Mui::init() has been called (addon may call it).
 	bool m_uiInitialised = false;
+
+	// Global engine instance
+	static BlotEngine *s_instance;
 };
 } // namespace blot

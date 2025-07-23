@@ -4,15 +4,16 @@
 // WindowSettings struct
 #include "core/AppSettings.h"
 #include "core/WindowSettings.h"
+#include "ecs/systems/SEvent.h"
 namespace blot {
 
 class BlotEngine;
 class MEcs;
 class MAddon;
-class Mui;
 class MRendering;
 class MCanvas;
 class MSettings;
+class Iui;
 
 class IApp {
   public:
@@ -37,6 +38,11 @@ class IApp {
 	WindowSettings &window() { return m_settings.window; }
 	const WindowSettings &window() const { return m_settings.window; }
 
+	// Application state helpers
+	int getWindowWidth() const { return m_settings.window.width; }
+	int getWindowHeight() const { return m_settings.window.height; }
+	float getDeltaTime() const { return m_deltaTime; }
+
   protected:
 	// ----------------------------------------
 	// User hooks – override these in your app
@@ -45,11 +51,14 @@ class IApp {
 	virtual void update(float) {}
 	virtual void draw() {}
 
+	// Derived apps can register UI/Event actions here after engine setup
+	virtual void registerUIActions(blot::ecs::SEvent &) {}
+
 	// Convenience accessors
 	blot::MEcs *getECSManager() const;
 	blot::MRendering *getRenderingManager() const;
 	blot::MCanvas *getCanvasManager() const;
-	blot::Mui *getUIManager() const;
+	blot::Iui *getUiManager() const;
 	blot::MAddon *getAddonManager() const;
 	blot::MSettings *getSettingsManager() const;
 
@@ -58,5 +67,7 @@ class IApp {
 
 	blot::BlotEngine *m_engine = nullptr;
 	AppSettings m_settings;
+	float m_deltaTime = 0.0f;
+	float m_lastFrameTime = 0.0f;
 };
 } // namespace blot

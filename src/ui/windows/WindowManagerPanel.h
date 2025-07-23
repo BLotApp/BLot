@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../MWindow.h"
+#include "MWindow.h"
 #include "Window.h"
 
 namespace blot {

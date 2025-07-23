@@ -7,4 +7,5 @@ std::string getFontsDir();
 std::string getUserSettingsFile();
 std::string getWorkspacesDir();
 std::string getImGuiIniPath();
+std::string getManifestPath();
 } // namespace AppPaths

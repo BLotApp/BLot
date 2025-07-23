@@ -1,6 +1,6 @@
 #include "AddonManagerWindow.h"
 #include <imgui.h>
-#include "core/AddonBase.h"
+#include "core/IAddon.h"
 #include "core/MAddon.h"
 
 namespace blot {

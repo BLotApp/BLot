@@ -1,0 +1,13 @@
+{
+  "name": "Example App",
+  "url": "https://github.com/BlotApp/example_app.git",
+  "branch": "main",
+  "version": "0.1.0",
+  "author": "Blot Team",
+  "description": "Demo app for Blot.",
+  "dependencies": [
+    {"name":"bxImGui","url":"https://github.com/BlotApp/bxImGui.git","branch":"main"},
+    {"name":"bxCodeEditor","url":"https://github.com/BlotApp/bxCodeEditor.git","branch":"main"},
+    {"name":"bxScriptEngine","url":"https://github.com/BlotApp/bxScriptEngine.git","branch":"main"}
+  ]
+}

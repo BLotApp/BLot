@@ -1,0 +1,9 @@
+{
+  "name": "bxImGui",
+  "url": "https://github.com/BlotApp/bxImGui.git",
+  "branch": "main",
+  "version": "0.1.0",
+  "author": "Blot Team",
+  "description": "ImGui-based UI backend for Blot.",
+  "dependencies": []
+} 

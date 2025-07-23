@@ -8,18 +8,24 @@
 #include <iostream>
 #include <thread>
 
+#include "Mui.h"
 #include "core/AppSettings.h"
 #include "core/IApp.h"
+#include "core/Iui.h"
 #include "core/MAddon.h"
 #include "core/U_core.h"
 #include "core/util/MSettings.h"
 #include "rendering/U_rendering.h"
-#include "ui/Mui.h"
-#include "ui/U_ui.h"
 
 namespace blot {
 
-BlotEngine::~BlotEngine() = default;
+// Initialize static member
+BlotEngine *BlotEngine::s_instance = nullptr;
+
+BlotEngine::~BlotEngine() {
+	// Clear global engine instance
+	s_instance = nullptr;
+}
 
 BlotEngine::BlotEngine(std::unique_ptr<IApp> app)
 	: BlotEngine(std::move(app), AppSettings{}) {}
@@ -33,6 +39,9 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	  m_renderingManager(std::make_unique<MRendering>()),
 	  m_canvasManager(std::make_unique<MCanvas>(this)), m_uiManager(nullptr),
 	  m_settingsManager(std::make_unique<MSettings>()), m_window(nullptr) {
+
+	// Set global engine instance
+	s_instance = this;
 	// Apply settings
 	WindowSettings ws = m_settings.window;
 	if (m_app) {
@@ -63,7 +72,9 @@ BlotEngine::BlotEngine(std::unique_ptr<IApp> app, const AppSettings &settings)
 	}
 #endif
 
-	m_addonManager->initDefaultAddons();
+	// Applications are now responsible for registering and initializing any
+	// addons they require via MAddon. The engine no longer loads default
+	// addons automatically.
 
 	// store settings for later if needed
 	m_windowSettings = ws;
@@ -152,8 +163,17 @@ void BlotEngine::setTargetFrameRate(int fps) {
 
 // -------------- UI Manager attach/detach ----------------
 
-void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+void BlotEngine::attachUiManager(std::unique_ptr<Iui> ui) {
 	m_uiManager = std::move(ui);
+	if (m_uiManager) {
+		m_uiManager->setBlotEngine(this);
+	}
+}
+
+// Temporary wrapper (backward compatibility)
+
+void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+	m_uiManager.reset(ui.release());
 	if (m_uiManager) {
 		m_uiManager->setBlotEngine(this);
 	}

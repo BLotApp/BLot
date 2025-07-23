@@ -1,17 +1,17 @@
 #pragma once
 
+#include <cstdint>
 #include <imgui.h>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include "windows/Window.h"
 
 namespace blot {
+
 namespace ecs {
 
 struct CWindow {
-	std::shared_ptr<Window> window;
 	std::string name;
 	bool isVisible = true;
 	bool isFocused = false;

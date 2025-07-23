@@ -1,17 +1,21 @@
-add_library(bxCodeEditor
-    bxCodeEditor.cpp
-    bxCodeEditor.h
+cmake_minimum_required(VERSION 3.19)
+
+set(ADDON_NAME "bxCodeEditor")
+
+# Collect sources from src/
+file(GLOB BXCODEEDITOR_SRC
+    src/*.cpp
+    src/*.h
+    third_party/ImGuiColorTextEdit/TextEditor.cpp
 )
-target_include_directories(bxCodeEditor PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/core
-    ${CMAKE_SOURCE_DIR}/src/ui
-    ${CMAKE_SOURCE_DIR}/src/rendering
-    ${CMAKE_SOURCE_DIR}/src/ecs
-    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
-    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
-    ${CMAKE_SOURCE_DIR}/third_party/glad/include
-    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
-) 
+
+add_library(${ADDON_NAME} STATIC ${BXCODEEDITOR_SRC})
+
+# Depend on blot core and bxImGui (already fetched via addons.cmake)
+target_link_libraries(${ADDON_NAME} PUBLIC blot bxImGui bxScriptEngine)
+
+# Include directories
+ target_include_directories(${ADDON_NAME} PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/third_party/ImGuiColorTextEdit>
+ )

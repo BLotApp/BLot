@@ -9,12 +9,7 @@ class AppTemplate : public blot::IApp {
 		window().title = "App Template";
 		// window().fullscreen = true;
 	}
-	void setup() override {
-		spdlog::info("App Template setup!");
-		if (auto engine = getEngine()) {
-			engine->setClearColor(0.4f, 0.4f, 0.4f, 1.0f);
-		}
-	}
+	void setup() override;
 	void update(float) override {}
 	void draw() override {
 

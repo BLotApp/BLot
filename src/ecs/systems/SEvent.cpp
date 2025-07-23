@@ -7,7 +7,7 @@ namespace ecs {
 SEvent::SEvent(entt::registry &registry) : m_registry(registry) {}
 
 void SEvent::registerEvent(const std::string &eventId,
-								std::function<void(const CEvent &)> handler) {
+						   std::function<void(const CEvent &)> handler) {
 	m_eventHandlers[eventId].push_back(handler);
 }
 
@@ -19,23 +19,22 @@ void SEvent::unregisterEvent(const std::string &eventId) {
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<void()> action) {
+							std::function<void()> action) {
 	m_actions[actionId] = action;
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<void(int)> action) {
-	m_actions[actionId] = action;
-}
-
-void SEvent::registerAction(
-	const std::string &actionId,
-	std::function<void(const std::string &)> action) {
+							std::function<void(int)> action) {
 	m_actions[actionId] = action;
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<void(uint32_t)> action) {
+							std::function<void(const std::string &)> action) {
+	m_actions[actionId] = action;
+}
+
+void SEvent::registerAction(const std::string &actionId,
+							std::function<void(uint32_t)> action) {
 	m_actions[actionId] = action;
 }
 
@@ -45,20 +44,18 @@ void SEvent::registerAction(
 	m_actions[actionId] = action;
 }
 
-void SEvent::registerAction(
-	const std::string &actionId,
-	std::function<bool(const std::string &)> action) {
-	m_actions[actionId] = action;
-}
-
-void SEvent::registerAction(
-	const std::string &actionId,
-	std::function<std::vector<std::string>()> action) {
+void SEvent::registerAction(const std::string &actionId,
+							std::function<bool(const std::string &)> action) {
 	m_actions[actionId] = action;
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<std::string()> action) {
+							std::function<std::vector<std::string>()> action) {
+	m_actions[actionId] = action;
+}
+
+void SEvent::registerAction(const std::string &actionId,
+							std::function<std::string()> action) {
 	m_actions[actionId] = action;
 }
 
@@ -69,12 +66,23 @@ void SEvent::registerAction(
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<void(bool)> action) {
+							std::function<void(bool)> action) {
 	m_actions[actionId] = action;
 }
 
 void SEvent::registerAction(const std::string &actionId,
-								 std::function<bool()> action) {
+							std::function<bool()> action) {
+	m_actions[actionId] = action;
+}
+
+void SEvent::registerAction(
+	const std::string &actionId,
+	std::function<std::vector<std::pair<size_t, std::string>>()> action) {
+	m_actions[actionId] = action;
+}
+
+void SEvent::registerAction(const std::string &actionId,
+							std::function<size_t()> action) {
 	m_actions[actionId] = action;
 }
 
@@ -97,7 +105,7 @@ void SEvent::emitEvent(EET_EventType type, const std::string &actionId) {
 }
 
 void SEvent::emitEvent(EET_EventType type, const std::string &actionId,
-							const std::any &data) {
+					   const std::any &data) {
 	CEvent event(type, actionId, data);
 	emitEvent(event);
 }
@@ -117,8 +125,7 @@ void SEvent::triggerAction(const std::string &actionId) {
 	}
 }
 
-void SEvent::triggerAction(const std::string &actionId,
-								const std::any &data) {
+void SEvent::triggerAction(const std::string &actionId, const std::any &data) {
 	auto it = m_actions.find(actionId);
 	if (it != m_actions.end()) {
 		// Try to find a matching action signature
@@ -162,7 +169,7 @@ void SEvent::triggerAction(const std::string &actionId,
 
 entt::entity
 SEvent::createListener(const std::string &eventId,
-							std::function<void(const CEvent &)> callback) {
+					   std::function<void(const CEvent &)> callback) {
 	auto entity = m_registry.create();
 	m_registry.emplace<CEventListener>(entity, eventId, callback);
 	return entity;
@@ -175,7 +182,7 @@ void SEvent::removeListener(entt::entity entity) {
 }
 
 void SEvent::createEmitter(entt::entity entity,
-								const std::vector<std::string> &events) {
+						   const std::vector<std::string> &events) {
 	if (m_registry.valid(entity)) {
 		m_registry.emplace<CEventEmitter>(entity, events);
 	}

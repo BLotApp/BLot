@@ -40,7 +40,7 @@ class MEcs : public IManager, public ISettings {
 	template <typename T> void removeComponent(entt::entity entity);
 
 	// System management
-	void updateSystems(float deltaTime);
+	void updateSystems(MRendering *renderingManager, float deltaTime);
 	void renderSystems();
 
 	// Query systems
@@ -88,9 +88,7 @@ class MEcs : public IManager, public ISettings {
 
 	// Event system access
 	ecs::SEvent &getEventSystem() { return *m_eventSystem; }
-	const ecs::SEvent &getEventSystem() const {
-		return *m_eventSystem;
-	}
+	const ecs::SEvent &getEventSystem() const { return *m_eventSystem; }
 
 	// ISettings interface
 	json getSettings() const override;

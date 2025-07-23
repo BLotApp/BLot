@@ -1,7 +1,7 @@
 #include "InfoWindow.h"
 #include <imgui.h>
-#include "../CoordinateSystem.h"
-#include "../Mui.h"
+#include "CoordinateSystem.h"
+#include "Mui.h"
 #include "ecs/components/CTransform.h"
 
 namespace blot {

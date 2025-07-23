@@ -1,5 +1,7 @@
 {
   "name": "bxCodeEditor",
+  "url": "https://github.com/BlotApp/bxCodeEditor.git",
+  "branch": "main",
   "version": "1.0.0",
   "author": "Your Name",
   "description": "A modular code editor for Blot.",

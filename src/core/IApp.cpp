@@ -1,5 +1,7 @@
 #include "core/IApp.h"
 #include "core/BlotEngine.h"
+#include "core/Iui.h"
+#include "core/util/AppPaths.h"
 
 namespace blot {
 
@@ -15,8 +17,8 @@ MCanvas *IApp::getCanvasManager() const {
 	return m_engine ? m_engine->getCanvasManager() : nullptr;
 }
 
-Mui *IApp::getUIManager() const {
-	return m_engine ? m_engine->getUIManager() : nullptr;
+Iui *IApp::getUiManager() const {
+	return m_engine ? m_engine->getUiManager() : nullptr;
 }
 
 MAddon *IApp::getAddonManager() const {
@@ -37,16 +39,32 @@ void IApp::blotSetup(BlotEngine *engine) {
 	setEngine(engine);
 
 	// Framework-level initialisation
-	if (auto ui = getUIManager()) {
+	if (auto ui = getUiManager()) {
 		ui->setBlotEngine(engine);
+	}
+
+	// Allow app to register its UI actions now that ECS exists
+	if (m_engine && m_engine->getECSManager()) {
+		registerUIActions(m_engine->getECSManager()->getEventSystem());
+		// load addons from manifest
+		m_engine->getAddonManager()->loadFromManifest(
+			AppPaths::getManifestPath());
 	}
 
 	setup();
 }
 
 void IApp::blotUpdate(float deltaTime) {
+	m_deltaTime = deltaTime;
 	// Framework-level update
-	if (auto ui = getUIManager()) {
+	// 1) Update ECS-related systems (canvas, scripts, generic systems)
+	if (auto ecs = getECSManager()) {
+		auto renderingMgr = getRenderingManager();
+		ecs->updateSystems(renderingMgr, deltaTime);
+	}
+
+	// 2) Update UI – this also internally updates the WindowManager
+	if (auto ui = getUiManager()) {
 		ui->update();
 	}
 

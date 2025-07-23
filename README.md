@@ -2,8 +2,7 @@
 
 ![preview](apps/appTemplate/img/preview.png)
 
-**Blot** (pronounced "Beelot") is a lightweight creative coding framework inspired by [OpenFrameworks]. Built around an Entity-Component-System architecture, it's designed to be fast enough to run on single-board computers like the Raspberry Pi while providing a flexible foundation for creative programming projects.
-
+**Blot** is a lightweight creative application framework inspired by [OpenFrameworks]. Built around an Entity-Component-System architecture, it's designed to be fast enough to run on single-board computers like the Raspberry Pi while providing a flexible foundation for creative programming projects.
 
 ## Dependencies
 
@@ -12,8 +11,6 @@
 | [GLFW3]     | Window/input management        | submodule     |                   |
 | [GLM]       | Math (vectors/matrices)        | submodule     | Header-only       |
 | [GLAD]      | OpenGL loader                  | Included      |                   |
-| [DearImGui] | UI framework                   | submodule     |                   |
-| [Blend2D]   | 2D vector graphics             | submodule     | *Included Addon*  |
 | [EnTT]      | ECS (Entity-Component-System)  | submodule     | Header-only       |
 | [spdlog]    | Logging                        | submodule     | Header-only       |
 
@@ -40,11 +37,14 @@ For detailed build instructions, see the [Build Documentation](./docs/build_inst
 
 ## Known Addons
 
-- [ ] **bxMui** - Material Design UI components
-- [ ] **bxBlend2D** - 2D vector graphics rendering
-- [ ] **bxCodeEditor** - Code editing capabilities
-- [ ] **bxOsc** - Open Sound Control support
-- [ ] **bxScriptEngine** - Scripting engine integration
+- [ ] **bxImGui** - Adds Dear ImGui UI components  
+- [ ] **bxTestEngine** - ImGui Test Engine for BLot  
+- [ ] **bxBlend2D** - 2D vector graphics rendering  
+- [ ] **bxMarkdown** - Markdown support  
+- [ ] **bxCodeEditor** - Code editing capabilities  
+- [ ] **bxNodeEditor** - ImGui-based node editor  
+- [ ] **bxOsc** - Open Sound Control support  
+- [ ] **bxScriptEngine** - Scripting engine integration  
 
 ## Contributing
 
