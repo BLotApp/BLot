@@ -8,12 +8,11 @@
 #include <iostream>
 #include <thread>
 
-#include "Mui.h"
 #include "core/AppSettings.h"
 #include "core/IApp.h"
 #include "core/Iui.h"
-#include "core/MAddon.h"
 #include "core/U_core.h"
+#include "core/addon/MAddon.h"
 #include "core/util/MSettings.h"
 #include "rendering/U_rendering.h"
 
@@ -170,14 +169,13 @@ void BlotEngine::attachUiManager(std::unique_ptr<Iui> ui) {
 	}
 }
 
-// Temporary wrapper (backward compatibility)
-
-void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
-	m_uiManager.reset(ui.release());
-	if (m_uiManager) {
-		m_uiManager->setBlotEngine(this);
-	}
-}
+// UI manager attachment through addon system
+// void BlotEngine::attachUIManager(std::unique_ptr<Mui> ui) {
+// 	m_uiManager.reset(ui.release());
+// 	if (m_uiManager) {
+// 		m_uiManager->setBlotEngine(this);
+// 	}
+// }
 
 void BlotEngine::detachUIManager() { m_uiManager.reset(); }
 

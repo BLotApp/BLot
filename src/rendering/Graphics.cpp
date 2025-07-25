@@ -204,6 +204,34 @@ void Graphics::setGradient(float x1, float y1, float r1, float g1, float b1,
 	m_gradientEndColor = glm::vec4(r2, g2, b2, 1.0f);
 }
 
+void Graphics::setLinearGradient(float x1, float y1, float x2, float y2,
+								 const std::vector<GradientStop> &stops) {
+	if (m_renderer) {
+		m_renderer->setLinearGradient(x1, y1, x2, y2, stops);
+	}
+}
+
+void Graphics::setRadialGradient(float cx, float cy, float radius,
+								 const std::vector<GradientStop> &stops) {
+	if (m_renderer) {
+		m_renderer->setRadialGradient(cx, cy, radius, stops);
+	}
+}
+
+void Graphics::setConicGradient(float cx, float cy, float angle,
+								const std::vector<GradientStop> &stops) {
+	if (m_renderer) {
+		m_renderer->setConicGradient(cx, cy, angle, stops);
+	}
+}
+
+void Graphics::clearGradient() {
+	if (m_renderer) {
+		m_renderer->clearGradient();
+	}
+	m_hasGradient = false;
+}
+
 void Graphics::drawImage(const std::string &imagePath, float x, float y,
 						 float width, float height) {
 	// Basic image drawing - would load and render texture

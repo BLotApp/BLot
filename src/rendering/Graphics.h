@@ -59,6 +59,16 @@ class Graphics {
 				   float a = 1.0f);
 	void setGradient(float x1, float y1, float r1, float g1, float b1, float x2,
 					 float y2, float r2, float g2, float b2);
+
+	// Advanced gradient support
+	void setLinearGradient(float x1, float y1, float x2, float y2,
+						   const std::vector<GradientStop> &stops);
+	void setRadialGradient(float cx, float cy, float radius,
+						   const std::vector<GradientStop> &stops);
+	void setConicGradient(float cx, float cy, float angle,
+						  const std::vector<GradientStop> &stops);
+	void clearGradient();
+
 	void setStrokeCap(int cap);
 	void setStrokeJoin(int join);
 	void setStrokeDash(const std::vector<float> &dashes, float offset = 0.0f);

@@ -1,10 +1,11 @@
 #pragma once
 #include <entt/entt.hpp>
 #include <spdlog/spdlog.h>
-#include "core/IAddon.h"
 #include "core/IApp.h"
-#include "core/MAddon.h"
+#include "core/IWindow.h"
 #include "core/WindowSettings.h"
+#include "core/addon/IAddon.h"
+#include "core/addon/MAddon.h"
 #include "core/canvas/MCanvas.h"
 #include "core/util/MSettings.h"
 #include "ecs/MEcs.h"

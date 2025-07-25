@@ -1,9 +1,0 @@
-{
-  "name": "bxTemplate",
-  "url": "https://github.com/BlotApp/bxTemplate.git",
-  "branch": "main",
-  "version": "1.0.0",
-  "author": "Blot Team",
-  "description": "Template addon for Blot.",
-  "dependencies": []
-} 

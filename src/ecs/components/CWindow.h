@@ -1,7 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <cstdint>
-#include <imgui.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -19,16 +19,16 @@ struct CWindow {
 };
 
 struct CWindowTransform {
-	ImVec2 position = ImVec2(0, 0);
-	ImVec2 size = ImVec2(400, 300);
-	ImVec2 minSize = ImVec2(100, 100);
-	ImVec2 maxSize = ImVec2(FLT_MAX, FLT_MAX);
+	glm::vec2 position = glm::vec2(0, 0);
+	glm::vec2 size = glm::vec2(400, 300);
+	glm::vec2 minSize = glm::vec2(100, 100);
+	glm::vec2 maxSize = glm::vec2(FLT_MAX, FLT_MAX);
 };
 
 struct CWindowStyle {
 	float alpha = 1.0f;
 	int flags = 0;
-	ImVec4 backgroundColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+	glm::vec4 backgroundColor = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
 };
 
 struct CWindowInput {

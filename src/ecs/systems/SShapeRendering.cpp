@@ -1,6 +1,5 @@
 #include "SShapeRendering.h"
 #include <cmath>
-#include "imgui.h"
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -12,13 +11,11 @@ namespace blot {
 namespace ecs {
 
 // TODO: This should be a class that inherits from ISystem?
-void SShapeRendering(MEcs &ecs,
-						  std::shared_ptr<IRenderer> renderer) {
+void SShapeRendering(MEcs &ecs, std::shared_ptr<IRenderer> renderer) {
 	// If Blend2D-specific logic is needed, use dynamic_cast here
 	// Blend2DRenderer* blend2d =
 	// dynamic_cast<Blend2DRenderer*>(renderer.get());
-	auto view =
-		ecs.view<ecs::CTransform, ecs::CShape, ecs::CDrawStyle>();
+	auto view = ecs.view<ecs::CTransform, ecs::CShape, ecs::CDrawStyle>();
 
 	for (auto entity : view) {
 		auto &transform = view.get<ecs::CTransform>(entity);
@@ -45,8 +42,7 @@ void SShapeRendering(MEcs &ecs,
 	}
 }
 
-void renderRectangle(const ecs::CTransform &transform,
-					 const ecs::CShape &shape,
+void renderRectangle(const ecs::CTransform &transform, const ecs::CShape &shape,
 					 const ecs::CDrawStyle &style,
 					 std::shared_ptr<IRenderer> renderer) {
 	if (!renderer)
@@ -74,8 +70,7 @@ void renderRectangle(const ecs::CTransform &transform,
 	}
 }
 
-void renderEllipse(const ecs::CTransform &transform,
-				   const ecs::CShape &shape,
+void renderEllipse(const ecs::CTransform &transform, const ecs::CShape &shape,
 				   const ecs::CDrawStyle &style,
 				   std::shared_ptr<IRenderer> renderer) {
 	if (!renderer)
@@ -108,8 +103,8 @@ void renderEllipse(const ecs::CTransform &transform,
 	}
 }
 
-void renderLine(const ecs::CTransform &transform,
-				const ecs::CShape &shape, const ecs::CDrawStyle &style,
+void renderLine(const ecs::CTransform &transform, const ecs::CShape &shape,
+				const ecs::CDrawStyle &style,
 				std::shared_ptr<IRenderer> renderer) {
 	if (!renderer || !style.hasStroke)
 		return;
@@ -129,8 +124,7 @@ void renderLine(const ecs::CTransform &transform,
 	renderer->drawLine(x1, y1, x2, y2);
 }
 
-void renderPolygon(const ecs::CTransform &transform,
-				   const ecs::CShape &shape,
+void renderPolygon(const ecs::CTransform &transform, const ecs::CShape &shape,
 				   const ecs::CDrawStyle &style,
 				   std::shared_ptr<IRenderer> renderer) {
 	if (!renderer)
@@ -170,8 +164,8 @@ void renderPolygon(const ecs::CTransform &transform,
 	}
 }
 
-void renderStar(const ecs::CTransform &transform,
-				const ecs::CShape &shape, const ecs::CDrawStyle &style,
+void renderStar(const ecs::CTransform &transform, const ecs::CShape &shape,
+				const ecs::CDrawStyle &style,
 				std::shared_ptr<IRenderer> renderer) {
 	if (!renderer)
 		return;
@@ -213,87 +207,18 @@ void renderStar(const ecs::CTransform &transform,
 	}
 }
 
-void renderSelectionOverlay(MEcs &ecs, const ImVec2 &canvasPos,
-							const ImVec2 &canvasSize,
+void renderSelectionOverlay(MEcs &ecs, const glm::vec2 &canvasPos,
+							const glm::vec2 &canvasSize,
 							std::shared_ptr<IRenderer> renderer) {
-	auto view = ecs.view<ecs::CTransform, ecs::CShape,
-						 ecs::CSelection>();
-
-	for (auto entity : view) {
-		auto &transform = view.get<ecs::CTransform>(entity);
-		auto &shape = view.get<ecs::CShape>(entity);
-		auto &selection = view.get<ecs::CSelection>(entity);
-
-		// Draw selection rectangle
-		float x = transform.position.x + shape.x1;
-		float y = transform.position.y + shape.y1;
-		float width = shape.x2 - shape.x1;
-		float height = shape.y2 - shape.y1;
-
-		// Apply transform
-		x *= transform.scale.x;
-		y *= transform.scale.y;
-		width *= transform.scale.x;
-		height *= transform.scale.y;
-
-		// Convert to screen coordinates
-		float screenX = canvasPos.x + x;
-		float screenY = canvasPos.y + y;
-
-		// Draw selection rectangle
-		if (renderer) {
-			renderer->setStrokeColor(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red
-			renderer->setStrokeWidth(2.0f);
-			renderer->drawRect(screenX - 2, screenY - 2, width + 4, height + 4);
-		}
-	}
+	// TODO: Implement selection overlay rendering
+	// This should be moved to the UI layer, not the ECS system
 }
 
-void renderDrawingPreview(MEcs &ecs, const ImVec2 &canvasPos,
-						  const ImVec2 &canvasSize,
+void renderDrawingPreview(MEcs &ecs, const glm::vec2 &canvasPos,
+						  const glm::vec2 &canvasSize,
 						  std::shared_ptr<IRenderer> renderer) {
-	auto view =
-		ecs.view<ecs::CTransform, ecs::CShape, ecs::CDrawStyle>();
-
-	for (auto entity : view) {
-		auto &transform = view.get<ecs::CTransform>(entity);
-		auto &shape = view.get<ecs::CShape>(entity);
-		auto &style = view.get<ecs::CDrawStyle>(entity);
-
-		// Convert to screen coordinates
-		float x = canvasPos.x + transform.position.x + shape.x1;
-		float y = canvasPos.y + transform.position.y + shape.y1;
-
-		// Apply transform
-		x *= transform.scale.x;
-		y *= transform.scale.y;
-
-		// Draw preview (simplified)
-		if (renderer && style.hasStroke) {
-			setStrokeStyle(style, renderer);
-			switch (shape.type) {
-			case ecs::CShape::Type::Rectangle:
-				renderer->drawRect(x, y,
-								   (shape.x2 - shape.x1) * transform.scale.x,
-								   (shape.y2 - shape.y1) * transform.scale.y);
-				break;
-			case ecs::CShape::Type::Ellipse:
-				renderer->drawEllipse(
-					x + (shape.x2 - shape.x1) * 0.5f * transform.scale.x,
-					y + (shape.y2 - shape.y1) * 0.5f * transform.scale.y,
-					(shape.x2 - shape.x1) * 0.5f * transform.scale.x,
-					(shape.y2 - shape.y1) * 0.5f * transform.scale.y);
-				break;
-			case ecs::CShape::Type::Line:
-				renderer->drawLine(
-					x, y, x + (shape.x2 - shape.x1) * transform.scale.x,
-					y + (shape.y2 - shape.y1) * transform.scale.y);
-				break;
-			default:
-				break;
-			}
-		}
-	}
+	// TODO: Implement drawing preview rendering
+	// This should be moved to the UI layer, not the ECS system
 }
 
 void setFillStyle(const ecs::CDrawStyle &style,

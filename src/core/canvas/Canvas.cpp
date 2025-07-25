@@ -9,7 +9,7 @@
 
 #include "core/BlotEngine.h"
 #include "core/ISettings.h"
-#include "core/MAddon.h"
+#include "core/addon/MAddon.h"
 #include "core/json.h"
 #include "ecs/MEcs.h"
 #include "ecs/components/CDrawStyle.h"

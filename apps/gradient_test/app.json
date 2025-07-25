@@ -1,0 +1,12 @@
+{
+  "name": "gradient_test",
+  "version": "1.0.0",
+  "description": "Test app for bxBlend2D gradients",
+  "dependencies": [
+    {
+      "name": "bxBlend2D",
+      "url": "file://F:/repos/blot/addons/bxBlend2D",
+      "branch": "main"
+    }
+  ]
+} 

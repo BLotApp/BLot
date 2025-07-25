@@ -39,14 +39,7 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui)
-include_directories(${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui/backends)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui_markdown)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/imgui-filebrowser)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit)
-
-# Add PortableFileDialogs include path
-include_directories(third_party/portable-file-dialogs)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/portable-file-dialogs)
 
 # Add ImPlot and ImPlot3D include directories
 include_directories(${CMAKE_SOURCE_DIR}/third_party/implot)
@@ -64,10 +57,10 @@ file(GLOB_RECURSE BLOT_SOURCES
 # Exclude third_party sources if needed
 list(FILTER BLOT_SOURCES EXCLUDE REGEX "third_party/")
 
-# ImGui, backends, and ImGuiColorTextEdit are now compiled inside bxImGui / bxCodeEditor addons.
+# ImGui sources are now handled by the bxImGui addon
 set(IMGUI_SOURCES)
 set(IMGUI_BACKEND_SOURCES)
-set(IMGUI_COLOR_TEXT_EDIT_SOURCES ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit/TextEditor.cpp)
+set(IMGUI_COLOR_TEXT_EDIT_SOURCES)
 
 # ----------------- Addon hybrid build -------------------
 
@@ -136,25 +129,7 @@ endif()
 source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/MCanvas.cpp src/framework/canvas/MCanvas.h)
 source_group("Rendering" FILES src/rendering/Graphics.cpp)
 source_group("CodeEditor" FILES addons/bxCodeEditor/bxCodeEditor.cpp addons/bxCodeEditor/bxCodeEditor.h)
-source_group("ThirdParty\\ImGuiColorTextEdit" FILES third_party/ImGuiColorTextEdit/TextEditor.cpp third_party/ImGuiColorTextEdit/TextEditor.h)
-source_group("ThirdParty\\ImGui" FILES
-    addons/bxImGui/imgui/imgui.cpp
-    addons/bxImGui/imgui/imgui.h
-    addons/bxImGui/imgui/imgui_draw.cpp
-    addons/bxImGui/imgui/imgui_internal.h
-    addons/bxImGui/imgui/imgui_tables.cpp
-    addons/bxImGui/imgui/imgui_widgets.cpp
-    addons/bxImGui/imgui/imgui_demo.cpp
-    addons/bxImGui/imgui/imconfig.h
-    addons/bxImGui/imgui/imstb_rectpack.h
-    addons/bxImGui/imgui/imstb_textedit.h
-    addons/bxImGui/imgui/imstb_truetype.h
-    addons/bxImGui/imgui/backends/imgui_impl_glfw.cpp
-    addons/bxImGui/imgui/backends/imgui_impl_glfw.h
-    addons/bxImGui/imgui/backends/imgui_impl_opengl3.cpp
-    addons/bxImGui/imgui/backends/imgui_impl_opengl3.h
-    addons/bxImGui/imgui/backends/imgui_impl_opengl3_loader.h
-)
+
 # GLOB all Addons sources and headers
 file(GLOB ADDONS_SOURCES src/addons/*.cpp src/addons/*.h)
 source_group("Addons" FILES ${ADDONS_SOURCES})
@@ -167,17 +142,21 @@ source_group("Resources" FILES ${RESOURCES_SOURCES})
 file(GLOB ECS_SOURCES src/ecs/*.cpp src/ecs/*.h src/ecs/systems/*.cpp src/ecs/systems/*.h)
 source_group("ECS" FILES ${ECS_SOURCES})
 
-# GLOB all Node sources and headers
-source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
+# GLOB all Addon sources and headers
+file(GLOB ADDON_SOURCES src/core/addon/*.cpp src/core/addon/*.h)
+source_group("Addon" FILES ${ADDON_SOURCES})
+
+# UI window sources moved to bxImGui addon
+
+# Node sources moved to bxNodeEditor addon
 
 # GLOB all Scripting sources and headers
 file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
 source_group("Scripting" FILES ${SCRIPTING_SOURCES})
 
 # Use the globbed files in the source group and target sources
-source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp ${UI_WINDOW_SOURCES} src/ui/Mui.cpp)
+source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Mui.cpp)
 source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
-source_group("Node" FILES src/ui/windows/NodeEditorWindow.cpp src/ui/windows/NodeEditorWindow.h)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
 
 # Propagate third-party include directories needed by external consumers (apps)
@@ -185,49 +164,43 @@ target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/third_party/glfw/include
     ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
-    # ImGui include (local submodule or fetched via CPM)
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui>
-    $<BUILD_INTERFACE:${imgui_SOURCE_DIR}>
-    # Blend2D include for StrokeWindow
-    ${CMAKE_SOURCE_DIR}/third_party/blend2d
-    ${CMAKE_SOURCE_DIR}/third_party/blend2d/src
-    # ImGuiColorTextEdit header-only include
-    ${CMAKE_SOURCE_DIR}/third_party/ImGuiColorTextEdit
 )
 
 # add_subdirectory(works)  # Removed: directory no longer exists
 
 add_subdirectory(third_party/glfw) 
 
+# Add bxBlend2D addon
+add_subdirectory(addons/bxBlend2D)
+
 target_include_directories(blot PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/core/addon
     ${CMAKE_SOURCE_DIR}/src/ui
     ${CMAKE_SOURCE_DIR}/src/rendering
     ${CMAKE_SOURCE_DIR}/src/ecs
     ${CMAKE_SOURCE_DIR}/src/core/canvas
-    ${CMAKE_SOURCE_DIR}/addons/bxImGui/src
-    ${CMAKE_SOURCE_DIR}/addons/bxCodeEditor/src
     # ...add others as needed
 ) 
 
 # TODO: This is a hack to ensure the core has ImGui headers available (used by MEcs, etc.)  
 # PLEASE FIX THIS simply search the headers and remove implement properly through registers
 # Ensure core has ImGui headers available (used by MEcs, etc.)
-set(IMGUI_LOCAL_DIR "${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui")
-if (NOT EXISTS "${IMGUI_LOCAL_DIR}/imgui.h")
-    CPMAddPackage(
-        NAME imgui_core
-        GITHUB_REPOSITORY ocornut/imgui
-        GIT_TAG docking
-    )
-    set(IMGUI_INCLUDE_DIR ${imgui_core_SOURCE_DIR})
-else()
-    set(IMGUI_INCLUDE_DIR ${IMGUI_LOCAL_DIR})
-endif() 
+# set(IMGUI_LOCAL_DIR "${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui")
+# if (NOT EXISTS "${IMGUI_LOCAL_DIR}/imgui.h")
+#     CPMAddPackage(
+#         NAME imgui_core
+#         GITHUB_REPOSITORY ocornut/imgui
+#         GIT_TAG docking
+#     )
+#     set(IMGUI_INCLUDE_DIR ${imgui_core_SOURCE_DIR})
+# else()
+#     set(IMGUI_INCLUDE_DIR ${IMGUI_LOCAL_DIR})
+# endif() 
 
 # Add the ImGui include dir so blot's sources can find imgui.h
-target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR}) 
+# target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR})
 
 include(cmake/BlotAddons.cmake)
 

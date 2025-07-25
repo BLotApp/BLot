@@ -79,11 +79,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 This project was developed with assistance from Claude Sonnet 4 and OpenAI ChatGPT-4.
 
 > [!CAUTION]
-> **Note**: While Blot offers a unique ECS-based approach to creative coding, it's designed for larger, more complex projects. For quick sketching and prototyping, we recommend [OpenFrameworks] for most users. However, if you specifically need the composition-based architecture that Blot provides, it can be an excellent choice. In creative projects, composition over inheritance often makes more sense than traditional object-oriented approaches.
+> **Note**: While Blot offers a unique ECS-based approach to creative programming, it's designed for larger, more complex projects. For quick sketching and prototyping, we recommend [OpenFrameworks]. However, if you specifically need the composition-based architecture that Blot provides, it can be an excellent choice. In creative applications (over sketches), composition over inheritance often makes more sense than traditional object-oriented approaches.
 
-### Why a new project and not a fork of OpenFrameworks?
+### Why a new project and not fork OpenFrameworks?
 
-Adding an Entity-Component System to OpenFrameworks isn't straightforward due to its existing architecture. While you can experiment with the [ofxEntt](https://github.com/ofxyz/ofxEnTT) plugin, OpenFrameworks' design wasn't built with ECS in mind from the ground up. OpenFrameworks uses traditional inheritance-based design, while ECS requires composition-based architecture. OpenFrameworks backends are maintained as private, restricting direct memory access that ECS systems often need for optimal performance. Also building from scratch allows for consistent attribute access patterns across all components, rather than working around existing getter/setter patterns. But really, starting from the ground up provides valuable insights into framework design and ECS implementation so it is a bit of a learning process for me as well.
+Adding an Entity-Component System to OpenFrameworks isn't straightforward due to its existing architecture. While you can experiment with the [ofxEntt](https://github.com/ofxyz/ofxEnTT) plugin, OpenFrameworks' design wasn't built with ECS in mind. OpenFrameworks uses traditional inheritance-based design, while ECS requires composition-based architecture. Building from scratch allows for consistent attribute access patterns across all components, rather than working around existing getter/setter patterns and provides valuable insights into framework and ECS implementation. Also the focus for this Framework is Creative Applications over Creative Coding.
 
 [OpenFrameworks]: https://openframeworks.cc/
 [DrawBot]: https://drawbot.com/

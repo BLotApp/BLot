@@ -3,12 +3,24 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
+#include <vector>
 
 // Forward declarations
 class Canvas;
 class Graphics;
 
 enum class RendererType { OpenGL, Blend2D };
+
+// Gradient types
+enum class GradientType { Linear, Radial, Conic };
+
+// Gradient stop structure
+struct GradientStop {
+	float offset; // 0.0 to 1.0
+	glm::vec4 color;
+
+	GradientStop(float o, const glm::vec4 &c) : offset(o), color(c) {}
+};
 
 class IRenderer {
   public:
@@ -61,6 +73,15 @@ class IRenderer {
 	virtual void setFillColor(const glm::vec4 &color) = 0;
 	virtual void setStrokeColor(const glm::vec4 &color) = 0;
 	virtual void setStrokeWidth(float width) = 0;
+
+	// Advanced gradient support
+	virtual void setLinearGradient(float x1, float y1, float x2, float y2,
+								   const std::vector<GradientStop> &stops) = 0;
+	virtual void setRadialGradient(float cx, float cy, float radius,
+								   const std::vector<GradientStop> &stops) = 0;
+	virtual void setConicGradient(float cx, float cy, float angle,
+								  const std::vector<GradientStop> &stops) = 0;
+	virtual void clearGradient() = 0;
 
 	// Export
 	virtual bool saveToFile(const std::string &filename) = 0;

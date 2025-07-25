@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <entt/entt.hpp>
 #include <memory>
 #include <string>
@@ -8,7 +9,6 @@
 #include "core/IManager.h"
 #include "core/ISettings.h"
 #include "ecs/systems/SEvent.h"
-#include "imgui.h"
 #include "rendering/IRenderer.h"
 
 // Forward declarations
@@ -66,9 +66,9 @@ class MEcs : public IManager, public ISettings {
 							float innerRadius, int points);
 
 	// Drawing system
-	void startDrawing(entt::entity entity, const ImVec2 &startPos);
-	void updateDrawing(entt::entity entity, const ImVec2 &currentPos);
-	void finishDrawing(entt::entity entity, const ImVec2 &endPos);
+	void startDrawing(entt::entity entity, const glm::vec2 &startPos);
+	void updateDrawing(entt::entity entity, const glm::vec2 &currentPos);
+	void finishDrawing(entt::entity entity, const glm::vec2 &endPos);
 	void selectEntity(entt::entity entity, bool multiSelect = false);
 	void clearSelection();
 

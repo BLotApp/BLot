@@ -1,9 +1,0 @@
-{
-  "name": "bxScriptEngine",
-  "url": "https://github.com/BlotApp/bxScriptEngine.git",
-  "branch": "main",
-  "version": "0.1.0",
-  "author": "Your Name",
-  "description": "A modular scripting engine for Blot.",
-  "dependencies": []
-} 

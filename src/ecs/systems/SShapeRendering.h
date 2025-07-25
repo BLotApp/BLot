@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <imgui.h>
 #include <memory>
 #include "ecs/MEcs.h"
 #include "ecs/components/CDrawStyle.h"
@@ -33,11 +32,11 @@ void renderStar(const ecs::CTransform &transform, const ecs::CShape &shape,
 				std::shared_ptr<IRenderer> renderer);
 
 // UI rendering for selection and preview
-void renderSelectionOverlay(MEcs &ecs, const ImVec2 &canvasPos,
-							const ImVec2 &canvasSize,
+void renderSelectionOverlay(MEcs &ecs, const glm::vec2 &canvasPos,
+							const glm::vec2 &canvasSize,
 							std::shared_ptr<IRenderer> renderer);
-void renderDrawingPreview(MEcs &ecs, const ImVec2 &canvasPos,
-						  const ImVec2 &canvasSize,
+void renderDrawingPreview(MEcs &ecs, const glm::vec2 &canvasPos,
+						  const glm::vec2 &canvasSize,
 						  std::shared_ptr<IRenderer> renderer);
 
 // Helper functions
