@@ -23,6 +23,11 @@ function(blot_load_addons MANIFEST_PATH OUT_VAR)
     # in CMake 3.19).
     file(READ "${MANIFEST_PATH}" _manifest)
 
+    # Initialize global list of processed addons if not already set
+    if(NOT DEFINED BLOT_PROCESSED_ADDONS)
+        set(BLOT_PROCESSED_ADDONS "" CACHE INTERNAL "List of processed addons")
+    endif()
+
     # Get length of dependencies array
     string(JSON _depsLen LENGTH "${_manifest}" dependencies)
 
@@ -44,12 +49,36 @@ function(blot_load_addons MANIFEST_PATH OUT_VAR)
             continue()
         endif()
 
-        CPMAddPackage(
-            NAME ${depName}
-            GITHUB_REPOSITORY ${depUrl}
-            GIT_TAG ${depBranch}
-            OPTIONS "ADD_SUBDIRECTORY"
-        )
+        # Set the addon directory in the main addons folder
+        set(ADDON_DIR "${CMAKE_SOURCE_DIR}/addons/${depName}")
+        
+        # Check if this package has already been processed
+        list(FIND BLOT_PROCESSED_ADDONS ${depName} _found)
+        if(NOT _found EQUAL -1)
+            message(STATUS "[BlotAddons] Package ${depName} already processed, skipping")
+            list(APPEND _addon_libs ${depName})
+            continue()
+        endif()
+        
+        # Check if addon already exists locally
+        if(EXISTS "${ADDON_DIR}")
+            message(STATUS "[BlotAddons] Using local addon: ${depName}")
+            # Build addon in global namespace to avoid std namespace pollution
+            add_subdirectory(${ADDON_DIR})
+        else()
+            message(STATUS "[BlotAddons] Cloning addon: ${depName}")
+            CPMAddPackage(
+                NAME ${depName}
+                GIT_REPOSITORY ${depUrl}
+                GIT_TAG ${depBranch}
+                GIT_SHALLOW TRUE
+                SOURCE_DIR ${ADDON_DIR}
+                OPTIONS "ADD_SUBDIRECTORY"
+            )
+        endif()
+        
+        # Mark this addon as processed
+        list(APPEND BLOT_PROCESSED_ADDONS ${depName})
 
         list(APPEND _addon_libs ${depName})
     endforeach()

@@ -6,8 +6,8 @@
   "author": "Blot Team",
   "description": "Demo app for Blot.",
   "dependencies": [
-    {"name":"bxImGui","url":"https://github.com/BlotApp/bxImGui.git","branch":"main"},
-    {"name":"bxCodeEditor","url":"https://github.com/BlotApp/bxCodeEditor.git","branch":"main"},
-    {"name":"bxScriptEngine","url":"https://github.com/BlotApp/bxScriptEngine.git","branch":"main"}
+    {"name":"bxImGui","url":"https://github.com/BlotApp/bxImGui.git","branch":"master"},
+    {"name":"bxCodeEditor","url":"https://github.com/BlotApp/bxCodeEditor.git","branch":"master"},
+    {"name":"bxScriptEngine","url":"https://github.com/BlotApp/bxScriptEngine.git","branch":"master"}
   ]
 }

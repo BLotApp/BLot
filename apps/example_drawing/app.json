@@ -1,0 +1,12 @@
+{
+  "name": "Example Drawing",
+  "version": "0.1.0",
+  "description": "Test app for drawing with bxBlend2d",
+  "dependencies": [
+    {
+      "name": "bxBlend2D",
+      "url": "https://github.com/BLotApp/bxBlend2D.git",
+      "branch": "master"
+    }
+  ]
+} 

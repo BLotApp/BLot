@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <sstream>
 #include <unordered_set>
 // Removed direct bxImGui include; addons are now registered by applications.
 #include "AddonRegistry.h"
@@ -136,7 +137,9 @@ void MAddon::scanAddonDirectory(const std::string &directory) {
 			std::string addonName = entry.path().filename().string();
 
 			// Check for addon.json manifest
-			std::string manifestPath = addonPath + "/addon.json";
+			std::ostringstream oss;
+			oss << addonPath << "/addon.json";
+			std::string manifestPath = oss.str();
 			if (std::filesystem::exists(manifestPath)) {
 				spdlog::info("Found addon manifest: {}", manifestPath);
 				loadFromManifest(manifestPath);
@@ -149,8 +152,11 @@ bool MAddon::loadAddon(const std::string &path) {
 	spdlog::info("Loading addon from path: {}", path);
 
 	// Try to load from manifest first
-	if (std::filesystem::exists(path + "/addon.json")) {
-		return loadFromManifest(path + "/addon.json");
+	std::ostringstream oss1;
+	oss1 << path << "/addon.json";
+	std::string manifestPath = oss1.str();
+	if (std::filesystem::exists(manifestPath)) {
+		return loadFromManifest(manifestPath);
 	}
 
 	// Try to load as a single file
@@ -464,16 +470,20 @@ std::vector<std::string> MAddon::getCircularDependencies() const {
 	std::vector<std::string> circular;
 
 	for (const auto &pair : m_addons) {
-		auto addon = pair.second;
+		std::shared_ptr<IAddon> addon = pair.second;
 		if (addon) {
-			for (const auto &dep : addon->getDependencies()) {
+			const std::vector<std::string> &deps = addon->getDependencies();
+			for (const auto &dep : deps) {
 				auto depAddon = getAddon(dep);
 				if (depAddon) {
-					for (const auto &depDep : depAddon->getDependencies()) {
+					const std::vector<std::string> &depDeps =
+						depAddon->getDependencies();
+					for (const auto &depDep : depDeps) {
 						if (depDep == pair.first) {
-							std::string cycle =
-								pair.first + " -> " + dep + " -> " + depDep;
-							circular.push_back(cycle);
+							std::ostringstream oss;
+							oss << pair.first << " -> " << dep << " -> "
+								<< depDep;
+							circular.push_back(oss.str());
 						}
 					}
 				}

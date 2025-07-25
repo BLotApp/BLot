@@ -39,13 +39,6 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party/entt/single_include)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/portable-file-dialogs)
-
-# Add ImPlot and ImPlot3D include directories
-include_directories(${CMAKE_SOURCE_DIR}/third_party/implot)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/implot3d)
-
-
 
 # Automatically collect all source and header files in src/
 file(GLOB_RECURSE BLOT_SOURCES
@@ -70,6 +63,78 @@ set(IMGUI_COLOR_TEXT_EDIT_SOURCES)
 # comment.
 
 
+# Organize source files into folders for Visual Studio
+source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/MCanvas.cpp src/framework/canvas/MCanvas.h)
+source_group("Rendering" FILES src/rendering/Graphics.cpp)
+
+# GLOB all Addons sources and headers
+file(GLOB ADDONS_SOURCES src/addons/*.cpp src/addons/*.h)
+source_group("Addons" FILES ${ADDONS_SOURCES})
+
+# GLOB all Resources sources and headers
+file(GLOB RESOURCES_SOURCES src/resources/*.cpp src/resources/*.h)
+source_group("Resources" FILES ${RESOURCES_SOURCES})
+
+# GLOB all ECS sources and headers
+file(GLOB ECS_SOURCES src/ecs/*.cpp src/ecs/*.h src/ecs/systems/*.cpp src/ecs/systems/*.h)
+source_group("ECS" FILES ${ECS_SOURCES})
+
+# GLOB all Addon sources and headers
+file(GLOB ADDON_SOURCES src/core/addon/*.cpp src/core/addon/*.h)
+source_group("Addon" FILES ${ADDON_SOURCES})
+
+# UI window sources moved to bxImGui addon
+
+# Node sources moved to bxNodeEditor addon
+
+# GLOB all Scripting sources and headers
+file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
+source_group("Scripting" FILES ${SCRIPTING_SOURCES})
+
+# Use the globbed files in the source group and target sources
+source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Mui.cpp)
+source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
+source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
+
+# Propagate third-party include directories needed by external consumers (apps)
+target_include_directories(blot PUBLIC
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
+    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
+)
+
+add_subdirectory(third_party/glfw) 
+
+target_include_directories(blot PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/core/addon
+    ${CMAKE_SOURCE_DIR}/src/ui
+    ${CMAKE_SOURCE_DIR}/src/rendering
+    ${CMAKE_SOURCE_DIR}/src/ecs
+    ${CMAKE_SOURCE_DIR}/src/core/canvas
+    # ...add others as needed
+) 
+
+# TODO: This is a hack to ensure the core has ImGui headers available (used by MEcs, etc.)  
+# PLEASE FIX THIS simply search the headers and remove implement properly through registers
+# Ensure core has ImGui headers available (used by MEcs, etc.)
+# set(IMGUI_LOCAL_DIR "${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui")
+# if (NOT EXISTS "${IMGUI_LOCAL_DIR}/imgui.h")
+#     CPMAddPackage(
+#         NAME imgui_core
+#         GITHUB_REPOSITORY ocornut/imgui
+#         GIT_TAG docking
+#     )
+#     set(IMGUI_INCLUDE_DIR ${imgui_core_SOURCE_DIR})
+# else()
+#     set(IMGUI_INCLUDE_DIR ${IMGUI_LOCAL_DIR})
+# endif() 
+
+# Add the ImGui include dir so blot's sources can find imgui.h
+# target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR})
+
+# Build the blot library first to ensure it's not affected by addon macros
 add_library(blot STATIC ${BLOT_SOURCES})
 # ImGui sources removed from core target
 target_sources(blot PRIVATE ${APP_PATHS_SOURCES})
@@ -118,89 +183,11 @@ endif()
 # Copy assets
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
 
-# -----------------------------------------------------------------------------
-# Optional sample / demo applications
-option(BUILD_APPS "Build sample applications in /apps" ON)
-if(BUILD_APPS)
-    add_subdirectory(apps)
-endif()
+# Build blot library completely isolated from addons
+add_custom_target(blot_library_built ALL DEPENDS blot)
 
-# Organize source files into folders for Visual Studio
-source_group("Canvas" FILES src/framework/canvas/Canvas.cpp src/framework/canvas/MCanvas.cpp src/framework/canvas/MCanvas.h)
-source_group("Rendering" FILES src/rendering/Graphics.cpp)
-source_group("CodeEditor" FILES addons/bxCodeEditor/bxCodeEditor.cpp addons/bxCodeEditor/bxCodeEditor.h)
-
-# GLOB all Addons sources and headers
-file(GLOB ADDONS_SOURCES src/addons/*.cpp src/addons/*.h)
-source_group("Addons" FILES ${ADDONS_SOURCES})
-
-# GLOB all Resources sources and headers
-file(GLOB RESOURCES_SOURCES src/resources/*.cpp src/resources/*.h)
-source_group("Resources" FILES ${RESOURCES_SOURCES})
-
-# GLOB all ECS sources and headers
-file(GLOB ECS_SOURCES src/ecs/*.cpp src/ecs/*.h src/ecs/systems/*.cpp src/ecs/systems/*.h)
-source_group("ECS" FILES ${ECS_SOURCES})
-
-# GLOB all Addon sources and headers
-file(GLOB ADDON_SOURCES src/core/addon/*.cpp src/core/addon/*.h)
-source_group("Addon" FILES ${ADDON_SOURCES})
-
-# UI window sources moved to bxImGui addon
-
-# Node sources moved to bxNodeEditor addon
-
-# GLOB all Scripting sources and headers
-file(GLOB SCRIPTING_SOURCES src/scripting/*.cpp src/scripting/*.h)
-source_group("Scripting" FILES ${SCRIPTING_SOURCES})
-
-# Use the globbed files in the source group and target sources
-source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src/ui/Mui.cpp)
-source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
-source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
-
-# Propagate third-party include directories needed by external consumers (apps)
-target_include_directories(blot PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
-    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
-)
-
-# add_subdirectory(works)  # Removed: directory no longer exists
-
-add_subdirectory(third_party/glfw) 
-
-# Add bxBlend2D addon
-add_subdirectory(addons/bxBlend2D)
-
-target_include_directories(blot PUBLIC
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/core
-    ${CMAKE_SOURCE_DIR}/src/core/addon
-    ${CMAKE_SOURCE_DIR}/src/ui
-    ${CMAKE_SOURCE_DIR}/src/rendering
-    ${CMAKE_SOURCE_DIR}/src/ecs
-    ${CMAKE_SOURCE_DIR}/src/core/canvas
-    # ...add others as needed
-) 
-
-# TODO: This is a hack to ensure the core has ImGui headers available (used by MEcs, etc.)  
-# PLEASE FIX THIS simply search the headers and remove implement properly through registers
-# Ensure core has ImGui headers available (used by MEcs, etc.)
-# set(IMGUI_LOCAL_DIR "${CMAKE_SOURCE_DIR}/addons/bxImGui/imgui")
-# if (NOT EXISTS "${IMGUI_LOCAL_DIR}/imgui.h")
-#     CPMAddPackage(
-#         NAME imgui_core
-#         GITHUB_REPOSITORY ocornut/imgui
-#         GIT_TAG docking
-#     )
-#     set(IMGUI_INCLUDE_DIR ${imgui_core_SOURCE_DIR})
-# else()
-#     set(IMGUI_INCLUDE_DIR ${IMGUI_LOCAL_DIR})
-# endif() 
-
-# Add the ImGui include dir so blot's sources can find imgui.h
-# target_include_directories(blot PUBLIC ${IMGUI_INCLUDE_DIR})
+# Only include addons after blot library is fully built
+# This ensures blot library is compiled without any ASMJIT macro pollution
 
 include(cmake/BlotAddons.cmake)
 
@@ -208,6 +195,27 @@ include(cmake/BlotAddons.cmake)
 function(add_blot_application APP_NAME)
     set(APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/apps/${APP_NAME}")
     set(APP_MANIFEST "${APP_DIR}/app.json")
+
+    # Read the manifest to get the project name
+    if(EXISTS ${APP_MANIFEST})
+        file(READ "${APP_MANIFEST}" _manifest)
+        string(JSON _project_name GET "${_manifest}" name)
+        
+        # Sanitize project name for CMake (replace spaces and special chars with underscores)
+        string(REGEX REPLACE "[^a-zA-Z0-9_]" "_" _sanitized_name "${_project_name}")
+        string(REGEX REPLACE "_+" "_" _sanitized_name "${}")
+        string(REGEX REPLACE "^_|_$" "" _sanitized_name "${_sanitized_name}")
+        
+        # Use sanitized name for CMake project, fallback to APP_NAME if empty
+        if(_sanitized_name STREQUAL "")
+            set(_sanitized_name ${APP_NAME})
+        endif()
+        
+        message(STATUS "[BlotAddons] Using project name: '${_project_name}' -> '${_sanitized_name}'")
+    else()
+        set(_sanitized_name ${APP_NAME})
+        message(STATUS "[BlotAddons] No app.json found, using APP_NAME: ${_sanitized_name}")
+    endif()
 
     # Resolve addon dependencies declared in the manifest (variable -> APP_ADDON_LIBS)
     blot_load_addons(${APP_MANIFEST} APP_ADDON_LIBS)
@@ -220,10 +228,21 @@ function(add_blot_application APP_NAME)
         "${APP_DIR}/*.hpp"
     )
 
-    add_executable(${APP_NAME} ${APP_SRC})
-    target_link_libraries(${APP_NAME} PRIVATE blot ${APP_ADDON_LIBS})
-    target_include_directories(${APP_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
+    add_executable(${_sanitized_name} ${APP_SRC})
+    # Link addons before blot to ensure they're in global namespace
+    target_link_libraries(${_sanitized_name} PRIVATE ${APP_ADDON_LIBS} blot)
+    target_include_directories(${_sanitized_name} PRIVATE ${CMAKE_SOURCE_DIR})
 endfunction()
 
-add_blot_application(example_app) 
+# Build blot library first, then build applications with addons
+# This ensures blot library is compiled without any ASMJIT macro pollution
+
+# Automatically discover and build all apps
+file(GLOB APP_DIRS LIST_DIRECTORIES true "${CMAKE_CURRENT_SOURCE_DIR}/apps/*")
+foreach(APP_DIR ${APP_DIRS})
+    if(IS_DIRECTORY ${APP_DIR})
+        get_filename_component(APP_NAME ${APP_DIR} NAME)
+        add_blot_application(${APP_NAME})
+    endif()
+endforeach() 
 
