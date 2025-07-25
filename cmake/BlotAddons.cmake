@@ -79,6 +79,7 @@ function(blot_load_addons MANIFEST_PATH OUT_VAR)
         
         # Mark this addon as processed
         list(APPEND BLOT_PROCESSED_ADDONS ${depName})
+        set(BLOT_PROCESSED_ADDONS ${BLOT_PROCESSED_ADDONS} CACHE INTERNAL "List of processed addons")
 
         list(APPEND _addon_libs ${depName})
     endforeach()

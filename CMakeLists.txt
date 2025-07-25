@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 # vcpkg toolchain logic removed – project now builds entirely from vendored
 # submodules and system libraries.
 
-project(Blot VERSION 1.0.0 LANGUAGES C CXX)
+project(blot VERSION 1.0.0 LANGUAGES C CXX)
 
 # ----------------------------------------------------
 # CPM.cmake – lightweight CMake package manager
@@ -96,25 +96,7 @@ source_group("UI" FILES src/ui/ImGuiRenderer.cpp src/ui/CoordinateSystem.cpp src
 source_group("ECS" FILES src/ecs/MEcs.cpp src/ecs/systems/CanvasSystems.cpp src/ecs/systems/SEvent.cpp)
 source_group("Scripting" FILES src/scripting/ScriptEngine.cpp) 
 
-# Propagate third-party include directories needed by external consumers (apps)
-target_include_directories(blot PUBLIC
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/third_party/glfw/include
-    ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
-)
-
 add_subdirectory(third_party/glfw) 
-
-target_include_directories(blot PUBLIC
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/core
-    ${CMAKE_SOURCE_DIR}/src/core/addon
-    ${CMAKE_SOURCE_DIR}/src/ui
-    ${CMAKE_SOURCE_DIR}/src/rendering
-    ${CMAKE_SOURCE_DIR}/src/ecs
-    ${CMAKE_SOURCE_DIR}/src/core/canvas
-    # ...add others as needed
-) 
 
 # TODO: This is a hack to ensure the core has ImGui headers available (used by MEcs, etc.)  
 # PLEASE FIX THIS simply search the headers and remove implement properly through registers
@@ -160,13 +142,16 @@ target_link_libraries(blot
         glfw
 )
 
-# Add include directories for submodules (ImGui, etc.)
+# Add include directories for submodules and third-party dependencies
 target_include_directories(blot PUBLIC
+    ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/core/addon
     ${CMAKE_SOURCE_DIR}/src/ui
     ${CMAKE_SOURCE_DIR}/src/rendering
     ${CMAKE_SOURCE_DIR}/src/ecs
+    ${CMAKE_SOURCE_DIR}/src/core/canvas
     ${CMAKE_SOURCE_DIR}/third_party/spdlog/include
     ${CMAKE_SOURCE_DIR}/third_party/glfw/include
     ${CMAKE_SOURCE_DIR}/third_party/glad/include

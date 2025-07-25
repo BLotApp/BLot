@@ -1,16 +1,16 @@
 #include "AddonRegistry.h"
 #include "IAddon.h"
 
-AddonRegistry &AddonRegistry::instance() {
+blot::AddonRegistry &blot::AddonRegistry::instance() {
 	static AddonRegistry inst;
 	return inst;
 }
 
-void AddonRegistry::addFactory(const std::string &name, Factory f) {
+void blot::AddonRegistry::addFactory(const std::string &name, Factory f) {
 	m_factories[name] = std::move(f);
 }
 
-std::shared_ptr<IAddon> AddonRegistry::create(const std::string &name) const {
+std::shared_ptr<blot::IAddon> blot::AddonRegistry::create(const std::string &name) const {
 	auto it = m_factories.find(name);
 	return it == m_factories.end() ? nullptr : it->second();
 } 

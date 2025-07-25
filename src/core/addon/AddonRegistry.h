@@ -30,4 +30,5 @@ class AddonRegistry {
 		}                                                                      \
 	};                                                                         \
 	static ADDON_CLASS##Registrar ADDON_CLASS##_auto_reg;                      \
-	} 
+}
+}

@@ -12,12 +12,12 @@
 #include "ISettings.h"
 #include "json.h"
 
-MAddon::MAddon(BlotEngine *engine)
+blot::MAddon::MAddon(blot::BlotEngine *engine)
 	: m_engine(engine), m_addonDirectory("addons") {}
 
-MAddon::~MAddon() { cleanupAll(); }
+blot::MAddon::~MAddon() { cleanupAll(); }
 
-void MAddon::unregisterAddon(const std::string &name) {
+void blot::MAddon::unregisterAddon(const std::string &name) {
 	auto it = m_addons.find(name);
 	if (it != m_addons.end()) {
 		it->second->cleanup();
@@ -34,7 +34,7 @@ void MAddon::unregisterAddon(const std::string &name) {
 	}
 }
 
-std::shared_ptr<IAddon> MAddon::getAddon(const std::string &name) const {
+std::shared_ptr<blot::IAddon> blot::MAddon::getAddon(const std::string &name) const {
 	auto it = m_addons.find(name);
 	if (it != m_addons.end()) {
 		return it->second;
@@ -42,7 +42,7 @@ std::shared_ptr<IAddon> MAddon::getAddon(const std::string &name) const {
 	return nullptr;
 }
 
-bool MAddon::initAll() {
+bool blot::MAddon::initAll() {
 	spdlog::info("Initializing all addons...");
 
 	// Sort addons by dependencies
@@ -75,7 +75,7 @@ bool MAddon::initAll() {
 	return true;
 }
 
-void MAddon::setupAll() {
+void blot::MAddon::setupAll() {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
@@ -84,7 +84,7 @@ void MAddon::setupAll() {
 	}
 }
 
-void MAddon::updateAll(float deltaTime) {
+void blot::MAddon::updateAll(float deltaTime) {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
@@ -93,7 +93,7 @@ void MAddon::updateAll(float deltaTime) {
 	}
 }
 
-void MAddon::drawAll() {
+void blot::MAddon::drawAll() {
 	for (const auto &name : m_addonOrder) {
 		auto addon = m_addons[name];
 		if (addon && addon->isEnabled() && addon->isInitialized()) {
@@ -102,7 +102,7 @@ void MAddon::drawAll() {
 	}
 }
 
-void MAddon::cleanupAll() {
+void blot::MAddon::cleanupAll() {
 	spdlog::info("Cleaning up all addons...");
 	for (auto it = m_addonOrder.rbegin(); it != m_addonOrder.rend(); ++it) {
 		auto addon = m_addons[*it];
@@ -113,17 +113,17 @@ void MAddon::cleanupAll() {
 	spdlog::info("All addons cleaned up");
 }
 
-void MAddon::initDefaultAddons() {
+void blot::MAddon::initDefaultAddons() {
 	// This would initialize default addons that are always available
 	spdlog::info("Initializing default addons...");
 }
 
-void MAddon::loadDefaultAddons() {
+void blot::MAddon::loadDefaultAddons() {
 	// This would load addons that are always enabled by default
 	spdlog::info("Loading default addons...");
 }
 
-void MAddon::scanAddonDirectory(const std::string &directory) {
+void blot::MAddon::scanAddonDirectory(const std::string &directory) {
 	spdlog::info("Scanning addon directory: {}", directory);
 
 	if (!std::filesystem::exists(directory)) {
@@ -148,7 +148,7 @@ void MAddon::scanAddonDirectory(const std::string &directory) {
 	}
 }
 
-bool MAddon::loadAddon(const std::string &path) {
+bool blot::MAddon::loadAddon(const std::string &path) {
 	spdlog::info("Loading addon from path: {}", path);
 
 	// Try to load from manifest first
@@ -169,7 +169,7 @@ bool MAddon::loadAddon(const std::string &path) {
 	return false;
 }
 
-void MAddon::reloadAddon(const std::string &name) {
+void blot::MAddon::reloadAddon(const std::string &name) {
 	spdlog::info("Reloading addon: {}", name);
 
 	auto addon = getAddon(name);
@@ -182,14 +182,14 @@ void MAddon::reloadAddon(const std::string &name) {
 	}
 }
 
-void MAddon::reloadAllAddons() {
+void blot::MAddon::reloadAllAddons() {
 	spdlog::info("Reloading all addons...");
 	cleanupAll();
 	initAll();
 	setupAll();
 }
 
-bool MAddon::loadFromManifest(const std::string &path) {
+bool blot::MAddon::loadFromManifest(const std::string &path) {
 	spdlog::info("Loading addon from manifest: {}", path);
 
 	try {
@@ -225,7 +225,7 @@ bool MAddon::loadFromManifest(const std::string &path) {
 	}
 }
 
-void MAddon::enableAddon(const std::string &name) {
+void blot::MAddon::enableAddon(const std::string &name) {
 	auto addon = getAddon(name);
 	if (addon) {
 		addon->setEnabled(true);
@@ -234,7 +234,7 @@ void MAddon::enableAddon(const std::string &name) {
 	}
 }
 
-void MAddon::disableAddon(const std::string &name) {
+void blot::MAddon::disableAddon(const std::string &name) {
 	auto addon = getAddon(name);
 	if (addon) {
 		addon->setEnabled(false);
@@ -243,12 +243,12 @@ void MAddon::disableAddon(const std::string &name) {
 	}
 }
 
-bool MAddon::isAddonEnabled(const std::string &name) const {
+bool blot::MAddon::isAddonEnabled(const std::string &name) const {
 	auto addon = getAddon(name);
 	return addon ? addon->isEnabled() : false;
 }
 
-std::vector<std::string> MAddon::getAddonNames() const {
+std::vector<std::string> blot::MAddon::getAddonNames() const {
 	std::vector<std::string> names;
 	for (const auto &pair : m_addons) {
 		names.push_back(pair.first);
@@ -256,7 +256,7 @@ std::vector<std::string> MAddon::getAddonNames() const {
 	return names;
 }
 
-std::vector<std::shared_ptr<IAddon>> MAddon::getEnabledAddons() const {
+std::vector<std::shared_ptr<blot::IAddon>> blot::MAddon::getEnabledAddons() const {
 	std::vector<std::shared_ptr<IAddon>> enabled;
 	for (const auto &pair : m_addons) {
 		if (pair.second && pair.second->isEnabled()) {
@@ -266,7 +266,7 @@ std::vector<std::shared_ptr<IAddon>> MAddon::getEnabledAddons() const {
 	return enabled;
 }
 
-std::vector<std::shared_ptr<IAddon>> MAddon::getAllAddons() const {
+std::vector<std::shared_ptr<blot::IAddon>> blot::MAddon::getAllAddons() const {
 	std::vector<std::shared_ptr<IAddon>> all;
 	for (const auto &pair : m_addons) {
 		if (pair.second) {
@@ -276,7 +276,7 @@ std::vector<std::shared_ptr<IAddon>> MAddon::getAllAddons() const {
 	return all;
 }
 
-bool MAddon::resolveDependencies() {
+bool blot::MAddon::resolveDependencies() {
 	spdlog::info("Resolving addon dependencies...");
 
 	// Check all addon dependencies
@@ -293,7 +293,7 @@ bool MAddon::resolveDependencies() {
 }
 
 std::vector<std::string>
-MAddon::getAddonDependencies(const std::string &name) const {
+blot::MAddon::getAddonDependencies(const std::string &name) const {
 	auto addon = getAddon(name);
 	if (addon) {
 		return addon->getDependencies();
@@ -301,7 +301,7 @@ MAddon::getAddonDependencies(const std::string &name) const {
 	return {};
 }
 
-void MAddon::saveAddonConfig() {
+void blot::MAddon::saveAddonConfig() {
 	spdlog::info("Saving addon configuration...");
 
 	json config;
@@ -320,7 +320,7 @@ void MAddon::saveAddonConfig() {
 	}
 }
 
-void MAddon::loadAddonConfig() {
+void blot::MAddon::loadAddonConfig() {
 	spdlog::info("Loading addon configuration...");
 
 	std::ifstream f("addon_config.json");
@@ -351,16 +351,16 @@ void MAddon::loadAddonConfig() {
 	}
 }
 
-void MAddon::setAddonDirectory(const std::string &directory) {
+void blot::MAddon::setAddonDirectory(const std::string &directory) {
 	m_addonDirectory = directory;
 }
 
-void MAddon::addGlobalEventListener(const std::string &event,
+void blot::MAddon::addGlobalEventListener(const std::string &event,
 									std::function<void()> callback) {
 	m_globalEventListeners[event].push_back(callback);
 }
 
-void MAddon::triggerGlobalEvent(const std::string &event) {
+void blot::MAddon::triggerGlobalEvent(const std::string &event) {
 	auto it = m_globalEventListeners.find(event);
 	if (it != m_globalEventListeners.end()) {
 		for (auto &callback : it->second) {
@@ -369,7 +369,7 @@ void MAddon::triggerGlobalEvent(const std::string &event) {
 	}
 }
 
-json MAddon::getSettings() const {
+blot::json blot::MAddon::getSettings() const {
 	json settings;
 	settings["addonDirectory"] = m_addonDirectory;
 	settings["addonConfig"] = m_addonConfig;
@@ -384,7 +384,7 @@ json MAddon::getSettings() const {
 	return settings;
 }
 
-void MAddon::setSettings(const json &settings) {
+void blot::MAddon::setSettings(const json &settings) {
 	if (settings.contains("addonDirectory")) {
 		m_addonDirectory = settings["addonDirectory"];
 	}
@@ -404,7 +404,7 @@ void MAddon::setSettings(const json &settings) {
 	}
 }
 
-bool MAddon::checkDependencies(const std::string &addonName) {
+bool blot::MAddon::checkDependencies(const std::string &addonName) {
 	auto addon = getAddon(addonName);
 	if (!addon) {
 		return false;
@@ -427,7 +427,7 @@ bool MAddon::checkDependencies(const std::string &addonName) {
 	return true;
 }
 
-void MAddon::sortAddonsByDependencies() {
+void blot::MAddon::sortAddonsByDependencies() {
 	// Simple topological sort implementation
 	std::vector<std::string> sorted;
 	std::unordered_set<std::string> visited;
@@ -464,7 +464,7 @@ void MAddon::sortAddonsByDependencies() {
 	m_addonOrder = sorted;
 }
 
-std::vector<std::string> MAddon::getCircularDependencies() const {
+std::vector<std::string> blot::MAddon::getCircularDependencies() const {
 	// This is a simplified implementation
 	// A full implementation would use a proper cycle detection algorithm
 	std::vector<std::string> circular;
@@ -494,7 +494,7 @@ std::vector<std::string> MAddon::getCircularDependencies() const {
 	return circular;
 }
 
-void MAddon::registerAddon(std::shared_ptr<IAddon> addon) {
+void blot::MAddon::registerAddon(std::shared_ptr<blot::IAddon> addon) {
 	if (!addon) {
 		spdlog::error("Attempted to register null addon");
 		return;

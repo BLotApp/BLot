@@ -3,7 +3,7 @@
 #include "AddonRegistry.h"
 #include "MAddon.h"
 
-void AddonLoader::registerAvailableAddons(
+void blot::AddonLoader::registerAvailableAddons(
 	MAddon *addonManager, const std::vector<std::string> &addonNames) {
 	if (!addonManager) {
 		spdlog::error("[AddonLoader] No addon manager provided");
@@ -25,7 +25,7 @@ void AddonLoader::registerAvailableAddons(
 	}
 }
 
-bool AddonLoader::registerAddon(MAddon *addonManager,
+bool blot::AddonLoader::registerAddon(MAddon *addonManager,
 								const std::string &addonName) {
 	if (!addonManager) {
 		spdlog::error("[AddonLoader] No addon manager provided");
@@ -43,7 +43,7 @@ bool AddonLoader::registerAddon(MAddon *addonManager,
 	}
 }
 
-std::vector<std::string> AddonLoader::getAvailableAddonNames() {
+std::vector<std::string> blot::AddonLoader::getAvailableAddonNames() {
 	return {"bxImGui",	 "bxScriptEngine", "bxCodeEditor",
 			"bxBlend2d", "bxMarkdown",	   "bxNodeEditor",
 			"bxOsc",	 "bxTemplate",	   "bxTestEngine"};
